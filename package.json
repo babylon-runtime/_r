@@ -1,0 +1,27 @@
+{
+  "name": "babylon-runtime",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/babylon-runtime/_r.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/babylon-runtime/_r/issues"
+  },
+  "homepage": "https://github.com/babylon-runtime/_r#readme",
+  "devDependencies": {
+    "babylonjs": "^3.3.0",
+    "rollup-plugin-typescript2": "^0.17.2",
+    "typescript": "^3.1.3"
+  }
+}
