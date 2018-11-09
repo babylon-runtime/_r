@@ -1,0 +1,18 @@
+# some file types
+
+*.blend1
+*.blend2
+*.DS_Store
+*.old
+*.sav
+*.kra~
+*.ffs_db
+
+# some specific files
+
+Thumbs.db
+scene.log
+
+# some specific folders
+
+node_modules/
