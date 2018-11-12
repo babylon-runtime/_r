@@ -55,7 +55,8 @@ export function launch(obj : IRuntimeLoading) {
             // scene is a filename
             let ext = (<string> obj.scene).split('.').pop();
             if((ext === "glb" || ext === "gltf") && !(BABYLON.GLTF1 || BABYLON.GLTF2)) {
-                console.error("[babylon-runtime] You try to load GLTF but you forget to include the loader : https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js ");
+                console.error("[babylon-runtime] You try to load a GLTF scene but you forget to include the loader : https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js ");
+                return;
             }
             BABYLON.SceneLoader.Load(obj.assets, <string> obj.scene, global.engine, function(scene) {
                 global.scene = scene;

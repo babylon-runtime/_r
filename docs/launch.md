@@ -11,6 +11,16 @@ BABYLON setup & launching shortcuts.
 * offline mode, ktx, loading screen & progress loading
 
 ## Getting started
+```
+<script src="https://preview.babylonjs.com/babylon.js"></script>
+<script src="https://unpkg.com/babylon-runtime/dist/_r.js"></script>
+<script>
+_r.launch({
+    assets : "https://models.babylonjs.com/CornellBox/",
+    scene : "cornellBox.babylon"
+})
+</script>
+```
 
 ## Scene
 
@@ -92,13 +102,13 @@ TODO
     }})
 ``` 
 
-### responsive container polyfill
-
 ### Loading screen and events
 
 ### ktx
 
 ### enableOfflineSupport
+
+### responsive container polyfill
 
 
 
