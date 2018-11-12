@@ -11,15 +11,11 @@ BABYLON setup & launching shortcuts.
 * offline mode, ktx, loading screen & progress loading
 
 ## Getting started
-```
-<script src="https://preview.babylonjs.com/babylon.js"></script>
-<script src="https://unpkg.com/babylon-runtime/dist/_r.js"></script>
-<script>
+```javascript
 _r.launch({
     assets : "https://models.babylonjs.com/CornellBox/",
     scene : "cornellBox.babylon"
 })
-</script>
 ```
 
 ## Scene
@@ -31,7 +27,7 @@ _r.launch({
 
 ### Copy / Paste from babylon playground
 
-```
+```javascript
 _r.launch({
     scene : function() {
         // This creates a basic Babylon Scene object (non-mesh)
@@ -71,7 +67,7 @@ _r.launch({
 
 ### *.gltf | *.glb | *.obj | *.stl
 
-``` 
+```javascript 
  _r.launch({
     assets : "https://models.babylonjs.com/CornellBox/",
     scene : "cornellBox.glb",
@@ -89,7 +85,7 @@ TODO
 ## Misc.
 
 ### activeCamera by function
-``` 
+```javascript 
 _r.launch({
     assets : "https://models.babylonjs.com/CornellBox/",
     scene : "cornellBox.glb",

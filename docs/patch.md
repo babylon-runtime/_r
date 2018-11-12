@@ -14,7 +14,7 @@ Code is great but it’s hard to understand and maintain for a 3D designers team
 
 With _r you can use patch file to customise the scene. Patch are very easy to read/write text files that don't required any programming skills.
 
-```
+```javascript
 [
     {
         "scene":
