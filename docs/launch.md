@@ -16,7 +16,20 @@ BABYLON setup & launching shortcuts.
 
 ### Loading *.babylon
 
+<script async src="https://jsfiddle.net/ryz6j5hv/1/embed/"></script>
+
+[Try it](https://jsfiddle.net/ryz6j5hv/1/)
+
+```
+_r.launch({
+    assets : "https://models.babylonjs.com/CornellBox/",
+    scene : "cornellBox.babylon"
+})
+```
+
 ### Copy / Paste from babylon playground
+
+
 
 ### *.gltf | *.glb | *.obj | *.stl
 
