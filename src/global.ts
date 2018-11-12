@@ -52,7 +52,20 @@ export class global {
 
     static set scene(value) {
         if(is.Function(value)) {
-            _scene = value(_scene, global.engine, global.canvas);
+            (function(win) {
+                // we want to copy / paste from playground so we create global variables.
+                win["engine"] = global.engine;
+                win["scene"] = global.scene;
+                win["canvas"] = global.canvas;
+                _scene = value(global.scene, global.engine, global.canvas);
+                global.engine =  win["engine"];
+                global.canvas = win["canvas"];
+                global.scene = win["scene"];
+                // but we don't want to pollute the window
+                win["engine"] = null;
+                win["scene"] = null;
+                win["canvas"] = null;
+            })(window)
         }
         else {
             _scene = value;

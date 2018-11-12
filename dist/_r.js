@@ -1,7 +1,7 @@
 var _r = (function (BABYLON) {
     'use strict';
 
-    console.log("babylon runtime v(0.0.1)")
+    console.log("babylon runtime v(0.0.3)")
 
     var is;
     (function (is) {
@@ -202,7 +202,20 @@ var _r = (function (BABYLON) {
             },
             set: function (value) {
                 if (is.Function(value)) {
-                    _scene = value(_scene, global.engine, global.canvas);
+                    (function (win) {
+                        // we want to copy / paste from playground so we create global variables.
+                        win["engine"] = global.engine;
+                        win["scene"] = global.scene;
+                        win["canvas"] = global.canvas;
+                        _scene = value(global.scene, global.engine, global.canvas);
+                        global.engine = win["engine"];
+                        global.canvas = win["canvas"];
+                        global.scene = win["scene"];
+                        // but we don't want to pollute the window
+                        win["engine"] = null;
+                        win["scene"] = null;
+                        win["canvas"] = null;
+                    })(window);
                 }
                 else {
                     _scene = value;
@@ -215,9 +228,6 @@ var _r = (function (BABYLON) {
     }());
 
     function activateCamera(camera) {
-        if (global.scene.activeCamera) {
-            global.scene.activeCamera.detachControl();
-        }
         global.scene.setActiveCameraByName(camera);
         global.scene.activeCamera.attachControl(global.canvas, true);
     }
@@ -252,6 +262,10 @@ var _r = (function (BABYLON) {
         if (obj.scene) {
             if (is.String(obj.scene)) {
                 // scene is a filename
+                var ext = obj.scene.split('.').pop();
+                if ((ext === "glb" || ext === "gltf") && !(BABYLON.GLTF1 || BABYLON.GLTF2)) {
+                    console.error("[babylon-runtime] You try to load GLTF but you forget to include the loader : https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js ");
+                }
                 BABYLON.SceneLoader.Load(obj.assets, obj.scene, global.engine, function (scene) {
                     global.scene = scene;
                     if (obj.patch) {
@@ -293,19 +307,22 @@ var _r = (function (BABYLON) {
                 if (is.Function(obj.activeCamera)) {
                     try {
                         var camera = obj.activeCamera.call(global.scene);
-                        global.scene.activeCamera = camera;
+                        activateCamera(camera.name);
                     }
                     catch (ex) {
                         console.error("_r.launch() error on activeCamera", ex);
                     }
                 }
                 else {
-                    global.scene.activeCamera = obj.activeCamera;
+                    activateCamera(obj.activeCamera.name);
                 }
             }
         }
         if (!global.scene.activeCamera && global.scene.cameras.length > 0) {
             global.scene.activeCamera = global.scene.cameras[0];
+        }
+        if (obj.beforeFirstRender && is.Function(obj.beforeFirstRender)) {
+            obj.beforeFirstRender();
         }
         window.addEventListener('resize', function () {
             global.engine.resize();

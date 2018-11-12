@@ -53,6 +53,10 @@ export function launch(obj : IRuntimeLoading) {
     if(obj.scene) {
         if(is.String(obj.scene)) {
             // scene is a filename
+            let ext = (<string> obj.scene).split('.').pop();
+            if((ext === "glb" || ext === "gltf") && !(BABYLON.GLTF1 || BABYLON.GLTF2)) {
+                console.error("[babylon-runtime] You try to load GLTF but you forget to include the loader : https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js ");
+            }
             BABYLON.SceneLoader.Load(obj.assets, <string> obj.scene, global.engine, function(scene) {
                 global.scene = scene;
                 if(obj.patch) {
@@ -96,20 +100,25 @@ function run(obj : IRuntimeLoading) {
             if(is.Function(obj.activeCamera)) {
                 try {
                     let camera = (<Function> obj.activeCamera).call(global.scene);
-                    global.scene.activeCamera = camera;
+                    activateCamera(camera.name);
                 }
                 catch(ex) {
                     console.error("_r.launch() error on activeCamera", ex);
                 }
             }
             else {
-                global.scene.activeCamera = obj.activeCamera;
+                activateCamera( obj.activeCamera.name);
             }
         }
+
     }
 
     if(!global.scene.activeCamera && global.scene.cameras.length > 0) {
         global.scene.activeCamera = global.scene.cameras[0];
+    }
+
+    if(obj.beforeFirstRender && is.Function(obj.beforeFirstRender)) {
+        obj.beforeFirstRender();
     }
     window.addEventListener('resize', function () {
         global.engine.resize();
