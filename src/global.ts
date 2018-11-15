@@ -60,7 +60,12 @@ export class global {
                 _scene = value(global.scene, global.engine, global.canvas);
                 global.engine =  win["engine"];
                 global.canvas = win["canvas"];
-                global.scene = win["scene"];
+                if(_scene) {
+                    global.scene = _scene;
+                }
+                else {
+                    global.scene = win["scene"];
+                }
                 // but we don't want to pollute the window
                 win["engine"] = null;
                 win["scene"] = null;

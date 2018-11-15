@@ -2,8 +2,9 @@ import { is } from "./is.js";
 import { global } from "./global.js";
 import { activateCamera } from "./activateCamera.js";
 import {BABYLON} from "./BABYLON.js";
+import {importScene} from "./import.js";
 //import { patch } from "./patch.js";
-
+declare var Q;
 
 let isReady = true;
 let callbacks = [];
@@ -58,36 +59,15 @@ export function launch(obj : IRuntimeLoading) {
                 console.error("[babylon-runtime] You try to load a GLTF scene but you forget to include the loader : https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js ");
                 return;
             }
-            BABYLON.SceneLoader.Load(obj.assets, <string> obj.scene, global.engine, function(scene) {
-                global.scene = scene;
-                if(obj.patch) {
-                    // TODO
-                    throw new Error("patches in launch not yet available");
-                    /**
-                    patch(obj.patch).then(function() {
-                        run(obj);
-                    })**/
-                }
-                else {
-                    run(obj);
-                }
-            });
+
+            return importScene(obj.assets,  <string> obj.scene).then(function() {
+                run(obj);
+            })
         }
         else {
             // setter accept function and object.
             global.scene = obj.scene;
-            if(obj.patch) {
-                // TODO
-                throw new Error("patches in launch not yet available");
-                /**
-                patch(obj.patch).then(function() {
-                    run(obj);
-                })**/
-            }
-            else {
-                run(obj);
-            }
-
+            return Q(run(obj));
         }
     }
 }

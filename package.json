@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "rollup -c",
+    "watch": "rollup --config --watch",
     "release": "release-it"
   },
   "repository": {
@@ -21,7 +22,9 @@
   },
   "homepage": "https://github.com/babylon-runtime/_r#readme",
   "devDependencies": {
+    "@types/q": "^1.5.1",
     "babylonjs": "^3.3.0",
+    "q": "^1.5.1",
     "release-it": "^7.6.3",
     "rollup-plugin-typescript2": "^0.17.2",
     "typescript": "^3.1.3"

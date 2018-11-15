@@ -10,12 +10,10 @@ export default {
         sourcemap : true,
         intro : 'console.log("babylon runtime v(' + pkg.version + ')")'
     },
-
     external : [
         '../node_modules/babylonjs/es6.js'
     ],
     plugins: [
         typescript()
-
     ]
 }
