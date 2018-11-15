@@ -1,5 +1,5 @@
 import { global } from "./global.js";
-import { launch, ready } from "./launch.js";
+import { launch, ready, start, pause } from "./launch.js";
 
 export default {
     get canvas() {
@@ -21,5 +21,7 @@ export default {
         global.engine = value;
     },
     launch : launch,
-    ready : ready
+    ready : ready,
+    start : start,
+    pause : pause
 }

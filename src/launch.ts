@@ -91,7 +91,6 @@ function run(obj : IRuntimeLoading) {
                 activateCamera( obj.activeCamera.name);
             }
         }
-
     }
 
     if(!global.scene.activeCamera && global.scene.cameras.length > 0) {
@@ -105,15 +104,25 @@ function run(obj : IRuntimeLoading) {
         global.engine.resize();
     });
 
-    global.engine.runRenderLoop(function(){
-        global.scene.render();
-    });
+    start();
 
     isReady = true;
     callbacks.forEach(function(callback) {
         callback.call(global.scene);
     });
     callbacks.length = 0;
+}
+
+function loop() {
+    global.scene.render();
+}
+
+export function start() {
+    global.engine.runRenderLoop(loop);
+}
+
+export function pause() {
+    global.engine.stopRenderLoop(loop);
 }
 
 export function ready(callback:Function) {

@@ -2,8 +2,7 @@ import { is } from "./is.js";
 import { global } from "./global.js";
 import {BABYLON} from "./BABYLON.js";
 import "../node_modules/q/q.js";
-
-declare var Q;
+export declare const Q;
 
 export function importScene(...any) : Q.Promise<any> {
     if(any.length === 1) {

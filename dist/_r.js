@@ -2415,14 +2415,21 @@ var _r = (function (BABYLON) {
         window.addEventListener('resize', function () {
             global.engine.resize();
         });
-        global.engine.runRenderLoop(function () {
-            global.scene.render();
-        });
+        start();
         isReady = true;
         callbacks.forEach(function (callback) {
             callback.call(global.scene);
         });
         callbacks.length = 0;
+    }
+    function loop() {
+        global.scene.render();
+    }
+    function start() {
+        global.engine.runRenderLoop(loop);
+    }
+    function pause() {
+        global.engine.stopRenderLoop(loop);
     }
     function ready(callback) {
         if (isReady) {
@@ -2453,7 +2460,9 @@ var _r = (function (BABYLON) {
             global.engine = value;
         },
         launch: launch,
-        ready: ready
+        ready: ready,
+        start: start,
+        pause: pause
     };
 
     return index;
