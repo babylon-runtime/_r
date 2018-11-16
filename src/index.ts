@@ -1,5 +1,6 @@
 import { global } from "./global.js";
 import { launch, ready, start, pause } from "./launch.js";
+import { importScene, disposeScene} from "./import.js";
 
 export default {
     get canvas() {
@@ -23,5 +24,13 @@ export default {
     launch : launch,
     ready : ready,
     start : start,
-    pause : pause
+    pause : pause,
+    import : importScene,
+    dispose : disposeScene,
+    get TRACE() {
+        return global.TRACE
+    },
+    set TRACE(value) {
+        global.TRACE = value
+    }
 }

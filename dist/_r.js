@@ -229,6 +229,7 @@ var _r = (function (BABYLON) {
             enumerable: true,
             configurable: true
         });
+        global.TRACE = false;
         return global;
     }());
 
@@ -2316,35 +2317,127 @@ var _r = (function (BABYLON) {
 
     });
 
+    // Error handling in promise can be tricky, for instance errors in then must be catch, we don't want that for our users, so we provide a ready function.
+    // + We need progress to track async operation.
+    var ImportPromise = /** @class */ (function () {
+        function ImportPromise(promise) {
+            this.promise = promise;
+            this._progressCallbacks = [];
+            this._readyCallbacks = [];
+            this._errorCallbacks = [];
+            this._isReady = false;
+            this._error = false;
+            var self = this;
+            if (promise.then) {
+                promise.then(function (container) {
+                    self._isReady = true;
+                    self._readyCallbacks.forEach(function (callback) {
+                        callback(container.scene);
+                    });
+                });
+                promise.catch(function (ex) {
+                    self._error = true;
+                    self._exception = ex;
+                    self._errorCallbacks.forEach(function (callback) {
+                        callback(ex);
+                    });
+                });
+            }
+            else {
+                this._isReady = true;
+                this._result = promise;
+            }
+        }
+        ImportPromise.prototype.triggerProgress = function (progress) {
+            this._progressCallbacks.forEach(function (callback) {
+                callback(progress);
+            });
+        };
+        ImportPromise.prototype.progress = function (callback) {
+            this._progressCallbacks.push(callback);
+            return this;
+        };
+        ImportPromise.prototype.ready = function (callback) {
+            if (this._isReady) {
+                callback(this._result);
+            }
+            else {
+                this._readyCallbacks.push(callback);
+            }
+            return this;
+        };
+        ImportPromise.prototype.error = function (callback) {
+            if (!this._isReady) {
+                this._errorCallbacks.push(callback);
+            }
+            else {
+                if (this._error) {
+                    callback(this._exception);
+                }
+            }
+            return this;
+        };
+        return ImportPromise;
+    }());
     function importScene() {
         var any = [];
         for (var _i = 0; _i < arguments.length; _i++) {
             any[_i] = arguments[_i];
         }
         if (any.length === 1) {
-            if (is.String(any[0])) ;
+            if (is.String(any[0])) {
+                // argument is a filename and assets are in the same folder
+                var url = any[0];
+                var filename = url.split('/').pop();
+                var rootUrl = url.replace(filename, "");
+                return load(rootUrl, filename);
+            }
             else {
+                // argument is an object
+                var roolUrl = any["assets"];
                 var sceneFileName = any["scene"];
+                return load(roolUrl, sceneFileName);
             }
         }
         else {
             var rootUrl = any[0];
             var sceneFileName = any[1];
-            var deferred_1 = Q.defer();
-            BABYLON.SceneLoader.LoadAssetContainer(rootUrl, sceneFileName, global.scene, function (container) {
-                container.addAllToScene();
-                console.log(container);
-                deferred_1.resolve();
-            });
-            return deferred_1.promise;
+            return load(rootUrl, sceneFileName);
         }
-        return;
+    }
+    function load(rootUrl, fileName) {
+        if (global.TRACE) {
+            console.group("_r.import(" + rootUrl + ", " + fileName + ")");
+            BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.DETAILED_LOGGING;
+        }
+        var promise = BABYLON.SceneLoader.LoadAssetContainerAsync(rootUrl, fileName, global.scene, function (e) {
+            importPromise.triggerProgress(e);
+        }).then(function (container) {
+            container.addAllToScene();
+            BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.NO_LOGGING;
+            console.groupEnd();
+            return container;
+        });
+        var importPromise = new ImportPromise(promise);
+        return importPromise;
+    }
+    function disposeScene() {
+        var any = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            any[_i] = arguments[_i];
+        }
     }
 
     var isReady = true;
     var callbacks = [];
     function launch(obj) {
         isReady = false;
+        if (is.String(obj)) {
+            return importScene(obj).ready(function () {
+                run(obj);
+            });
+        }
+        obj = obj;
         if (obj.container) {
             global.canvas = obj.container;
         }
@@ -2370,19 +2463,22 @@ var _r = (function (BABYLON) {
         if (obj.scene) {
             if (is.String(obj.scene)) {
                 // scene is a filename
-                var ext = obj.scene.split('.').pop();
-                if ((ext === "glb" || ext === "gltf") && !(BABYLON.GLTF1 || BABYLON.GLTF2)) {
-                    console.error("[babylon-runtime] You try to load a GLTF scene but you forget to include the loader : https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js ");
-                    return;
+                if (obj.assets) {
+                    return importScene(obj.assets, obj.scene).ready(function () {
+                        run(obj);
+                    });
                 }
-                return importScene(obj.assets, obj.scene).then(function () {
-                    run(obj);
-                });
+                else {
+                    return importScene(obj.scene).ready(function (res) {
+                        run(obj);
+                    });
+                }
             }
             else {
                 // setter accept function and object.
                 global.scene = obj.scene;
-                return Q(run(obj));
+                run(obj);
+                return new ImportPromise(global.scene);
             }
         }
     }
@@ -2407,7 +2503,7 @@ var _r = (function (BABYLON) {
             }
         }
         if (!global.scene.activeCamera && global.scene.cameras.length > 0) {
-            global.scene.activeCamera = global.scene.cameras[0];
+            activateCamera(global.scene.cameras[0].name);
         }
         if (obj.beforeFirstRender && is.Function(obj.beforeFirstRender)) {
             obj.beforeFirstRender();
@@ -2462,7 +2558,15 @@ var _r = (function (BABYLON) {
         launch: launch,
         ready: ready,
         start: start,
-        pause: pause
+        pause: pause,
+        import: importScene,
+        dispose: disposeScene,
+        get TRACE() {
+            return global.TRACE;
+        },
+        set TRACE(value) {
+            global.TRACE = value;
+        }
     };
 
     return index;

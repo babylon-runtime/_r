@@ -6,5 +6,8 @@
   },
   "exclude": [
     "node_modules"
+  ],
+  "lib" : [
+      "ES2015.Promise"
   ]
 }

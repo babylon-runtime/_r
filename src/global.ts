@@ -76,6 +76,8 @@ export class global {
             _scene = value;
         }
     }
+
+    static TRACE = false
 }
 
 

@@ -2,8 +2,9 @@ import { is } from "./is.js";
 import { global } from "./global.js";
 import { activateCamera } from "./activateCamera.js";
 import {BABYLON} from "./BABYLON.js";
-import {importScene} from "./import.js";
+import {importScene, ImportPromise} from "./import.js";
 //import { patch } from "./patch.js";
+import "../node_modules/q/q.js";
 declare var Q;
 
 let isReady = true;
@@ -22,9 +23,14 @@ export interface IRuntimeLoading {
     loadingScreen : any
 }
 
-export function launch(obj : IRuntimeLoading) {
+export function launch(obj : IRuntimeLoading | string) {
     isReady = false;
-
+    if(is.String(obj)) {
+        return importScene(obj).ready(function() {
+            run(<IRuntimeLoading> obj);
+        })
+    }
+    obj = <IRuntimeLoading> obj;
     if(obj.container) {
         global.canvas = obj.container;
     }
@@ -54,20 +60,22 @@ export function launch(obj : IRuntimeLoading) {
     if(obj.scene) {
         if(is.String(obj.scene)) {
             // scene is a filename
-            let ext = (<string> obj.scene).split('.').pop();
-            if((ext === "glb" || ext === "gltf") && !(BABYLON.GLTF1 || BABYLON.GLTF2)) {
-                console.error("[babylon-runtime] You try to load a GLTF scene but you forget to include the loader : https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js ");
-                return;
+            if(obj.assets) {
+                return importScene(obj.assets,  <string> obj.scene).ready(function() {
+                    run(<IRuntimeLoading> obj);
+                });
             }
-
-            return importScene(obj.assets,  <string> obj.scene).then(function() {
-                run(obj);
-            })
+            else {
+                return importScene(<string> obj.scene).ready(function(res) {
+                    run(<IRuntimeLoading> obj);
+                });
+            }
         }
         else {
             // setter accept function and object.
             global.scene = obj.scene;
-            return Q(run(obj));
+            run(obj);
+            return new ImportPromise(global.scene);
         }
     }
 }
@@ -93,8 +101,9 @@ function run(obj : IRuntimeLoading) {
         }
     }
 
+
     if(!global.scene.activeCamera && global.scene.cameras.length > 0) {
-        global.scene.activeCamera = global.scene.cameras[0];
+        activateCamera(global.scene.cameras[0].name);
     }
 
     if(obj.beforeFirstRender && is.Function(obj.beforeFirstRender)) {

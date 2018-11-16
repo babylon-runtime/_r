@@ -7,10 +7,16 @@
 <body>
 
 <script type="module">
-    import {launch} from "../launch.js";
-    import {importScene} from "../import.js";
-    launch({
-        scene : function() {
+    import {default as _r} from "../index.js";
+
+    _r.TRACE = true;
+    /**
+    _r.launch("https://models.babylonjs.com/CornellBox/cornellBox.babylon");
+     **/
+
+    _r.launch({
+        scene :
+            function() {
             // This creates a basic Babylon Scene object (non-mesh)
             var scene = new BABYLON.Scene(engine);
 
@@ -40,10 +46,15 @@
 
             return scene;
         }
-    }).then(function() {
-        importScene("https://models.babylonjs.com/CornellBox/", "cornellBox.babylon").then(function() {
-            console.log("loaded");
-        })
+    }).ready(function(res) {
+        console.log("YEP", res);
+        _r.import("https://models.babylonjs.com/CornellBox/", "cornellBox.babylon").ready(function(res) {
+            console.log('loaded !!', res)
+        }).progress(function(e) {
+            console.log("progress", e);
+        }).error(function(e) {
+            console.error("ERROR", e);
+        });
     })
 </script>
 </body>
