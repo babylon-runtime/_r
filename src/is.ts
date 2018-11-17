@@ -26,6 +26,14 @@ export module is {
         return false;
     }
 
+    export function AssetContainer(x : any) {
+        return x instanceof BABYLON.AssetContainer;
+    }
+
+    export function Scene(x : any) {
+        return x instanceof BABYLON.Scene;
+    }
+
     export function Array(x : any) : boolean {
         return window['Array'].isArray(x);
     }

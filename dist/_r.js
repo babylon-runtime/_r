@@ -30,6 +30,14 @@ var _r = (function (BABYLON) {
             return false;
         }
         is.PlainObject = PlainObject;
+        function AssetContainer(x) {
+            return x instanceof BABYLON.AssetContainer;
+        }
+        is.AssetContainer = AssetContainer;
+        function Scene(x) {
+            return x instanceof BABYLON.Scene;
+        }
+        is.Scene = Scene;
         function Array(x) {
             return window['Array'].isArray(x);
         }
@@ -2332,7 +2340,7 @@ var _r = (function (BABYLON) {
                 promise.then(function (container) {
                     self._isReady = true;
                     self._readyCallbacks.forEach(function (callback) {
-                        callback(container.scene);
+                        callback(container);
                     });
                 });
                 promise.catch(function (ex) {
@@ -2384,48 +2392,50 @@ var _r = (function (BABYLON) {
         for (var _i = 0; _i < arguments.length; _i++) {
             any[_i] = arguments[_i];
         }
+        return load.apply(void 0, any).ready(function (assetContainer) {
+            assetContainer.addAllToScene();
+            return assetContainer.scene;
+        });
+    }
+    function downloadScene() {
+        var any = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            any[_i] = arguments[_i];
+        }
+        return load.apply(void 0, any);
+    }
+    function load() {
+        var any = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            any[_i] = arguments[_i];
+        }
+        var rootUrl, sceneFileName;
         if (any.length === 1) {
             if (is.String(any[0])) {
                 // argument is a filename and assets are in the same folder
                 var url = any[0];
-                var filename = url.split('/').pop();
-                var rootUrl = url.replace(filename, "");
-                return load(rootUrl, filename);
+                sceneFileName = url.split('/').pop();
+                rootUrl = url.replace(sceneFileName, "");
             }
             else {
                 // argument is an object
-                var roolUrl = any["assets"];
-                var sceneFileName = any["scene"];
-                return load(roolUrl, sceneFileName);
+                rootUrl = any["assets"];
+                sceneFileName = any["scene"];
             }
         }
-        else {
-            var rootUrl = any[0];
-            var sceneFileName = any[1];
-            return load(rootUrl, sceneFileName);
-        }
-    }
-    function load(rootUrl, fileName) {
         if (global.TRACE) {
-            console.group("_r.import(" + rootUrl + ", " + fileName + ")");
+            console.group("_r.import(" + rootUrl + ", " + sceneFileName + ")");
             BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.DETAILED_LOGGING;
         }
-        var promise = BABYLON.SceneLoader.LoadAssetContainerAsync(rootUrl, fileName, global.scene, function (e) {
+        var promise = BABYLON.SceneLoader.LoadAssetContainerAsync(rootUrl, sceneFileName, global.scene, function (e) {
             importPromise.triggerProgress(e);
         }).then(function (container) {
-            container.addAllToScene();
             BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.NO_LOGGING;
             console.groupEnd();
             return container;
         });
         var importPromise = new ImportPromise(promise);
         return importPromise;
-    }
-    function disposeScene() {
-        var any = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            any[_i] = arguments[_i];
-        }
     }
 
     var isReady = true;
@@ -2536,6 +2546,93 @@ var _r = (function (BABYLON) {
         }
     }
 
+    var Library = /** @class */ (function () {
+        function Library(name) {
+            var elements = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                elements[_i - 1] = arguments[_i];
+            }
+            this.name = name;
+            this.PROPERTIES = {
+                ActionManager: "actionManagers",
+                AnimationGroup: "animationGroups",
+                Animation: "animations",
+                Camera: "cameras",
+                EffectLayer: "effectLayers",
+                Geometry: "geometries",
+                Layer: "layers",
+                LensFlareSystem: "lensFlareSystems",
+                Light: "lights",
+                ShadowLight: "lights",
+                Material: "materials",
+                Mesh: "meshes",
+                MorphTargetManager: "morphTargetManagers",
+                MultiMaterial: "multiMaterials",
+                ParticleSystem: "particleSystems",
+                ProceduralTexture: "proceduralTextures",
+                ReflectionProbe: "reflectionProbes",
+                Skeleton: "skeletons",
+                Sound: "sounds",
+                Texture: "textures"
+            };
+            if (elements.length == 1 && is.AssetContainer(elements[0])) {
+                this.assetContainer = elements[0];
+            }
+            else {
+                this.assetContainer = new BABYLON.AssetContainer(global.scene);
+                for (var i = 0; i < elements.length; i++) {
+                    this.add(elements[i]);
+                }
+            }
+        }
+        Library.prototype.add = function (element) {
+            if (is.Array(element)) {
+                var self = this;
+                element.forEach(function (_element) {
+                    self.add(_element);
+                });
+                return;
+            }
+            for (var property in this.PROPERTIES) {
+                if (element instanceof BABYLON[property]) {
+                    this.assetContainer[this.PROPERTIES[property]].push(element);
+                    return;
+                }
+            }
+            console.error("_r.library accepts only mesh, camera, light and material", element);
+        };
+        Library.prototype.show = function () {
+            this.assetContainer.addAllToScene();
+        };
+        Library.prototype.hide = function () {
+            this.assetContainer.removeAllFromScene();
+        };
+        // TODO
+        Library.prototype.select = function (selector) {
+        };
+        // TODO
+        Library.prototype.dispose = function () {
+        };
+        return Library;
+    }());
+    var libraries = [];
+    function createLibrary(name) {
+        var elements = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            elements[_i - 1] = arguments[_i];
+        }
+        if (libraries[name]) {
+            console.error("Error in _r.createLibrary : " + name + " already exists");
+            return;
+        }
+        else {
+            libraries[name] = new (Library.bind.apply(Library, [void 0, name].concat(elements)))();
+        }
+    }
+    function library(name) {
+        return libraries[name];
+    }
+
     var index = {
         get canvas() {
             return global.canvas;
@@ -2560,13 +2657,15 @@ var _r = (function (BABYLON) {
         start: start,
         pause: pause,
         import: importScene,
-        dispose: disposeScene,
+        download: downloadScene,
         get TRACE() {
             return global.TRACE;
         },
         set TRACE(value) {
             global.TRACE = value;
-        }
+        },
+        createLibrary: createLibrary,
+        library: library
     };
 
     return index;

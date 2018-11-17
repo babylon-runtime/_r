@@ -46,16 +46,16 @@
 
                 return scene;
             }
-    }).ready(function(res) {
-        console.log("YEP", res);
-        _r.import("https://models.babylonjs.com/CornellBox/", "cornellBox.babylon").ready(function(res) {
-            console.log('loaded !!', res)
-        }).progress(function(e) {
-            console.log("progress", e);
-        }).error(function(e) {
-            console.error("ERROR", e);
-        });
-    })
+    }).ready(function(_scene1) {
+        _r.createLibrary("lib1", _scene1.meshes, _scene1.lights);
+
+        _r.download("https://models.babylonjs.com/CornellBox/cornellBox.babylon")
+            .ready(function(assetContainer) {
+                console.log("createLibrary", assetContainer);
+                //assetContainer.addAllToScene();
+                _r.createLibrary("lib2", assetContainer);
+            });
+    });
 </script>
 </body>
 </html>

@@ -8,7 +8,7 @@
 
 <script type="module">
     import {default as _r} from "../index.js";
-
+    window._r = _r;
     _r.TRACE = true;
     /**
     _r.launch("https://models.babylonjs.com/CornellBox/cornellBox.babylon");
@@ -17,45 +17,49 @@
     _r.launch({
         scene :
             function() {
-            // This creates a basic Babylon Scene object (non-mesh)
-            var scene = new BABYLON.Scene(engine);
+                // This creates a basic Babylon Scene object (non-mesh)
+                var scene = new BABYLON.Scene(engine);
 
-            // This creates and positions a free camera (non-mesh)
-            var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
+                // This creates and positions a free camera (non-mesh)
+                var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
 
-            // This targets the camera to scene origin
-            camera.setTarget(BABYLON.Vector3.Zero());
+                // This targets the camera to scene origin
+                camera.setTarget(BABYLON.Vector3.Zero());
 
-            // This attaches the camera to the canvas
-            camera.attachControl(canvas, true);
+                // This attaches the camera to the canvas
+                camera.attachControl(canvas, true);
 
-            // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-            var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+                // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+                var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
 
-            // Default intensity is 1. Let's dim the light a small amount
-            light.intensity = 0.7;
+                // Default intensity is 1. Let's dim the light a small amount
+                light.intensity = 0.7;
 
-            // Our built-in 'sphere' shape. Params: name, subdivs, size, scene
-            var sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
+                // Our built-in 'sphere' shape. Params: name, subdivs, size, scene
+                var sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
 
-            // Move the sphere upward 1/2 its height
-            sphere.position.y = 1;
+                // Move the sphere upward 1/2 its height
+                sphere.position.y = 1;
 
-            // Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
-            var ground = BABYLON.Mesh.CreateGround("ground1", 6, 6, 2, scene);
+                // Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
+                var ground = BABYLON.Mesh.CreateGround("ground1", 6, 6, 2, scene);
 
-            return scene;
-        }
-    }).ready(function(res) {
-        console.log("YEP", res);
-        _r.import("https://models.babylonjs.com/CornellBox/", "cornellBox.babylon").ready(function(res) {
-            console.log('loaded !!', res)
-        }).progress(function(e) {
-            console.log("progress", e);
-        }).error(function(e) {
-            console.error("ERROR", e);
-        });
-    })
+                return scene;
+            }
+    }).ready(function(_scene1) {
+        _r.createLibrary("lib1", _scene1.meshes, _scene1.lights);
+
+        _r.download("https://models.babylonjs.com/CornellBox/cornellBox.babylon")
+            .ready(function(assetContainer) {
+                console.log("createLibrary", assetContainer);
+                //assetContainer.addAllToScene();
+               _r.createLibrary("lib2", assetContainer);
+            });
+    });
+
+    // open console :
+    // _r.library("lib1").hide();
+    // _r.library("lib2"].hide();
 </script>
 </body>
 </html>

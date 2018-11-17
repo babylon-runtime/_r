@@ -1,6 +1,7 @@
 import { global } from "./global.js";
 import { launch, ready, start, pause } from "./launch.js";
-import { importScene, disposeScene} from "./import.js";
+import {importScene, downloadScene} from "./import.js";
+import { createLibrary, library} from "./library.js";
 
 export default {
     get canvas() {
@@ -26,11 +27,13 @@ export default {
     start : start,
     pause : pause,
     import : importScene,
-    dispose : disposeScene,
+    download : downloadScene,
     get TRACE() {
         return global.TRACE
     },
     set TRACE(value) {
         global.TRACE = value
-    }
+    },
+    createLibrary : createLibrary,
+    library : library
 }

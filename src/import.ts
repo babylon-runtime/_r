@@ -1,6 +1,6 @@
 import { is } from "./is.js";
 import { global } from "./global.js";
-import {BABYLON} from "./BABYLON.js";
+import { BABYLON } from "./BABYLON.js";
 import "../node_modules/q/q.js";
 export declare const Q;
 
@@ -20,7 +20,7 @@ export class ImportPromise {
             promise.then(function(container) {
                 self._isReady = true;
                 self._readyCallbacks.forEach(function(callback) {
-                    callback(container.scene);
+                    callback(container);
                 })
             });
 
@@ -72,52 +72,45 @@ export class ImportPromise {
     }
 }
 
-function GetFilename(url)
-{
-    if (url)
-    {
-        var m = url.toString().match(/.*\/(.+?)\./);
-        if (m && m.length > 1)
-        {
-            return m[1];
-        }
-    }
-    return "";
+export function importScene(...any) : ImportPromise {
+    return load(...any).ready(function(assetContainer) {
+        assetContainer.addAllToScene();
+        return assetContainer.scene;
+    });
 }
 
-export function importScene(...any) : ImportPromise {
+export function downloadScene(...any) : ImportPromise {
+    return load(...any);
+}
+
+export function load(...any) {
+    let rootUrl, sceneFileName;
     if(any.length === 1) {
         if(is.String(any[0])) {
             // argument is a filename and assets are in the same folder
             let url = any[0];
-            let filename = url.split('/').pop();
-            let rootUrl = url.replace(filename, "");
-            return load(rootUrl, filename);
+            sceneFileName = url.split('/').pop();
+            rootUrl= url.replace(sceneFileName, "");
 
         }
         else {
             // argument is an object
-            let roolUrl = any["assets"];
-            let sceneFileName = any["scene"];
-            return load(roolUrl, sceneFileName);
+            rootUrl = any["assets"];
+            sceneFileName = any["scene"];
         }
     }
     else {
         let rootUrl = any[0];
         let sceneFileName = any[1];
-        return load(rootUrl, sceneFileName);
-    }
-}
 
-function load(rootUrl, fileName) {
+    }
     if(global.TRACE) {
-        console.group("_r.import(" + rootUrl + ", " + fileName + ")");
+        console.group("_r.import(" + rootUrl + ", " + sceneFileName + ")");
         BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.DETAILED_LOGGING;
     }
-    let promise = BABYLON.SceneLoader.LoadAssetContainerAsync(rootUrl, fileName, global.scene, function(e) {
+    let promise = BABYLON.SceneLoader.LoadAssetContainerAsync(rootUrl, sceneFileName, global.scene, function(e) {
         importPromise.triggerProgress(e);
     }).then(function(container) {
-        container.addAllToScene();
         BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.NO_LOGGING;
         console.groupEnd();
         return container;
@@ -125,8 +118,4 @@ function load(rootUrl, fileName) {
 
     let importPromise = new ImportPromise(promise);
     return importPromise;
-}
-
-export function disposeScene(...any) {
-
 }
