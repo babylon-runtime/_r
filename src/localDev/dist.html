@@ -46,15 +46,17 @@
 
                 return scene;
             }
-    }).ready(function(_scene1) {
-        _r.createLibrary("lib1", _scene1.meshes, _scene1.lights);
+    }).ready(function(assets) {
+        _r.createLibrary("lib1", assets.meshes, assets.lights);
 
         _r.download("https://models.babylonjs.com/CornellBox/cornellBox.babylon")
-            .ready(function(assetContainer) {
-                console.log("createLibrary", assetContainer);
-                //assetContainer.addAllToScene();
-                _r.createLibrary("lib2", assetContainer);
+            .ready(function(assets) {
+                _r.createLibrary("lib2", assets);
             });
+
+        // then in console do :
+        // _r.library("lib2").show();
+        // _r.library("lib1").hide();
     });
 </script>
 </body>
