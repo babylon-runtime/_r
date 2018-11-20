@@ -1,6 +1,4 @@
-import {is} from "./is.js";
-import {BABYLON} from "./BABYLON.js";
-import {global} from "./global.js";
+
 import {Elements} from "./Elements.js";
 
 var libraries = [];

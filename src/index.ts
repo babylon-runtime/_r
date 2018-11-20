@@ -1,7 +1,8 @@
 import { global } from "./global.js";
 import { launch, ready, start, pause } from "./launch.js";
-import {importScene, downloadScene} from "./import.js";
+import { importScene, downloadScene} from "./import.js";
 import { createLibrary, library} from "./library.js";
+import { Elements, find } from "./Elements.js";
 
 export default {
     get canvas() {
@@ -22,18 +23,21 @@ export default {
     set engine(value) {
         global.engine = value;
     },
-    launch : launch,
-    ready : ready,
-    start : start,
-    pause : pause,
-    import : importScene,
-    download : downloadScene,
     get TRACE() {
         return global.TRACE
     },
     set TRACE(value) {
         global.TRACE = value
     },
+    launch : launch,
+    ready : ready,
+    start : start,
+    pause : pause,
+    import : importScene,
+    download : downloadScene,
     createLibrary : createLibrary,
-    library : library
+    library : library,
+    select : function(selector) {
+        return find(selector, global.scene);
+    }
 }

@@ -230,7 +230,7 @@ export class Elements extends BABYLON.AssetContainer {
      * @param property
      * @returns {_r.Elements}
      */
-    log(property?: string) : Elements{
+    log(property?: string) {
         this.each(function (item) {
             if (property) {
                 console.log(item[property]);
@@ -239,13 +239,10 @@ export class Elements extends BABYLON.AssetContainer {
                 console.log(item);
             }
         });
-        return this;
     }
 
-
-    // TODO
     select(selector : string) {
-
+        return find(selector, this);
     }
 
     // TODO
@@ -253,4 +250,110 @@ export class Elements extends BABYLON.AssetContainer {
 
     }
 
+}
+
+export function find(params : String, container : BABYLON.Scene | Elements | BABYLON.AssetContainer) : Elements {
+    let i = 0;
+    let res = [];
+    // TODO : refactor this shit :
+    params.split(',').forEach(function (selector) {
+        selector = selector.trim();
+        var types = [];
+        if (selector.indexOf(':mesh') !== -1) {
+            selector = selector.replace(':mesh', '');
+            types.push("meshes");
+        }
+        if (selector.indexOf(':material') !== -1) {
+            selector = selector.replace(':material', '');
+            types.push("materials");
+        }
+        if (selector.indexOf(':light') !== -1) {
+            selector = selector.replace(':light', '');
+            types.push("lights");
+        }
+        if (selector.indexOf(':camera') !== -1) {
+            selector = selector.replace(':camera', '');
+            types.push("cameras");
+        }
+        if (selector.indexOf(':texture') !== -1) {
+            selector = selector.replace(':texture', '');
+            types.push("textures");
+        }
+        if (types.length == 0) {
+            types = ["meshes", "materials", "lights", "cameras", "textures"];
+        }
+        var attributes = [];
+        var regExpAttribute = /\[(.*?)\]/;
+        var matched = regExpAttribute.exec(selector);
+        if (matched) {
+            selector = selector.replace(matched[0], '');
+            var expr = matched[1];
+            var operator;
+            if (expr.indexOf('!=') != -1) {
+                operator = '!=';
+            }
+            else {
+                if (expr.indexOf('=') != -1) {
+                    operator = '=';
+                }
+            }
+
+            if (operator) {
+                var split = expr.split(operator);
+                attributes.push({
+                    'property': split[0],
+                    'operator': operator,
+                    'value': split[1].replace(/[""]/g, '')
+                })
+            }
+            else {
+                attributes.push({
+                    'property': expr
+                })
+            }
+        }
+        ;
+
+        var exp = selector.replace(/\*/g, '.*'),
+            regExp = new RegExp('^' + exp + '$');
+
+        types.forEach(function (_type) {
+            container[_type].forEach(function (_item) {
+                if (regExp.test(_item.name)) {
+                    if (attributes.length > 0) {
+                        attributes.forEach(function (attribute) {
+                            if (attribute.hasOwnProperty('operator')) {
+                                if (_item.hasOwnProperty(attribute.property)) {
+                                    switch (attribute.operator) {
+                                        case '=':
+                                            if (_item[attribute.property].toString() == attribute.value) {
+                                                res[i++] = _item;
+                                            }
+                                            break;
+                                        case '!=':
+                                            if (_item[attribute.property].toString() != attribute.value) {
+                                                res[i++] = _item;
+                                            }
+                                            break;
+                                        default :
+                                            console.warn('BABYLON.Runtime._r : unrecognized operator ' + attribute.operator);
+                                    }
+                                }
+                            }
+                            else {
+                                if (_item.hasOwnProperty(attribute.property)) {
+                                    res[i++] = _item;
+                                }
+                            }
+                        })
+                    }
+                    else {
+                        res[i++] = _item;
+                    }
+
+                }
+            });
+        });
+    });
+    return new Elements(res);
 }
