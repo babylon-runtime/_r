@@ -3,6 +3,8 @@ var _r = (function (BABYLON) {
 
     console.log("babylon runtime v(0.0.3)")
 
+    // this will let us :
+
     var is;
     (function (is) {
         function Function(functionToCheck) {
@@ -247,7 +249,7 @@ var _r = (function (BABYLON) {
             global.scene.activeCamera.detachControl();
         }
         global.scene.setActiveCameraByName(camera);
-        global.scene.activeCamera.attachControl(global.canvas, true);
+        global.scene.activeCamera.attachControl(global.canvas);
     }
 
     // vim:ts=4:sts=4:sw=4:
@@ -2546,75 +2548,265 @@ var _r = (function (BABYLON) {
         }
     }
 
-    var Library = /** @class */ (function () {
-        function Library(name) {
+    /*! *****************************************************************************
+    Copyright (c) Microsoft Corporation. All rights reserved.
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain a copy of the
+    License at http://www.apache.org/licenses/LICENSE-2.0
+
+    THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+    WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+    MERCHANTABLITY OR NON-INFRINGEMENT.
+
+    See the Apache Version 2.0 License for specific language governing permissions
+    and limitations under the License.
+    ***************************************************************************** */
+    /* global Reflect, Promise */
+
+    var extendStatics = function(d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+
+    function __extends(d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    }
+
+    var PROPERTIES = {
+        ActionManager: "actionManagers",
+        AnimationGroup: "animationGroups",
+        Animation: "animations",
+        Camera: "cameras",
+        EffectLayer: "effectLayers",
+        Geometry: "geometries",
+        Layer: "layers",
+        LensFlareSystem: "lensFlareSystems",
+        Light: "lights",
+        Mesh: "meshes",
+        Material: "materials",
+        MorphTargetManager: "morphTargetManagers",
+        MultiMaterial: "multiMaterials",
+        ParticleSystem: "particleSystems",
+        ProceduralTexture: "proceduralTextures",
+        ReflectionProbe: "reflectionProbes",
+        Skeleton: "skeletons",
+        Sound: "sounds",
+        Texture: "textures"
+    };
+    var Elements = /** @class */ (function (_super) {
+        __extends(Elements, _super);
+        function Elements() {
             var elements = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                elements[_i - 1] = arguments[_i];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                elements[_i] = arguments[_i];
             }
-            this.name = name;
-            this.PROPERTIES = {
-                ActionManager: "actionManagers",
-                AnimationGroup: "animationGroups",
-                Animation: "animations",
-                Camera: "cameras",
-                EffectLayer: "effectLayers",
-                Geometry: "geometries",
-                Layer: "layers",
-                LensFlareSystem: "lensFlareSystems",
-                Light: "lights",
-                ShadowLight: "lights",
-                Material: "materials",
-                Mesh: "meshes",
-                MorphTargetManager: "morphTargetManagers",
-                MultiMaterial: "multiMaterials",
-                ParticleSystem: "particleSystems",
-                ProceduralTexture: "proceduralTextures",
-                ReflectionProbe: "reflectionProbes",
-                Skeleton: "skeletons",
-                Sound: "sounds",
-                Texture: "textures"
-            };
-            if (elements.length == 1 && is.AssetContainer(elements[0])) {
-                this.assetContainer = elements[0];
+            var _this = _super.call(this, global.scene) || this;
+            _this.length = 0;
+            for (var i = 0; i < elements.length; i++) {
+                _this.add(elements[i]);
             }
-            else {
-                this.assetContainer = new BABYLON.AssetContainer(global.scene);
-                for (var i = 0; i < elements.length; i++) {
-                    this.add(elements[i]);
-                }
-            }
+            return _this;
         }
-        Library.prototype.add = function (element) {
-            if (is.Array(element)) {
-                var self = this;
-                element.forEach(function (_element) {
-                    self.add(_element);
-                });
+        Elements.prototype.add = function (element) {
+            if (is.AssetContainer(element) || is.Scene(element)) {
+                for (var property in PROPERTIES) {
+                    var member = element[PROPERTIES[property]];
+                    if (member) {
+                        this.add(member);
+                    }
+                }
                 return;
             }
-            for (var property in this.PROPERTIES) {
+            if (is.Array(element)) {
+                for (var i = 0; i < element.length; i++) {
+                    this.add(element[i]);
+                }
+                return;
+            }
+            for (var property in PROPERTIES) {
                 if (element instanceof BABYLON[property]) {
-                    this.assetContainer[this.PROPERTIES[property]].push(element);
+                    this[this.length++] = element;
+                    this[PROPERTIES[property]].push(element);
                     return;
                 }
             }
-            console.error("_r.library accepts only mesh, camera, light and material", element);
-        };
-        Library.prototype.show = function () {
-            this.assetContainer.addAllToScene();
-        };
-        Library.prototype.hide = function () {
-            this.assetContainer.removeAllFromScene();
+            console.error("_r.elements unrecognized item : ", element);
         };
         // TODO
-        Library.prototype.select = function (selector) {
+        Elements.prototype.remove = function (element) {
+            /**
+            let index = this.toArray().indexOf(element);
+            if(index) {
+
+            }
+            for (let property in PROPERTIES) {
+                if(element instanceof BABYLON[property]) {
+                    this[this.length++] = element;
+                    super[PROPERTIES[property]].push(element);
+                    return;
+                }
+            }**/
         };
         // TODO
-        Library.prototype.dispose = function () {
+        Elements.prototype.contains = function (element) {
         };
-        return Library;
-    }());
+        //TODO
+        Elements.prototype.fadeIn = function () {
+        };
+        // TODO
+        Elements.prototype.fadeOut = function () {
+        };
+        /**
+         * Attach an event handler function for one or more events to the selected elements.
+         * @param events One or more space-separated event types
+         * @param handler A handler function previously attached for the event(s)
+         * @returns {Elements}
+         */
+        Elements.prototype.on = function (events, handler) {
+            // TODO
+        };
+        /**
+         * Attach a handler to an event for the elements. The handler is executed at most once per element per event type.
+         * @param events One or more space-separated event types
+         * @param handler A handler function previously attached for the event(s)
+         * @returns {Elements}
+         */
+        Elements.prototype.one = function (events, handler) {
+            // TODO
+        };
+        /**
+         * Remove an event handler that were attached with .on()
+         * @param events
+         * @param handler A handler function previously attached for the event(s) or null to remove all handler attached for the event(s)
+         * @returns {Elements}
+         */
+        Elements.prototype.off = function (events, handler) {
+            // TODO
+        };
+        /**
+         * Execute all handlers and behaviors attached to the matched elements for the given event type.
+         * @param events One or more space-separated event types
+         * @param extraParameters Additional parameters to pass along to the event handler.
+         * @returns {Elements}
+         */
+        Elements.prototype.trigger = function (events, extraParameters) {
+            // TODO
+        };
+        Elements.prototype.show = function () {
+            _super.prototype.addAllToScene.call(this);
+        };
+        Elements.prototype.hide = function () {
+            _super.prototype.removeAllFromScene.call(this);
+        };
+        Elements.prototype.dispose = function () {
+            _super.prototype.dispose.call(this);
+        };
+        /**
+         * Iterate over elements and executing a function for each element.
+         * @param callback A function to execute for each element.
+         * @returns {_r.Elements}
+         */
+        Elements.prototype.each = function (callback) {
+            for (var i = 0; i < this.length; i++) {
+                /** We can break the .each() loop at a particular iteration by making the callback function return false. Returning non-false is the same as a continue statement in a for loop; it will skip immediately to the next iteration. **/
+                if (callback.call(this[i], this[i], i) == false) {
+                    return;
+                }
+            }
+            return this;
+        };
+        /**
+         * Pass each element in the current matched set through a function, producing a new jQuery object containing the return values.
+         * @param func A function object that will be invoked for each element in the current set.
+         * @returns {_r.Elements}
+         */
+        Elements.prototype.map = function (func) {
+            var result = new Elements();
+            var length = 0;
+            this.each(function (element) {
+                result[length++] = func(element);
+            });
+            result.length = length;
+            return result;
+        };
+        /**
+         * Reduce the set of matched elements to those that match the selector or pass the function’s test.
+         * @param func A function used as a test for each element in the set. this is the current element.
+         * @returns {_r.Elements}
+         */
+        Elements.prototype.filter = function (func) {
+            var result = new Elements();
+            this.each(function (element) {
+                if (func(element)) {
+                    result.add(element);
+                }
+            });
+            return result;
+        };
+        /**
+         * Retrieve all the elements contained in the set, as an array.
+         * @returns {Array}
+         */
+        Elements.prototype.toArray = function () {
+            var result = [];
+            for (var i = 0; i < this.length; i++) {
+                result.push(this[i]);
+            }
+            return result;
+        };
+        /**
+         * Get the value of an attribute for the first element in the set of matched elements or set one or more attributes for every matched element.
+         * @param attribute The name of the attribute to get.
+         * @param value Optional value to set for the attribute.
+         * @returns {any}
+         */
+        Elements.prototype.attr = function (attribute, value) {
+            if (value != null) {
+                this.each(function (item) {
+                    item[attribute] = value;
+                });
+                return this;
+            }
+            else {
+                return this[0][attribute];
+            }
+        };
+        /**
+         * Reduce the set of matched elements to the first in the set.
+         * @returns {any}
+         */
+        Elements.prototype.first = function () {
+            return this[0];
+        };
+        /**
+         * @param property
+         * @returns {_r.Elements}
+         */
+        Elements.prototype.log = function (property) {
+            this.each(function (item) {
+                if (property) {
+                    console.log(item[property]);
+                }
+                else {
+                    console.log(item);
+                }
+            });
+            return this;
+        };
+        // TODO
+        Elements.prototype.select = function (selector) {
+        };
+        // TODO
+        Elements.prototype.patch = function (item) {
+        };
+        return Elements;
+    }(BABYLON.AssetContainer));
+
     var libraries = [];
     function createLibrary(name) {
         var elements = [];
@@ -2626,7 +2818,7 @@ var _r = (function (BABYLON) {
             return;
         }
         else {
-            libraries[name] = new (Library.bind.apply(Library, [void 0, name].concat(elements)))();
+            libraries[name] = new Elements(elements);
         }
     }
     function library(name) {
@@ -2652,18 +2844,18 @@ var _r = (function (BABYLON) {
         set engine(value) {
             global.engine = value;
         },
-        launch: launch,
-        ready: ready,
-        start: start,
-        pause: pause,
-        import: importScene,
-        download: downloadScene,
         get TRACE() {
             return global.TRACE;
         },
         set TRACE(value) {
             global.TRACE = value;
         },
+        launch: launch,
+        ready: ready,
+        start: start,
+        pause: pause,
+        import: importScene,
+        download: downloadScene,
         createLibrary: createLibrary,
         library: library
     };
