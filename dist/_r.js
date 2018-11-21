@@ -2623,6 +2623,9 @@ var _r = (function (BABYLON) {
     }
     function trigger(element, event, extraParameters) {
         var events = data(element, '_r.events');
+        if (!events) {
+            return;
+        }
         var handlers = events[event];
         if (is.Array(handlers)) {
             handlers.forEach(function (callback) {
