@@ -22,6 +22,9 @@ export function one(element : any, event : string, handler : (...args : any[]) =
 
 export function trigger(element : any, event : string, extraParameters? : any) {
     let events = data(element, '_r.events');
+    if(!events) {
+        return;
+    }
     let handlers = events[event];
     if(is.Array(handlers)) {
         handlers.forEach(function(callback) {
