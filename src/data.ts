@@ -10,13 +10,6 @@ let expando = '_r' + Date.now();
  * @param value
  */
 export function data(element : any, key?: string, value?: any) {
-    if(is.Array(element)) {
-        element.forEach(function(_element) {
-            data(_element, key, value);
-        });
-        return;
-    }
-
     if (!element.hasOwnProperty(expando)) {
         element[expando] = cache.length;
         cache[element[expando]] = {};

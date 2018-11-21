@@ -2577,6 +2577,84 @@ var _r = (function (BABYLON) {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     }
 
+    var cache = [];
+    var expando = '_r' + Date.now();
+    /**
+     * Attach any data to any js object (inspired by {@link https://api.jquery.com/data/ |jQuery.data()}).
+     * @param element
+     * @param key
+     * @param value
+     */
+    function data(element, key, value) {
+        if (!element.hasOwnProperty(expando)) {
+            element[expando] = cache.length;
+            cache[element[expando]] = {};
+        }
+        if (key != null) {
+            if (value != null) {
+                cache[element[expando]][key] = value;
+            }
+            else {
+                return cache[element[expando]][key];
+            }
+        }
+        else {
+            return cache[element[expando]];
+        }
+    }
+
+    function on(element, event, handler, repeat) {
+        if (repeat === void 0) { repeat = true; }
+        if (!data(element, '_r.events')) {
+            data(element, '_r.events', {});
+        }
+        var events = data(element, '_r.events');
+        if (!events[event]) {
+            events[event] = [];
+        }
+        events[event].push({
+            handler: handler,
+            repeat: repeat
+        });
+        data(element, '_r.events', events);
+    }
+    function one(element, event, handler) {
+        on(element, event, handler, false);
+    }
+    function trigger(element, event, extraParameters) {
+        var events = data(element, '_r.events');
+        var handlers = events[event];
+        if (is.Array(handlers)) {
+            handlers.forEach(function (callback) {
+                try {
+                    callback.handler.call(element, extraParameters);
+                    if (!callback.repeat) {
+                        off(element, event, callback.handler);
+                    }
+                }
+                catch (ex) {
+                    console.error("_r.trigger exception", ex);
+                }
+            });
+        }
+    }
+    function off(element, event, handler) {
+        var events = data(element, '_r.events');
+        if (events[event]) {
+            if (handler) {
+                events[event] = events[event].filter(function (_handler) {
+                    if (_handler.handler.toString() == handler.toString()) {
+                        events[event].splice(events[event].indexOf(_handler), 1);
+                    }
+                });
+            }
+            else {
+                events[event] = [];
+            }
+        }
+        data(element, '_r.events', events);
+    }
+
     var PROPERTIES = {
         ActionManager: "actionManagers",
         AnimationGroup: "animationGroups",
@@ -2668,7 +2746,9 @@ var _r = (function (BABYLON) {
          * @returns {Elements}
          */
         Elements.prototype.on = function (events, handler) {
-            // TODO
+            this.each(function (item) {
+                on(item, events, handler);
+            });
         };
         /**
          * Attach a handler to an event for the elements. The handler is executed at most once per element per event type.
@@ -2677,7 +2757,9 @@ var _r = (function (BABYLON) {
          * @returns {Elements}
          */
         Elements.prototype.one = function (events, handler) {
-            // TODO
+            this.each(function (item) {
+                one(item, events, handler);
+            });
         };
         /**
          * Remove an event handler that were attached with .on()
@@ -2686,7 +2768,9 @@ var _r = (function (BABYLON) {
          * @returns {Elements}
          */
         Elements.prototype.off = function (events, handler) {
-            // TODO
+            this.each(function (item) {
+                off(item, events, handler);
+            });
         };
         /**
          * Execute all handlers and behaviors attached to the matched elements for the given event type.
@@ -2695,7 +2779,19 @@ var _r = (function (BABYLON) {
          * @returns {Elements}
          */
         Elements.prototype.trigger = function (events, extraParameters) {
-            // TODO
+            this.each(function (item) {
+                trigger(item, events, extraParameters);
+            });
+        };
+        Elements.prototype.data = function (key, value) {
+            if (key != null && value != null) {
+                for (var i = 0; i < this.length; i++) {
+                    data(this[i], key, value);
+                }
+            }
+            else {
+                return data(this[0], key, value);
+            }
         };
         Elements.prototype.show = function () {
             _super.prototype.addAllToScene.call(this);
@@ -2884,7 +2980,7 @@ var _r = (function (BABYLON) {
                                                 }
                                                 break;
                                             default:
-                                                console.warn('BABYLON.Runtime._r : unrecognized operator ' + attribute.operator);
+                                                console.error('BABYLON.Runtime._r : unrecognized operator ' + attribute.operator);
                                         }
                                     }
                                 }
@@ -2902,7 +2998,11 @@ var _r = (function (BABYLON) {
                 });
             });
         });
-        return new Elements(res);
+        var elements = new Elements(res);
+        if (elements.length == 0 && global.TRACE) {
+            console.warn('BABYLON.Runtime::no object(s) found for selector "' + params + '"');
+        }
+        return elements;
     }
 
     var libraries = [];
@@ -2956,8 +3056,18 @@ var _r = (function (BABYLON) {
         download: downloadScene,
         createLibrary: createLibrary,
         library: library,
-        select: function (selector) {
-            return find(selector, global.scene);
+        data: data,
+        on: on,
+        off: off,
+        one: one,
+        trigger: trigger,
+        select: function (arg) {
+            if (is.String(arg)) {
+                return find(arg, global.scene);
+            }
+            else {
+                return new Elements(arg);
+            }
         }
     };
 

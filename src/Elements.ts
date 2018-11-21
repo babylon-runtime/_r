@@ -1,6 +1,8 @@
 import {BABYLON} from "./BABYLON.js";
 import {global} from "./global.js";
 import {is} from "./is.js";
+import {on, one, off, trigger} from "./events.js";
+import {data} from "./data.js";
 
 const PROPERTIES = {
     ActionManager : "actionManagers",
@@ -98,7 +100,9 @@ export class Elements extends BABYLON.AssetContainer {
      * @returns {Elements}
      */
     on(events : string, handler : (args : any) => void) {
-        // TODO
+        this.each(function(item) {
+            on(item, events, handler);
+        });
     }
 
     /**
@@ -108,7 +112,10 @@ export class Elements extends BABYLON.AssetContainer {
      * @returns {Elements}
      */
     one(events : string, handler : (args : any) => void) {
-        // TODO
+        this.each(function(item) {
+            one(item, events, handler);
+        });
+
     }
 
     /**
@@ -118,7 +125,9 @@ export class Elements extends BABYLON.AssetContainer {
      * @returns {Elements}
      */
     off(events : string, handler? : (args : any) => void) {
-       // TODO
+        this.each(function(item) {
+            off(item, events, handler);
+        });
     }
 
     /**
@@ -128,7 +137,20 @@ export class Elements extends BABYLON.AssetContainer {
      * @returns {Elements}
      */
     trigger(events : string, extraParameters? : any) {
-       // TODO
+        this.each(function(item) {
+            trigger(item, events, extraParameters);
+        });
+    }
+
+    data(key? : string, value? : any) {
+        if(key != null && value != null) {
+            for(let i = 0; i < this.length; i++) {
+                data(this[i], key, value);
+            }
+        }
+        else {
+            return data(this[0], key, value);
+        }
     }
 
     show() {
@@ -336,7 +358,7 @@ export function find(params : String, container : BABYLON.Scene | Elements | BAB
                                             }
                                             break;
                                         default :
-                                            console.warn('BABYLON.Runtime._r : unrecognized operator ' + attribute.operator);
+                                            console.error('BABYLON.Runtime._r : unrecognized operator ' + attribute.operator);
                                     }
                                 }
                             }
@@ -355,5 +377,9 @@ export function find(params : String, container : BABYLON.Scene | Elements | BAB
             });
         });
     });
-    return new Elements(res);
+    let elements =  new Elements(res);
+    if(elements.length == 0 && global.TRACE) {
+        console.warn('BABYLON.Runtime::no object(s) found for selector "' + params + '"')
+    }
+    return elements;
 }

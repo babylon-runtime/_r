@@ -6,5 +6,5 @@ export function activateCamera(camera : string) {
         global.scene.activeCamera.detachControl();
     }
     global.scene.setActiveCameraByName(camera);
-    global.scene.activeCamera.attachControl(global.canvas, true);
+    global.scene.activeCamera.attachControl(global.canvas);
 }
