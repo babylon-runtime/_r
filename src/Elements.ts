@@ -3,6 +3,7 @@ import {global} from "./global.js";
 import {is} from "./is.js";
 import {on, one, off, trigger} from "./events.js";
 import {data} from "./data.js";
+import {onMesh, oneMesh, offMesh, meshTriggers} from "./meshTriggers.js";
 
 const PROPERTIES = {
     ActionManager : "actionManagers",
@@ -25,6 +26,8 @@ const PROPERTIES = {
     Sound: "sounds",
     Texture: "textures"
 };
+
+
 
 export class Elements extends BABYLON.AssetContainer {
     length : number;
@@ -101,7 +104,12 @@ export class Elements extends BABYLON.AssetContainer {
      */
     on(events : string, handler : (args : any) => void) {
         this.each(function(item) {
-            on(item, events, handler);
+            if(is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+                onMesh(item, events, handler);
+            }
+            else {
+                on(item, events, handler);
+            }
         });
     }
 
@@ -113,9 +121,13 @@ export class Elements extends BABYLON.AssetContainer {
      */
     one(events : string, handler : (args : any) => void) {
         this.each(function(item) {
-            one(item, events, handler);
+            if(is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+                oneMesh(item, events, handler);
+            }
+            else {
+                one(item, events, handler);
+            }
         });
-
     }
 
     /**
@@ -126,7 +138,12 @@ export class Elements extends BABYLON.AssetContainer {
      */
     off(events : string, handler? : (args : any) => void) {
         this.each(function(item) {
-            off(item, events, handler);
+            if(is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+                off(item, events, handler);
+            }
+            else {
+                off(item, events, handler);
+            }
         });
     }
 

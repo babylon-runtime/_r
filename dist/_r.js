@@ -162,6 +162,13 @@ var _r = (function (BABYLON) {
         Object.defineProperty(global, "canvas", {
             get: function () {
                 if (!_canvas) {
+                    if (BABYLON.Engine.LastCreatedEngine) {
+                        var canvas = BABYLON.Engine.LastCreatedEngine.getRenderingCanvas();
+                        if (canvas) {
+                            _canvas = canvas;
+                            return _canvas;
+                        }
+                    }
                     _canvas = document.createElement('canvas');
                     _canvas.setAttribute('touch-action', 'none');
                     _canvas.style.width = "100%";
@@ -184,7 +191,12 @@ var _r = (function (BABYLON) {
         Object.defineProperty(global, "engine", {
             get: function () {
                 if (!_engine) {
-                    _engine = new BABYLON.Engine(global.canvas, true);
+                    if (BABYLON.Engine.LastCreatedEngine) {
+                        _engine = BABYLON.Engine.LastCreatedEngine;
+                    }
+                    else {
+                        _engine = new BABYLON.Engine(global.canvas, true);
+                    }
                 }
                 return _engine;
             },
@@ -201,8 +213,8 @@ var _r = (function (BABYLON) {
         Object.defineProperty(global, "scene", {
             get: function () {
                 if (!_scene) {
-                    if (global.engine.LastCreatedScene) {
-                        _scene = global.engine.LastCreatedScene;
+                    if (BABYLON.Engine.LastCreatedScene) {
+                        _scene = BABYLON.Engine.LastCreatedScene;
                     }
                     else {
                         _scene = new BABYLON.Scene(global.engine);
@@ -249,6 +261,7 @@ var _r = (function (BABYLON) {
             global.scene.activeCamera.detachControl();
         }
         global.scene.setActiveCameraByName(camera);
+        //global.scene.cameraToUseForPointers = global.scene.activeCamera;
         global.scene.activeCamera.attachControl(global.canvas);
     }
 
@@ -2616,7 +2629,6 @@ var _r = (function (BABYLON) {
             handler: handler,
             repeat: repeat
         });
-        data(element, '_r.events', events);
     }
     function one(element, event, handler) {
         on(element, event, handler, false);
@@ -2655,7 +2667,53 @@ var _r = (function (BABYLON) {
                 events[event] = [];
             }
         }
-        data(element, '_r.events', events);
+    }
+
+    var meshTriggers = [
+        'NothingTrigger ',
+        'OnDoublePickTrigger',
+        'OnPickTrigger',
+        'OnLeftPickTrigger',
+        'OnRightPickTrigger',
+        'OnCenterPickTrigger',
+        'OnPickDownTrigger',
+        'OnPickUpTrigger',
+        'OnPickOutTrigger',
+        'OnLongPressTrigger',
+        'OnPointerOverTrigger',
+        'OnPointerOutTrigger',
+        'OnEveryFrameTrigger',
+        'OnIntersectionEnterTrigger',
+        'OnIntersectionExitTrigger',
+        'OnKeyDownTrigger',
+        'OnKeyUpTrigger'
+    ];
+    function onMesh(mesh, event, handler, repeat) {
+        if (repeat === void 0) { repeat = true; }
+        if (!mesh.actionManager) {
+            console.log("actionManager", mesh.getScene());
+            mesh.actionManager = new BABYLON.ActionManager(mesh.getScene());
+        }
+        var action = new BABYLON.ExecuteCodeAction(BABYLON.ActionManager[event], function (evt) {
+            trigger(mesh, event, evt);
+        });
+        mesh.actionManager.registerAction(action);
+        var events = data(mesh, "_r.events");
+        if (!events) {
+            data(mesh, "_r.events", []);
+            events = data(mesh, "_r.events");
+        }
+        if (!events[event]) {
+            events[event] = [];
+        }
+        events[event].push({
+            handler: handler,
+            repeat: repeat,
+            action: action
+        });
+    }
+    function oneMesh(mesh, event, handler) {
+        onMesh(mesh, event, handler, false);
     }
 
     var PROPERTIES = {
@@ -2750,7 +2808,12 @@ var _r = (function (BABYLON) {
          */
         Elements.prototype.on = function (events, handler) {
             this.each(function (item) {
-                on(item, events, handler);
+                if (is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+                    onMesh(item, events, handler);
+                }
+                else {
+                    on(item, events, handler);
+                }
             });
         };
         /**
@@ -2761,7 +2824,12 @@ var _r = (function (BABYLON) {
          */
         Elements.prototype.one = function (events, handler) {
             this.each(function (item) {
-                one(item, events, handler);
+                if (is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+                    oneMesh(item, events, handler);
+                }
+                else {
+                    one(item, events, handler);
+                }
             });
         };
         /**
@@ -2772,7 +2840,12 @@ var _r = (function (BABYLON) {
          */
         Elements.prototype.off = function (events, handler) {
             this.each(function (item) {
-                off(item, events, handler);
+                if (is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+                    off(item, events, handler);
+                }
+                else {
+                    off(item, events, handler);
+                }
             });
         };
         /**

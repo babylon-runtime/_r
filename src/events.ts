@@ -13,7 +13,6 @@ export function on(element : any, event : string, handler : (...args : any[]) =>
         handler : handler,
         repeat : repeat
     });
-    data(element, '_r.events', events);
 }
 
 export function one(element : any, event : string, handler : (...args : any[]) => void) {
@@ -55,5 +54,4 @@ export function off(element : any, event : string, handler? : (...args : any[]) 
             events[event] = [];
         }
     }
-    data(element, '_r.events', events);
 }

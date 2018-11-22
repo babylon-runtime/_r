@@ -6,6 +6,13 @@ let _scene, _engine, _canvas;
 export class global {
     static get canvas() {
         if(!_canvas) {
+            if(BABYLON.Engine.LastCreatedEngine) {
+               let canvas = BABYLON.Engine.LastCreatedEngine.getRenderingCanvas();
+               if(canvas) {
+                   _canvas = canvas;
+                   return _canvas;
+               }
+            }
             _canvas = document.createElement('canvas');
             _canvas.setAttribute('touch-action', 'none');
             _canvas.style.width = "100%";
@@ -25,7 +32,13 @@ export class global {
     }
     static get engine() {
         if(!_engine) {
-            _engine = new BABYLON.Engine(global.canvas, true);
+            if(BABYLON.Engine.LastCreatedEngine) {
+                _engine = BABYLON.Engine.LastCreatedEngine;
+            }
+            else {
+                _engine = new BABYLON.Engine(global.canvas, true);
+            }
+
         }
         return _engine;
     }
@@ -40,8 +53,8 @@ export class global {
 
     static get scene() {
         if(!_scene) {
-            if(global.engine.LastCreatedScene) {
-                _scene = global.engine.LastCreatedScene;
+            if(BABYLON.Engine.LastCreatedScene) {
+                _scene = BABYLON.Engine.LastCreatedScene;
             }
             else {
                 _scene = new BABYLON.Scene(global.engine);
