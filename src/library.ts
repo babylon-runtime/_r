@@ -1,7 +1,7 @@
 
 import {Elements} from "./Elements.js";
 
-var libraries = [];
+export var libraries = [];
 
 export function createLibrary(name : string, ...elements : Array<any> | any) {
     if(libraries[name]) {

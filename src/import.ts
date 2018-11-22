@@ -1,6 +1,7 @@
 import { is } from "./is.js";
 import { global } from "./global.js";
 import { BABYLON } from "./BABYLON.js";
+import {createLibrary} from "./library.js";
 import "../node_modules/q/q.js";
 export declare const Q;
 
@@ -111,6 +112,7 @@ export function load(...any) {
     let promise = BABYLON.SceneLoader.LoadAssetContainerAsync(rootUrl, sceneFileName, global.scene, function(e) {
         importPromise.triggerProgress(e);
     }).then(function(container) {
+        createLibrary(rootUrl + sceneFileName, container);
         BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.NO_LOGGING;
         console.groupEnd();
         return container;

@@ -280,6 +280,41 @@ export class Elements extends BABYLON.AssetContainer {
         });
     }
 
+    /**
+     * Insert elements in the set
+     * @param elements
+     * @returns {_r.Elements}
+     */
+    concat(...elements : any[]) : Elements {
+        var self = this;
+        elements.forEach(function(element) {
+            let base;
+            if(element instanceof Elements) {
+                base = element;
+            }
+            else {
+                if(is.String(element)) {
+                    base = new Elements(element);
+                }
+                else {
+                    if(is.Array(element)) {
+                        base = new Elements();
+                        element.forEach(function(item) {
+                            base[base.length++] = item;
+                        })
+                    }
+                    else {
+                        base = new Elements(element);
+                    }
+                }
+            }
+            base.each(function(item) {
+                self[self.length++] = item;
+            })
+        });
+        return this;
+    }
+
     select(selector : string) {
         return find(selector, this);
     }
@@ -394,9 +429,6 @@ export function find(params : String, container : BABYLON.Scene | Elements | BAB
             });
         });
     });
-    let elements =  new Elements(res);
-    if(elements.length == 0 && global.TRACE) {
-        console.warn('BABYLON.Runtime::no object(s) found for selector "' + params + '"')
-    }
-    return elements;
+
+    return new Elements(res);
 }

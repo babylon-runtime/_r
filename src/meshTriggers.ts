@@ -25,8 +25,7 @@ export const meshTriggers = [
 
 export function onMesh(mesh : BABYLON.Mesh, event : string,  handler : (args : any) => void, repeat = true) {
     if(!mesh.actionManager) {
-        console.log("actionManager", mesh.getScene())
-        mesh.actionManager = new BABYLON.ActionManager(mesh.getScene());
+        mesh.actionManager = new BABYLON.ActionManager(global.scene);
     }
     let action = new BABYLON.ExecuteCodeAction(BABYLON.ActionManager[event], function(evt){
         trigger(mesh, event, evt);

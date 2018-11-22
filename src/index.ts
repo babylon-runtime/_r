@@ -2,7 +2,7 @@ import { global } from "./global.js";
 import { is } from "./is.js";
 import { launch, ready, start, pause } from "./launch.js";
 import { importScene, downloadScene} from "./import.js";
-import { createLibrary, library} from "./library.js";
+import { createLibrary, library, libraries} from "./library.js";
 import { Elements, find } from "./Elements.js";
 import { data } from "./data.js"
 import { on, off, one, trigger } from "./events.js";
@@ -47,7 +47,17 @@ export default {
     trigger : trigger,
     select : function(arg) {
         if(is.String(arg)) {
-            return find(arg, global.scene);
+            let elements = find(arg, global.scene);
+            for(let lib in libraries) {
+                let selection = libraries[lib].select(arg);
+                selection.each(function(item) {
+                    elements.add(item);
+                });
+            }
+            if(elements.length == 0) {
+                console.warn('BABYLON.Runtime::no object(s) found for selector "' + arg + '"')
+            }
+            return elements;
         }
         else {
             return new Elements(arg);
