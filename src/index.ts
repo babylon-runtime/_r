@@ -48,9 +48,11 @@ export default {
     select : function(arg) {
         if(is.String(arg)) {
             let elements = find(arg, global.scene);
+            // elements could be in a library not attached to the scene
             for(let lib in libraries) {
                 let selection = libraries[lib].select(arg);
                 selection.each(function(item) {
+                    // item could be in multiple libraries
                     if(!elements.contains(item)) {
                         elements.add(item);
                     }
