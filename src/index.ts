@@ -51,7 +51,9 @@ export default {
             for(let lib in libraries) {
                 let selection = libraries[lib].select(arg);
                 selection.each(function(item) {
-                    elements.add(item);
+                    if(!elements.contains(item)) {
+                        elements.add(item);
+                    }
                 });
             }
             if(elements.length == 0) {

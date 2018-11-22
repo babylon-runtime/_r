@@ -81,9 +81,8 @@ export class Elements extends BABYLON.AssetContainer {
         }**/
     }
 
-    // TODO
     contains(element : any) {
-
+        return this.toArray().indexOf(element) !== -1;
     }
 
     //TODO

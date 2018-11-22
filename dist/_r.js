@@ -480,8 +480,8 @@ var _r = (function (BABYLON) {
                 }
             }**/
         };
-        // TODO
         Elements.prototype.contains = function (element) {
+            return this.toArray().indexOf(element) !== -1;
         };
         //TODO
         Elements.prototype.fadeIn = function () {
@@ -811,11 +811,17 @@ var _r = (function (BABYLON) {
             elements[_i - 1] = arguments[_i];
         }
         if (libraries[name]) {
-            console.error("Error in _r.createLibrary : " + name + " already exists");
+            console.error("[_r] Error in _r.createLibrary : " + name + " already exists");
             return;
         }
         else {
-            libraries[name] = new Elements(elements);
+            var _elements = new Elements(elements);
+            libraries[name] = _elements;
+            if (global.TRACE) {
+                console.groupCollapsed("[_r] - create library " + name);
+                _elements.log();
+                console.groupEnd();
+            }
         }
     }
     function library(name) {
@@ -2996,7 +3002,7 @@ var _r = (function (BABYLON) {
             }
         }
         if (global.TRACE) {
-            console.group("_r.import(" + rootUrl + ", " + sceneFileName + ")");
+            console.groupCollapsed("[_r] - loadAssets & create library " + sceneFileName + " from " + rootUrl);
             BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.DETAILED_LOGGING;
         }
         var promise = BABYLON.SceneLoader.LoadAssetContainerAsync(rootUrl, sceneFileName, global.scene, function (e) {
@@ -3163,7 +3169,9 @@ var _r = (function (BABYLON) {
                 for (var lib in libraries) {
                     var selection = libraries[lib].select(arg);
                     selection.each(function (item) {
-                        elements_1.add(item);
+                        if (!elements_1.contains(item)) {
+                            elements_1.add(item);
+                        }
                     });
                 }
                 if (elements_1.length == 0) {

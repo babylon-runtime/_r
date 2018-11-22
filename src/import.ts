@@ -106,7 +106,7 @@ export function load(...any) {
 
     }
     if(global.TRACE) {
-        console.group("_r.import(" + rootUrl + ", " + sceneFileName + ")");
+        console.groupCollapsed("[_r] - loadAssets & create library " + sceneFileName + " from " + rootUrl);
         BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.DETAILED_LOGGING;
     }
     let promise = BABYLON.SceneLoader.LoadAssetContainerAsync(rootUrl, sceneFileName, global.scene, function(e) {

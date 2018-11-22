@@ -43,48 +43,29 @@
 
                 // Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
                 var ground = BABYLON.Mesh.CreateGround("ground1", 6, 6, 2, scene);
-
+                scene.activeCamera = camera;
+                scene.cameraToUseForPointers = camera;
                 return scene;
             }
-    }).ready(function(_scene1) {
-        _r.createLibrary("lib1", _scene1.meshes, _scene1.lights);
-        _r.import("https://models.babylonjs.com/CornellBox/cornellBox.babylon")
-            .ready(function(assetContainer) {
-                console.log("createLibrary", assetContainer);
-               _r.createLibrary("lib2", assetContainer);
-
-               for(var i = 0; i < _r.library("lib2").length; i++) {
-                    console.log(i, _r.library("lib2")[i].name);
-               }
-
-               _r.select("bloc.000").one("customEvent", function(data) {
-                   console.log("customEvent callback", data);
-               });
-
-               _r.select("bloc.000").trigger("customEvent", {
-                   hello : "world"
-               });
-
-                _r.select("bloc.000").trigger("customEvent", {
-                    hello : "blah"
-                });
-
-                function handler() {
-                    console.log("handler from ", this.name)
-                }
-                _r.select("*:mesh").on("event1", handler);
-
-                _r.select("*:mesh").trigger("event1");
-
-                _r.select("*:mesh").off("event1", handler);
-
-                _r.select("*:mesh").trigger("event1");
-            });
     });
 
-    // open console :
-    // _r.library("lib1").hide();
-    // _r.library("lib2"].hide();
+    _r.ready(function() {
+        _r.createLibrary("lib1", _r.scene.meshes, _r.scene.lights);
+        _r.download("https://models.babylonjs.com/CornellBox/cornellBox.babylon")
+            .ready(function(assets) {
+                console.log("this", this);
+                _r.select("suzanne.000").on("OnPickTrigger", function(e) {
+                    console.log("OnPickTrigger " + this.name);
+                });
+                _r.createLibrary("lib2", assets);
+            });
+        _r.select("sphere1").on("OnPickTrigger", function(e) {
+            console.log("OnPickTrigger " + this.name);
+        });
+
+
+    })
+
 </script>
 </body>
 </html>
