@@ -1,9 +1,8 @@
 import { is } from "./is.js";
 import { global } from "./global.js";
 import { activateCamera } from "./activateCamera.js";
-import {BABYLON} from "./BABYLON.js";
 import {importScene, ImportPromise} from "./import.js";
-//import { patch } from "./patch.js";
+import { patch } from "./patch/patch.js";
 import "../node_modules/q/q.js";
 declare var Q;
 
@@ -106,20 +105,40 @@ function run(obj : IRuntimeLoading) {
         activateCamera(global.scene.cameras[0].name);
     }
 
-    if(obj.beforeFirstRender && is.Function(obj.beforeFirstRender)) {
-        obj.beforeFirstRender();
-    }
     window.addEventListener('resize', function () {
         global.engine.resize();
     });
 
-    start();
+    if(obj.patch) {
+        patch(obj.patch).then(function() {
+            if(obj.beforeFirstRender && is.Function(obj.beforeFirstRender)) {
+                obj.beforeFirstRender();
+            }
 
-    isReady = true;
-    callbacks.forEach(function(callback) {
-        callback.call(global.scene);
-    });
-    callbacks.length = 0;
+            start();
+
+            isReady = true;
+            callbacks.forEach(function(callback) {
+                callback.call(global.scene);
+            });
+            callbacks.length = 0;
+        })
+    }
+    else {
+        if(obj.beforeFirstRender && is.Function(obj.beforeFirstRender)) {
+            obj.beforeFirstRender();
+        }
+
+        start();
+
+        isReady = true;
+        callbacks.forEach(function(callback) {
+            callback.call(global.scene);
+        });
+        callbacks.length = 0;
+    }
+
+
 }
 
 function loop() {

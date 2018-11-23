@@ -2,8 +2,7 @@ import { is } from "./is.js";
 import { global } from "./global.js";
 import { BABYLON } from "./BABYLON.js";
 import {createLibrary} from "./library.js";
-import "../node_modules/q/q.js";
-export declare const Q;
+
 
 // Error handling in promise can be tricky, for instance errors in then must be catch, we don't want that for our users, so we provide a ready function.
 // + We need progress to track async operation.

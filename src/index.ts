@@ -3,7 +3,7 @@ import { is } from "./is.js";
 import { launch, ready, start, pause } from "./launch.js";
 import { importScene, downloadScene} from "./import.js";
 import { createLibrary, library, libraries} from "./library.js";
-import { Elements, find } from "./Elements.js";
+import { select } from "./select.js";
 import { data } from "./data.js"
 import { on, off, one, trigger } from "./events.js";
 
@@ -45,26 +45,5 @@ export default {
     off : off,
     one : one,
     trigger : trigger,
-    select : function(arg) {
-        if(is.String(arg)) {
-            let elements = find(arg, global.scene);
-            // elements could be in a library not attached to the scene
-            for(let lib in libraries) {
-                let selection = libraries[lib].select(arg);
-                selection.each(function(item) {
-                    // item could be in multiple libraries
-                    if(!elements.contains(item)) {
-                        elements.add(item);
-                    }
-                });
-            }
-            if(elements.length == 0) {
-                console.warn('BABYLON.Runtime::no object(s) found for selector "' + arg + '"')
-            }
-            return elements;
-        }
-        else {
-            return new Elements(arg);
-        }
-    }
+    select : select
 }

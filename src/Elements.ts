@@ -178,6 +178,7 @@ export class Elements extends BABYLON.AssetContainer {
     }
 
     dispose() {
+        // TODO on doit supprimer les références ici aussi...
         super.dispose();
     }
 
@@ -431,3 +432,4 @@ export function find(params : String, container : BABYLON.Scene | Elements | BAB
 
     return new Elements(res);
 }
+

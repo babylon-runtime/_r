@@ -241,16 +241,6 @@ var _r = (function (BABYLON) {
         return global;
     }());
 
-    function activateCamera(camera) {
-        console.log("activateCamera " + camera);
-        if (global.scene.activeCamera) {
-            global.scene.activeCamera.detachControl();
-        }
-        global.scene.setActiveCameraByName(camera);
-        //global.scene.cameraToUseForPointers = global.scene.activeCamera;
-        global.scene.activeCamera.attachControl(global.canvas);
-    }
-
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation. All rights reserved.
     Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -565,6 +555,7 @@ var _r = (function (BABYLON) {
             _super.prototype.removeAllFromScene.call(this);
         };
         Elements.prototype.dispose = function () {
+            // TODO on doit supprimer les références ici aussi...
             _super.prototype.dispose.call(this);
         };
         /**
@@ -804,6 +795,19 @@ var _r = (function (BABYLON) {
         return new Elements(res);
     }
 
+    function activateCamera(camera) {
+        if (global.scene.activeCamera) {
+            global.scene.activeCamera.detachControl();
+        }
+        global.scene.setActiveCameraByName(camera);
+        global.scene.activeCamera.attachControl(global.canvas);
+        if (global.TRACE) {
+            console.groupCollapsed("[_r] - activate camera " + global.scene.activeCamera.name);
+            find(camera, global.scene).log();
+            console.groupEnd();
+        }
+    }
+
     var libraries = [];
     function createLibrary(name) {
         var elements = [];
@@ -826,6 +830,149 @@ var _r = (function (BABYLON) {
     }
     function library(name) {
         return libraries[name];
+    }
+
+    // Error handling in promise can be tricky, for instance errors in then must be catch, we don't want that for our users, so we provide a ready function.
+    // + We need progress to track async operation.
+    var ImportPromise = /** @class */ (function () {
+        function ImportPromise(promise) {
+            this.promise = promise;
+            this._progressCallbacks = [];
+            this._readyCallbacks = [];
+            this._errorCallbacks = [];
+            this._isReady = false;
+            this._error = false;
+            var self = this;
+            if (promise.then) {
+                promise.then(function (container) {
+                    self._isReady = true;
+                    self._readyCallbacks.forEach(function (callback) {
+                        callback(container);
+                    });
+                });
+                promise.catch(function (ex) {
+                    self._error = true;
+                    self._exception = ex;
+                    self._errorCallbacks.forEach(function (callback) {
+                        callback(ex);
+                    });
+                });
+            }
+            else {
+                this._isReady = true;
+                this._result = promise;
+            }
+        }
+        ImportPromise.prototype.triggerProgress = function (progress) {
+            this._progressCallbacks.forEach(function (callback) {
+                callback(progress);
+            });
+        };
+        ImportPromise.prototype.progress = function (callback) {
+            this._progressCallbacks.push(callback);
+            return this;
+        };
+        ImportPromise.prototype.ready = function (callback) {
+            if (this._isReady) {
+                callback(this._result);
+            }
+            else {
+                this._readyCallbacks.push(callback);
+            }
+            return this;
+        };
+        ImportPromise.prototype.error = function (callback) {
+            if (!this._isReady) {
+                this._errorCallbacks.push(callback);
+            }
+            else {
+                if (this._error) {
+                    callback(this._exception);
+                }
+            }
+            return this;
+        };
+        return ImportPromise;
+    }());
+    function importScene() {
+        var any = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            any[_i] = arguments[_i];
+        }
+        return load.apply(void 0, any).ready(function (assetContainer) {
+            assetContainer.addAllToScene();
+            return assetContainer.scene;
+        });
+    }
+    function downloadScene() {
+        var any = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            any[_i] = arguments[_i];
+        }
+        return load.apply(void 0, any);
+    }
+    function load() {
+        var any = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            any[_i] = arguments[_i];
+        }
+        var rootUrl, sceneFileName;
+        if (any.length === 1) {
+            if (is.String(any[0])) {
+                // argument is a filename and assets are in the same folder
+                var url = any[0];
+                sceneFileName = url.split('/').pop();
+                rootUrl = url.replace(sceneFileName, "");
+            }
+            else {
+                // argument is an object
+                rootUrl = any["assets"];
+                sceneFileName = any["scene"];
+            }
+        }
+        if (global.TRACE) {
+            console.groupCollapsed("[_r] - loadAssets & create library " + sceneFileName + " from " + rootUrl);
+            BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.DETAILED_LOGGING;
+        }
+        var promise = BABYLON.SceneLoader.LoadAssetContainerAsync(rootUrl, sceneFileName, global.scene, function (e) {
+            importPromise.triggerProgress(e);
+        }).then(function (container) {
+            createLibrary(rootUrl + sceneFileName, container);
+            BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.NO_LOGGING;
+            console.groupEnd();
+            return container;
+        });
+        var importPromise = new ImportPromise(promise);
+        return importPromise;
+    }
+
+    function select(arg) {
+        if (is.String(arg)) {
+            if (arg.toLowerCase() === "scene") {
+                var elements_1 = new Elements();
+                elements_1[0] = global.scene;
+                elements_1.length = 1;
+                return elements_1;
+            }
+            var elements_2 = find(arg, global.scene);
+            // elements could be in a library not attached to the scene
+            for (var lib in libraries) {
+                var selection = libraries[lib].select(arg);
+                selection.each(function (item) {
+                    // item could be in multiple libraries
+                    if (!elements_2.contains(item)) {
+                        elements_2.add(item);
+                    }
+                });
+            }
+            if (elements_2.length == 0) {
+                console.warn('BABYLON.Runtime::no object(s) found for selector "' + arg + '"');
+            }
+            return elements_2;
+        }
+        else {
+            return new Elements(arg);
+        }
     }
 
     // vim:ts=4:sts=4:sw=4:
@@ -2903,118 +3050,55 @@ var _r = (function (BABYLON) {
 
     });
 
-    // Error handling in promise can be tricky, for instance errors in then must be catch, we don't want that for our users, so we provide a ready function.
-    // + We need progress to track async operation.
-    var ImportPromise = /** @class */ (function () {
-        function ImportPromise(promise) {
-            this.promise = promise;
-            this._progressCallbacks = [];
-            this._readyCallbacks = [];
-            this._errorCallbacks = [];
-            this._isReady = false;
-            this._error = false;
-            var self = this;
-            if (promise.then) {
-                promise.then(function (container) {
-                    self._isReady = true;
-                    self._readyCallbacks.forEach(function (callback) {
-                        callback(container);
-                    });
-                });
-                promise.catch(function (ex) {
-                    self._error = true;
-                    self._exception = ex;
-                    self._errorCallbacks.forEach(function (callback) {
-                        callback(ex);
-                    });
-                });
-            }
-            else {
-                this._isReady = true;
-                this._result = promise;
-            }
+    function patch() {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
         }
-        ImportPromise.prototype.triggerProgress = function (progress) {
-            this._progressCallbacks.forEach(function (callback) {
-                callback(progress);
+        var promises = [];
+        if (args.length === 1) {
+            args[0].forEach(function (item) {
+                var selector = Object.getOwnPropertyNames(item)[0];
+                select(selector).each(function (element) {
+                    promises.push(applyPatch(element, item[selector]));
+                });
             });
-        };
-        ImportPromise.prototype.progress = function (callback) {
-            this._progressCallbacks.push(callback);
-            return this;
-        };
-        ImportPromise.prototype.ready = function (callback) {
-            if (this._isReady) {
-                callback(this._result);
-            }
-            else {
-                this._readyCallbacks.push(callback);
-            }
-            return this;
-        };
-        ImportPromise.prototype.error = function (callback) {
-            if (!this._isReady) {
-                this._errorCallbacks.push(callback);
-            }
-            else {
-                if (this._error) {
-                    callback(this._exception);
+        }
+        else {
+            console.error("not implemented");
+        }
+        return promises.reduce(Q.when, Q());
+    }
+    function applyPatch(element, patch) {
+        var properties = Object.getOwnPropertyNames(patch);
+        var promises = [];
+        properties.forEach(function (property) {
+            promises.push(resolveProperty(element, property, patch));
+        });
+        return promises.reduce(Q.when, Q());
+    }
+    function resolveProperty(element, property, source) {
+        if (is.Primitive(source[property])) {
+            element[property] = source[property];
+            return Q();
+        }
+        else {
+            if (is.Function(source[property])) {
+                if (is.Function(element[property])) {
+                    element[property] = source[property];
+                    return Q();
+                }
+                else {
+                    element[property] = source[property].call(element);
                 }
             }
-            return this;
-        };
-        return ImportPromise;
-    }());
-    function importScene() {
-        var any = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            any[_i] = arguments[_i];
-        }
-        return load.apply(void 0, any).ready(function (assetContainer) {
-            assetContainer.addAllToScene();
-            return assetContainer.scene;
-        });
-    }
-    function downloadScene() {
-        var any = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            any[_i] = arguments[_i];
-        }
-        return load.apply(void 0, any);
-    }
-    function load() {
-        var any = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            any[_i] = arguments[_i];
-        }
-        var rootUrl, sceneFileName;
-        if (any.length === 1) {
-            if (is.String(any[0])) {
-                // argument is a filename and assets are in the same folder
-                var url = any[0];
-                sceneFileName = url.split('/').pop();
-                rootUrl = url.replace(sceneFileName, "");
-            }
             else {
-                // argument is an object
-                rootUrl = any["assets"];
-                sceneFileName = any["scene"];
+                if (!element[property]) {
+                    element[property] = {};
+                }
+                return applyPatch(element[property], source[property]);
             }
         }
-        if (global.TRACE) {
-            console.groupCollapsed("[_r] - loadAssets & create library " + sceneFileName + " from " + rootUrl);
-            BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.DETAILED_LOGGING;
-        }
-        var promise = BABYLON.SceneLoader.LoadAssetContainerAsync(rootUrl, sceneFileName, global.scene, function (e) {
-            importPromise.triggerProgress(e);
-        }).then(function (container) {
-            createLibrary(rootUrl + sceneFileName, container);
-            BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.NO_LOGGING;
-            console.groupEnd();
-            return container;
-        });
-        var importPromise = new ImportPromise(promise);
-        return importPromise;
     }
 
     var isReady = true;
@@ -3094,18 +3178,33 @@ var _r = (function (BABYLON) {
         if (!global.scene.activeCamera && global.scene.cameras.length > 0) {
             activateCamera(global.scene.cameras[0].name);
         }
-        if (obj.beforeFirstRender && is.Function(obj.beforeFirstRender)) {
-            obj.beforeFirstRender();
-        }
         window.addEventListener('resize', function () {
             global.engine.resize();
         });
-        start();
-        isReady = true;
-        callbacks.forEach(function (callback) {
-            callback.call(global.scene);
-        });
-        callbacks.length = 0;
+        if (obj.patch) {
+            patch(obj.patch).then(function () {
+                if (obj.beforeFirstRender && is.Function(obj.beforeFirstRender)) {
+                    obj.beforeFirstRender();
+                }
+                start();
+                isReady = true;
+                callbacks.forEach(function (callback) {
+                    callback.call(global.scene);
+                });
+                callbacks.length = 0;
+            });
+        }
+        else {
+            if (obj.beforeFirstRender && is.Function(obj.beforeFirstRender)) {
+                obj.beforeFirstRender();
+            }
+            start();
+            isReady = true;
+            callbacks.forEach(function (callback) {
+                callback.call(global.scene);
+            });
+            callbacks.length = 0;
+        }
     }
     function loop() {
         global.scene.render();
@@ -3163,26 +3262,7 @@ var _r = (function (BABYLON) {
         off: off,
         one: one,
         trigger: trigger,
-        select: function (arg) {
-            if (is.String(arg)) {
-                var elements_1 = find(arg, global.scene);
-                for (var lib in libraries) {
-                    var selection = libraries[lib].select(arg);
-                    selection.each(function (item) {
-                        if (!elements_1.contains(item)) {
-                            elements_1.add(item);
-                        }
-                    });
-                }
-                if (elements_1.length == 0) {
-                    console.warn('BABYLON.Runtime::no object(s) found for selector "' + arg + '"');
-                }
-                return elements_1;
-            }
-            else {
-                return new Elements(arg);
-            }
-        }
+        select: select
     };
 
     return index;

@@ -1,5 +1,6 @@
 import {is} from "./is.js";
 import {BABYLON} from "./BABYLON.js";
+import {applyPatch} from "./patch/patch";
 
 let _scene, _engine, _canvas;
 
@@ -76,7 +77,20 @@ export class global {
         }
     }
 
-    static TRACE = false
+    static TRACE = false;
+
+    /**
+    static patch(_patch : any[]) {
+        let _this = this;
+        let promises = [];
+        _patch.forEach(function(item) {
+            let selector = Object.getOwnPropertyNames(item)[0];
+            _this.select(selector).each(function(element) {
+                promises.push(applyPatch(element, item[selector]));
+            });
+        });
+        return promises.reduce(Q.when, Q());
+    }**/
 }
 
 
