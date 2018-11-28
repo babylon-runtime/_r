@@ -15,7 +15,9 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'test/test.js'
+        'node_modules/babylonjs/babylon.js',
+        'dist/_r.js',
+        'test/test.js'
     ],
 
 
