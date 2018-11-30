@@ -394,6 +394,28 @@ var _r = (function (BABYLON) {
     function oneMesh(mesh, event, handler) {
         onMesh(mesh, event, handler, false);
     }
+    function offMesh(mesh, event, handler) {
+        var events = data(mesh, '_r.events');
+        if (events[event]) {
+            if (handler) {
+                events[event] = events[event].filter(function (_event) {
+                    if (_event.handler.toString() == handler.toString()) {
+                        if (_event.action) {
+                            var index = mesh.actionManager.actions.indexOf(_event.action);
+                            mesh.actionManager.actions.splice(index, 1);
+                        }
+                        if (_event.listener) {
+                            mesh.removeEventListener(_event, _event.listener);
+                        }
+                    }
+                    return _event.handler.toString() !== handler.toString();
+                });
+            }
+            else {
+                events[event] = [];
+            }
+        }
+    }
 
     var PROPERTIES = {
         ActionManager: "actionManagers",
@@ -455,29 +477,8 @@ var _r = (function (BABYLON) {
             }
             console.error("_r.elements unrecognized item : ", element);
         };
-        // TODO
-        Elements.prototype.remove = function (element) {
-            /**
-            let index = this.toArray().indexOf(element);
-            if(index) {
-
-            }
-            for (let property in PROPERTIES) {
-                if(element instanceof BABYLON[property]) {
-                    this[this.length++] = element;
-                    super[PROPERTIES[property]].push(element);
-                    return;
-                }
-            }**/
-        };
         Elements.prototype.contains = function (element) {
             return this.toArray().indexOf(element) !== -1;
-        };
-        //TODO
-        Elements.prototype.fadeIn = function () {
-        };
-        // TODO
-        Elements.prototype.fadeOut = function () {
         };
         /**
          * Attach an event handler function for one or more events to the selected elements.
@@ -520,7 +521,7 @@ var _r = (function (BABYLON) {
         Elements.prototype.off = function (events, handler) {
             this.each(function (item) {
                 if (is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
-                    off(item, events, handler);
+                    offMesh(item, events, handler);
                 }
                 else {
                     off(item, events, handler);
@@ -692,6 +693,37 @@ var _r = (function (BABYLON) {
         };
         // TODO
         Elements.prototype.patch = function (item) {
+        };
+        //TODO
+        /**
+         ready(callback : Function) {
+            if(this.isReady) {
+                callback.call(this, this);
+            }
+            else {
+
+            }
+        }**/
+        // TODO
+        Elements.prototype.remove = function (element) {
+            /**
+             let index = this.toArray().indexOf(element);
+             if(index) {
+
+            }
+             for (let property in PROPERTIES) {
+                if(element instanceof BABYLON[property]) {
+                    this[this.length++] = element;
+                    super[PROPERTIES[property]].push(element);
+                    return;
+                }
+            }**/
+        };
+        //TODO
+        Elements.prototype.fadeIn = function () {
+        };
+        // TODO
+        Elements.prototype.fadeOut = function () {
         };
         return Elements;
     }(BABYLON.AssetContainer));
@@ -3065,7 +3097,14 @@ var _r = (function (BABYLON) {
             });
         }
         else {
-            console.error("not implemented");
+            if (args.length === 2) {
+                select(args[0]).each(function (element) {
+                    promises.push(applyPatch(element, args[1]));
+                });
+            }
+            else {
+                console.error("not implemented");
+            }
         }
         return promises.reduce(Q.when, Q());
     }
@@ -3080,16 +3119,25 @@ var _r = (function (BABYLON) {
     function resolveProperty(element, property, source) {
         if (is.Primitive(source[property])) {
             element[property] = source[property];
-            return Q();
+            return Q(source[property]);
         }
         else {
             if (is.Function(source[property])) {
                 if (is.Function(element[property])) {
                     element[property] = source[property];
-                    return Q();
+                    return Q(source[property]);
                 }
                 else {
-                    element[property] = source[property].call(element);
+                    var res = source[property].call(element);
+                    if (is.Promise(res)) {
+                        return res.then(function (result) {
+                            element[property] = result;
+                        });
+                    }
+                    else {
+                        element[property] = res;
+                        return Q(res);
+                    }
                 }
             }
             else {
@@ -3262,7 +3310,8 @@ var _r = (function (BABYLON) {
         off: off,
         one: one,
         trigger: trigger,
-        select: select
+        select: select,
+        patch: patch
     };
 
     return index;

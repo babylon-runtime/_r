@@ -27,8 +27,6 @@ const PROPERTIES = {
     Texture: "textures"
 };
 
-
-
 export class Elements extends BABYLON.AssetContainer {
     length : number;
     constructor(...elements : any) {
@@ -65,34 +63,8 @@ export class Elements extends BABYLON.AssetContainer {
         console.error("_r.elements unrecognized item : ", element);
     }
 
-    // TODO
-    remove(element : any) {
-        /**
-        let index = this.toArray().indexOf(element);
-        if(index) {
-
-        }
-        for (let property in PROPERTIES) {
-            if(element instanceof BABYLON[property]) {
-                this[this.length++] = element;
-                super[PROPERTIES[property]].push(element);
-                return;
-            }
-        }**/
-    }
-
     contains(element : any) {
         return this.toArray().indexOf(element) !== -1;
-    }
-
-    //TODO
-    fadeIn() {
-
-    }
-
-    // TODO
-    fadeOut() {
-
     }
 
     /**
@@ -138,7 +110,7 @@ export class Elements extends BABYLON.AssetContainer {
     off(events : string, handler? : (args : any) => void) {
         this.each(function(item) {
             if(is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
-                off(item, events, handler);
+                offMesh(item, events, handler);
             }
             else {
                 off(item, events, handler);
@@ -321,6 +293,43 @@ export class Elements extends BABYLON.AssetContainer {
 
     // TODO
     patch(item : any) {
+
+    }
+
+    //TODO
+    /**
+     ready(callback : Function) {
+        if(this.isReady) {
+            callback.call(this, this);
+        }
+        else {
+
+        }
+    }**/
+
+    // TODO
+    remove(element : any) {
+        /**
+         let index = this.toArray().indexOf(element);
+         if(index) {
+
+        }
+         for (let property in PROPERTIES) {
+            if(element instanceof BABYLON[property]) {
+                this[this.length++] = element;
+                super[PROPERTIES[property]].push(element);
+                return;
+            }
+        }**/
+    }
+
+    //TODO
+    fadeIn() {
+
+    }
+
+    // TODO
+    fadeOut() {
 
     }
 
