@@ -8,7 +8,6 @@
   },
   "scripts": {
     "build": "rollup -c",
-    "watch": "rollup --config --watch",
     "release": "release-it",
     "test": "karma start"
   },

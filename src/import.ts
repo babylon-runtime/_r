@@ -100,9 +100,8 @@ export function load(...any) {
         }
     }
     else {
-        let rootUrl = any[0];
-        let sceneFileName = any[1];
-
+        rootUrl = any[0];
+        sceneFileName = any[1];
     }
     if(global.TRACE) {
         console.groupCollapsed("[_r] - loadAssets & create library " + sceneFileName + " from " + rootUrl);

@@ -2,8 +2,6 @@ import { global } from './global.js';
 import { find } from "./Elements.js";
 
 export function activateCamera(camera : string) {
-
-
     if(global.scene.activeCamera) {
         global.scene.activeCamera.detachControl();
     }

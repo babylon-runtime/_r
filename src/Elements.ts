@@ -5,32 +5,10 @@ import {on, one, off, trigger} from "./events.js";
 import {data} from "./data.js";
 import {onMesh, oneMesh, offMesh, meshTriggers} from "./meshTriggers.js";
 
-const PROPERTIES = {
-    ActionManager : "actionManagers",
-    AnimationGroup: "animationGroups",
-    Animation: "animations",
-    Camera : "cameras",
-    EffectLayer: "effectLayers",
-    Geometry: "geometries",
-    Layer: "layers",
-    LensFlareSystem: "lensFlareSystems",
-    Light: "lights",
-    Mesh: "meshes",
-    Material: "materials",
-    MorphTargetManager: "morphTargetManagers",
-    MultiMaterial: "multiMaterials",
-    ParticleSystem: "particleSystems",
-    ProceduralTexture: "proceduralTextures",
-    ReflectionProbe: "reflectionProbes",
-    Skeleton: "skeletons",
-    Sound: "sounds",
-    Texture: "textures"
-};
 
-export class Elements extends BABYLON.AssetContainer {
+export class Elements {
     length : number;
     constructor(...elements : any) {
-        super(global.scene);
         this.length = 0;
         for(let i = 0; i < elements.length; i++) {
             this.add(elements[i])
@@ -38,29 +16,31 @@ export class Elements extends BABYLON.AssetContainer {
     }
 
     add(element : any) {
-        if(is.AssetContainer(element) || is.Scene(element)) {
-            for(let property in PROPERTIES) {
-                let member = element[PROPERTIES[property]];
-                if(member) {
-                    this.add(member);
-                }
-            }
-            return;
-        }
         if(is.Array(element)) {
-            for(let i = 0; i < element.length;i++) {
+            for(let i = 0; i < element.length; i++) {
                 this.add(element[i]);
             }
             return;
         }
-        for (let property in PROPERTIES) {
-            if(element instanceof BABYLON[property]) {
-                this[this.length++] = element;
-                this[PROPERTIES[property]].push(element);
-                return;
+        if(is.AssetContainer(element) || is.Scene(element)) {
+            for(let i = 0; i < element.meshes.length; i++) {
+                this[this.length++] = element.meshes[i];
             }
+            for(let i = 0; i < element.lights.length; i++) {
+                this[this.length++] = element.lights[i];
+            }
+            for(let i = 0; i < element.materials.length; i++) {
+                this[this.length++] = element.materials[i];
+            }
+            for(let i = 0; i < element.textures.length; i++) {
+                this[this.length++] = element.textures[i];
+            }
+            for(let i = 0; i < element.cameras.length; i++) {
+                this[this.length++] = element.cameras[i];
+            }
+            return;
         }
-        console.error("_r.elements unrecognized item : ", element);
+        this[this.length++] = element;
     }
 
     contains(element : any) {
@@ -142,16 +122,60 @@ export class Elements extends BABYLON.AssetContainer {
     }
 
     show() {
-        super.addAllToScene();
+        for(let i = 0; i < this.length; i++) {
+            if(is.Mesh(this[i])) {
+                global.scene.addMesh(this[i]);
+                continue;
+            }
+            if(is.Material(this[i])) {
+                global.scene.addMaterial(this[i]);
+                continue;
+            }
+            if(is.Light(this[i])) {
+                global.scene.addMaterial(this[i]);
+                continue;
+            }
+            if(is.Texture(this[i])) {
+                global.scene.addTexture(this[i]);
+                continue;
+            }
+            if(is.Camera(this[i])) {
+                global.scene.addCamera(this[i]);
+                continue;
+            }
+        }
     }
 
     hide() {
-        super.removeAllFromScene();
+        for(let i = 0; i < this.length; i++) {
+            if(is.Mesh(this[i])) {
+                global.scene.removeMesh(this[i]);
+                continue;
+            }
+            if(is.Material(this[i])) {
+                global.scene.removeMaterial(this[i]);
+                continue;
+            }
+            if(is.Light(this[i])) {
+                global.scene.removeMaterial(this[i]);
+                continue;
+            }
+            if(is.Texture(this[i])) {
+                global.scene.removeTexture(this[i]);
+                continue;
+            }
+            if(is.Camera(this[i])) {
+                global.scene.removeCamera(this[i]);
+                continue;
+            }
+        }
     }
 
     dispose() {
-        // TODO on doit supprimer les références ici aussi...
-        super.dispose();
+        for(let i = 0; i < this.length; i++) {
+            this[i].dispose();
+            delete this[i];
+        }
     }
 
     /**
@@ -335,67 +359,70 @@ export class Elements extends BABYLON.AssetContainer {
 
 }
 
-export function find(params : String, container : BABYLON.Scene | Elements | BABYLON.AssetContainer) : Elements {
-    let i = 0;
-    let res = [];
-    // TODO : refactor this shit :
-    params.split(',').forEach(function (selector) {
-        selector = selector.trim();
-        var types = [];
-        if (selector.indexOf(':mesh') !== -1) {
-            selector = selector.replace(':mesh', '');
-            types.push("meshes");
-        }
-        if (selector.indexOf(':material') !== -1) {
-            selector = selector.replace(':material', '');
-            types.push("materials");
-        }
-        if (selector.indexOf(':light') !== -1) {
-            selector = selector.replace(':light', '');
-            types.push("lights");
-        }
-        if (selector.indexOf(':camera') !== -1) {
-            selector = selector.replace(':camera', '');
-            types.push("cameras");
-        }
-        if (selector.indexOf(':texture') !== -1) {
-            selector = selector.replace(':texture', '');
-            types.push("textures");
-        }
-        if (types.length == 0) {
-            types = ["meshes", "materials", "lights", "cameras", "textures"];
-        }
-        var attributes = [];
-        var regExpAttribute = /\[(.*?)\]/;
-        var matched = regExpAttribute.exec(selector);
-        if (matched) {
-            selector = selector.replace(matched[0], '');
-            var expr = matched[1];
-            var operator;
-            if (expr.indexOf('!=') != -1) {
-                operator = '!=';
-            }
-            else {
-                if (expr.indexOf('=') != -1) {
-                    operator = '=';
-                }
-            }
+export function match(element : any, params : String) {
 
-            if (operator) {
-                var split = expr.split(operator);
-                attributes.push({
-                    'property': split[0],
-                    'operator': operator,
-                    'value': split[1].replace(/[""]/g, '')
-                })
+}
+
+export function find(params : String, container : BABYLON.Scene | Elements | BABYLON.AssetContainer) : Elements {
+        let i = 0;
+        let res = [];
+        // TODO : refactor this shit :
+        params.split(',').forEach(function (selector) {
+            selector = selector.trim();
+            let types = [];
+            if (selector.indexOf(':mesh') !== -1) {
+                selector = selector.replace(':mesh', '');
+                types.push("meshes");
             }
-            else {
-                attributes.push({
-                    'property': expr
-                })
+            if (selector.indexOf(':material') !== -1) {
+                selector = selector.replace(':material', '');
+                types.push("materials");
             }
-        }
-        ;
+            if (selector.indexOf(':light') !== -1) {
+                selector = selector.replace(':light', '');
+                types.push("lights");
+            }
+            if (selector.indexOf(':camera') !== -1) {
+                selector = selector.replace(':camera', '');
+                types.push("cameras");
+            }
+            if (selector.indexOf(':texture') !== -1) {
+                selector = selector.replace(':texture', '');
+                types.push("textures");
+            }
+            if (types.length == 0) {
+                types = ["meshes", "materials", "lights", "cameras", "textures"];
+            }
+            var attributes = [];
+            var regExpAttribute = /\[(.*?)\]/;
+            var matched = regExpAttribute.exec(selector);
+            if (matched) {
+                selector = selector.replace(matched[0], '');
+                var expr = matched[1];
+                var operator;
+                if (expr.indexOf('!=') != -1) {
+                    operator = '!=';
+                }
+                else {
+                    if (expr.indexOf('=') != -1) {
+                        operator = '=';
+                    }
+                }
+
+                if (operator) {
+                    var split = expr.split(operator);
+                    attributes.push({
+                        'property': split[0],
+                        'operator': operator,
+                        'value': split[1].replace(/[""]/g, '')
+                    })
+                }
+                else {
+                    attributes.push({
+                        'property': expr
+                    })
+                }
+            };
 
         var exp = selector.replace(/\*/g, '.*'),
             regExp = new RegExp('^' + exp + '$');
@@ -433,7 +460,6 @@ export function find(params : String, container : BABYLON.Scene | Elements | BAB
                     else {
                         res[i++] = _item;
                     }
-
                 }
             });
         });

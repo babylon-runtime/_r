@@ -6,7 +6,10 @@ import { createLibrary, library, libraries} from "./library.js";
 import { select } from "./select.js";
 import { data } from "./data.js"
 import { on, off, one, trigger } from "./events.js";
-import {patch} from "./patch/patch.js";
+import { patch } from "./patch/patch.js";
+import { match } from "./Elements.js";
+import { Selector } from "./Selector.js";
+
 
 export default {
     get canvas() {
@@ -47,5 +50,7 @@ export default {
     one : one,
     trigger : trigger,
     select : select,
-    patch : patch
+    patch : patch,
+    match : match,
+    Selector : Selector
 }

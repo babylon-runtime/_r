@@ -1,5 +1,4 @@
 // Karma configuration
-// Generated on Tue Sep 02 2014 23:03:20 GMT+0200 (CEST)
 
 module.exports = function(config) {
   config.set({
@@ -7,19 +6,17 @@ module.exports = function(config) {
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: './',
 
-
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['mocha', 'chai'],
-
 
     // list of files / patterns to load in the browser
     files: [
         'node_modules/babylonjs/babylon.js',
         'dist/_r.js',
-        'test/test.js'
+        'test/cornellBox/launch.js',
+        'test/cornellBox/test.js'
     ],
-
 
     // list of files to exclude
     exclude: [
