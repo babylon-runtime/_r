@@ -404,12 +404,21 @@ export function find(params : string, container : BABYLON.Scene | Elements | BAB
             }
           }
         });
+        break;
       case "texture":
         container.textures.forEach(function(texture){
           if(selector.matchFilters(texture)) {
             elements.add(texture);
           }
         });
+        break;
+      case "camera":
+        container.cameras.forEach(function(camera){
+          if(selector.matchFilters(camera)) {
+            elements.add(camera);
+          }
+        });
+        break;
       case "all":
         container.materials.forEach(function(material) {
           if(selector.matchFilters(material)) {
@@ -435,9 +444,19 @@ export function find(params : string, container : BABYLON.Scene | Elements | BAB
   }
   else {
     container.each(function(element) {
-      if(selector.matchType(element) && selector.matchFilters(element)) {
-        elements.add(element);
+      // Elements can contain a scene.
+      if(is.Scene(element) || is.AssetContainer(element)) {
+          let _elements = find(params, element);
+          _elements.each(function(element) {
+            elements.add(element);
+          })
       }
+      else {
+        if(selector.matchType(element) && selector.matchFilters(element)) {
+          elements.add(element);
+        }
+      }
+
     })
   }
   return elements;
