@@ -1,5 +1,4 @@
 import { global } from './global.js';
-import { find } from "./Elements.js";
 
 export function activateCamera(camera : string) {
     if(global.scene.activeCamera) {
@@ -11,7 +10,7 @@ export function activateCamera(camera : string) {
 
     if(global.TRACE) {
         console.groupCollapsed("[_r] - activate camera " + global.scene.activeCamera.name);
-        find(camera, global.scene).log();
+        console.log(global.scene.activeCamera);
         console.groupEnd();
     }
 }
