@@ -105,5 +105,8 @@ export class Selector {
         if(this.type == "texture") {
             return is.Texture(element);
         }
+        if(this.type == "camera") {
+            return is.Camera(element);
+        }
     }
 }

@@ -1,7 +1,7 @@
 import {is} from "./is.js";
 import {Elements, find} from "./Elements.js";
-import {global} from "./global.js";
 import {libraries} from "./library.js";
+import {global} from "./global.js";
 
 export function select(arg) {
     if(is.String(arg)) {
@@ -23,7 +23,7 @@ export function select(arg) {
                 }
             });
         }
-        if(elements.length == 0) {
+        if(global.TRACE === true && elements.length == 0) {
             console.warn('BABYLON.Runtime::no object(s) found for selector "' + arg + '"')
         }
         return elements;
