@@ -1,6 +1,4 @@
-import {BABYLON} from "./BABYLON.js";
 import {is} from "./is.js";
-import {Elements} from "./Elements.js";
 
 export class Selector {
     type = "all";
@@ -68,9 +66,10 @@ export class Selector {
             });
             item = item.replace(regExpAttribute, '');
             // Here item only contains name selector i.e mesh.00*
-            let exp = selector.replace(/\*/g, '.*');
+            let exp = item.replace(/\*/g, '.*');
             let regExp = new RegExp('^' + exp + '$');
             filters.push(function(element) {
+                console.log(regExp, element.name,element.hasOwnProperty('name') && regExp.test(element.name));
                 return element.hasOwnProperty('name') && regExp.test(element.name);
             });
         });
@@ -80,11 +79,11 @@ export class Selector {
     }
 
     matchFilters(element) {
-        this.filters.forEach(function(filter) {
-            if(!filter(element)) {
+        for(let i = 0; i < this.filters.length; i++) {
+            if(!this.filters[i](element)) {
                 return false;
             }
-        });
+        }
         return true;
     }
 
@@ -108,88 +107,4 @@ export class Selector {
             return is.Texture(element);
         }
     }
-
-    find(container : BABYLON.Scene | Elements | BABYLON.AssetContainer) : Elements {
-        let elements = new Elements();
-        let selector = this;
-        if(is.Scene(container) || is.AssetContainer(container)) {
-            switch(this.type) {
-              case "material" :
-                  container.materials.forEach(function(material) {
-                     if(selector.matchFilters(material)) {
-                         elements.add(material);
-                     }
-                  });
-                  break;
-              case "mesh" :
-                  container.meshes.forEach(function(mesh){
-                     if(selector.matchFilters(mesh)) {
-                         elements.add(mesh);
-                     }
-                  });
-                  break;
-              case "light":
-                  container.lights.forEach(function(light){
-                      if(selector.matchFilters(light)) {
-                          elements.add(light);
-                      }
-                  });
-                  break;
-              case "multimaterial":
-                  container.material.forEach(function(material) {
-                      if(is.MultiMaterial(material)) {
-                          if(selector.matchFilters(material)) {
-                              elements.add(material);
-                          }
-                      }
-                  });
-              case "texture":
-                  container.textures.forEach(function(texture){
-                      if(selector.matchFilters(texture)) {
-                          elements.add(texture);
-                      }
-                  });
-              case "all":
-                container.materials.forEach(function(material) {
-                  if(selector.matchFilters(material)) {
-                    elements.add(material);
-                  }
-                });
-                container.meshes.forEach(function(mesh){
-                  if(selector.matchFilters(mesh)) {
-                    elements.add(mesh);
-                  }
-                });
-                container.lights.forEach(function(light){
-                  if(selector.matchFilters(light)) {
-                    elements.add(light);
-                  }
-                });
-                container.textures.forEach(function(texture){
-                  if(selector.matchFilters(texture)) {
-                    elements.add(texture);
-                  }
-                });
-            }
-        }
-        else {
-            container.each(function(element) {
-                if(selector.matchType(element) && selector.matchFilters(element)) {
-                    elements.add(element);
-                }
-            })
-        }
-        return elements;
-    }
-}
-
-/**
- * Helper to debug selector.
- * @param element
- * @param selector
- * @returns {boolean} true if element match the selector, false otherwise
- */
-export function match(element : any, selector : string) {
-    let _selector = new Selector(selector);
-    return _selector.matchType(element) && _selector.matchFilters(element);
 }

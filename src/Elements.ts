@@ -4,6 +4,7 @@ import {is} from "./is.js";
 import {on, one, off, trigger} from "./events.js";
 import {data} from "./data.js";
 import {onMesh, oneMesh, offMesh, meshTriggers} from "./meshTriggers.js";
+import {Selector} from "./Selector.js";
 
 
 export class Elements {
@@ -358,113 +359,88 @@ export class Elements {
     }
 
 }
-
-export function match(element : any, params : String) {
-
+/**
+ * Helper to debug selector.
+ * @param element
+ * @param selector
+ * @returns {boolean} true if element match the selector, false otherwise
+ */
+export function match(element : any, params : string) {
+  let _selector = new Selector(params);
+  return _selector.matchType(element) && _selector.matchFilters(element);
 }
 
-export function find(params : String, container : BABYLON.Scene | Elements | BABYLON.AssetContainer) : Elements {
-        let i = 0;
-        let res = [];
-        // TODO : refactor this shit :
-        params.split(',').forEach(function (selector) {
-            selector = selector.trim();
-            let types = [];
-            if (selector.indexOf(':mesh') !== -1) {
-                selector = selector.replace(':mesh', '');
-                types.push("meshes");
-            }
-            if (selector.indexOf(':material') !== -1) {
-                selector = selector.replace(':material', '');
-                types.push("materials");
-            }
-            if (selector.indexOf(':light') !== -1) {
-                selector = selector.replace(':light', '');
-                types.push("lights");
-            }
-            if (selector.indexOf(':camera') !== -1) {
-                selector = selector.replace(':camera', '');
-                types.push("cameras");
-            }
-            if (selector.indexOf(':texture') !== -1) {
-                selector = selector.replace(':texture', '');
-                types.push("textures");
-            }
-            if (types.length == 0) {
-                types = ["meshes", "materials", "lights", "cameras", "textures"];
-            }
-            var attributes = [];
-            var regExpAttribute = /\[(.*?)\]/;
-            var matched = regExpAttribute.exec(selector);
-            if (matched) {
-                selector = selector.replace(matched[0], '');
-                var expr = matched[1];
-                var operator;
-                if (expr.indexOf('!=') != -1) {
-                    operator = '!=';
-                }
-                else {
-                    if (expr.indexOf('=') != -1) {
-                        operator = '=';
-                    }
-                }
-
-                if (operator) {
-                    var split = expr.split(operator);
-                    attributes.push({
-                        'property': split[0],
-                        'operator': operator,
-                        'value': split[1].replace(/[""]/g, '')
-                    })
-                }
-                else {
-                    attributes.push({
-                        'property': expr
-                    })
-                }
-            };
-
-        var exp = selector.replace(/\*/g, '.*'),
-            regExp = new RegExp('^' + exp + '$');
-
-        types.forEach(function (_type) {
-            container[_type].forEach(function (_item) {
-                if (regExp.test(_item.name)) {
-                    if (attributes.length > 0) {
-                        attributes.forEach(function (attribute) {
-                            if (attribute.hasOwnProperty('operator')) {
-                                if (_item.hasOwnProperty(attribute.property)) {
-                                    switch (attribute.operator) {
-                                        case '=':
-                                            if (_item[attribute.property].toString() == attribute.value) {
-                                                res[i++] = _item;
-                                            }
-                                            break;
-                                        case '!=':
-                                            if (_item[attribute.property].toString() != attribute.value) {
-                                                res[i++] = _item;
-                                            }
-                                            break;
-                                        default :
-                                            console.error('BABYLON.Runtime._r : unrecognized operator ' + attribute.operator);
-                                    }
-                                }
-                            }
-                            else {
-                                if (_item.hasOwnProperty(attribute.property)) {
-                                    res[i++] = _item;
-                                }
-                            }
-                        })
-                    }
-                    else {
-                        res[i++] = _item;
-                    }
-                }
-            });
+export function find(params : string, container : BABYLON.Scene | Elements | BABYLON.AssetContainer) : Elements {
+  let elements = new Elements();
+  let selector = new Selector(params);
+  if(is.Scene(container) || is.AssetContainer(container)) {
+    switch(selector.type) {
+      case "material" :
+        container.materials.forEach(function(material) {
+          if(selector.matchFilters(material)) {
+            elements.add(material);
+          }
         });
-    });
-
-    return new Elements(res);
+        break;
+      case "mesh" :
+        container.meshes.forEach(function(mesh){
+          if(selector.matchFilters(mesh)) {
+            elements.add(mesh);
+          }
+        });
+        break;
+      case "light":
+        container.lights.forEach(function(light){
+          if(selector.matchFilters(light)) {
+            elements.add(light);
+          }
+        });
+        break;
+      case "multimaterial":
+        container.material.forEach(function(material) {
+          if(is.MultiMaterial(material)) {
+            if(selector.matchFilters(material)) {
+              elements.add(material);
+            }
+          }
+        });
+      case "texture":
+        container.textures.forEach(function(texture){
+          if(selector.matchFilters(texture)) {
+            elements.add(texture);
+          }
+        });
+      case "all":
+        container.materials.forEach(function(material) {
+          if(selector.matchFilters(material)) {
+            elements.add(material);
+          }
+        });
+        container.meshes.forEach(function(mesh){
+          if(selector.matchFilters(mesh)) {
+            elements.add(mesh);
+          }
+        });
+        container.lights.forEach(function(light){
+          if(selector.matchFilters(light)) {
+            elements.add(light);
+          }
+        });
+        container.textures.forEach(function(texture){
+          if(selector.matchFilters(texture)) {
+            elements.add(texture);
+          }
+        });
+    }
+  }
+  else {
+    container.each(function(element) {
+        console.log("yo");
+      if(selector.matchType(element) && selector.matchFilters(element)) {
+        elements.add(element);
+      }
+    })
+  }
+  return elements;
 }
 

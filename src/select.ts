@@ -11,9 +11,9 @@ export function select(arg) {
             elements.length = 1;
             return elements;
         }
-
         let elements = find(arg, global.scene);
         // elements could be in a library not attached to the scene
+
         for(let lib in libraries) {
             let selection = libraries[lib].select(arg);
             selection.each(function(item) {
