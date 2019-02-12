@@ -24,4 +24,17 @@ describe('Selectors', function() {
             expect(_r.select("*:light").length === 1).to.be.true;
         });
     });
+    describe("Select inside Select", function() {
+        it('_r.select("*:material").select("*bloc*").length === 1', function() {
+            expect(_r.select("*:material").select("*bloc*").length === 1).to.be.true;
+        });
+        it('_r.select("scene").select("*bloc*:material").length === 1', function() {
+            expect(_r.select("scene").select("*bloc*:material").length === 1).to.be.true;
+        });
+    });
+    describe("Select inside Library", function() {
+        it('_r.library("https://models.babylonjs.com/CornellBox/cornellBox.babylon").select("*:mesh").length === 4', function() {
+            expect(_r.library("https://models.babylonjs.com/CornellBox/cornellBox.babylon").select("*:mesh").length === 4).to.be.true;
+        });
+    });
 });
