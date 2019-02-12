@@ -69,7 +69,6 @@ export class Selector {
             let exp = item.replace(/\*/g, '.*');
             let regExp = new RegExp('^' + exp + '$');
             filters.push(function(element) {
-                console.log(regExp, element.name,element.hasOwnProperty('name') && regExp.test(element.name));
                 return element.hasOwnProperty('name') && regExp.test(element.name);
             });
         });
