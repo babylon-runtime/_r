@@ -3,7 +3,7 @@ import { global } from "./global.js";
 import { is } from "./is.js";
 import { on, one, off, trigger } from "./events.js";
 import { data } from "./data.js";
-import { onMesh, oneMesh, offMesh, meshTriggers } from "./meshTriggers.js";
+import { onMesh, oneMesh, offMesh, meshEvents } from "./meshEvents.js";
 import { Selector } from "./Selector.js";
 
 export class Elements {
@@ -55,7 +55,7 @@ export class Elements {
      */
     on(events : string, handler : (args : any) => void) {
         this.each(function(item) {
-            if (is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+            if (is.Mesh(item) && meshEvents.indexOf(events) !== -1) {
                 onMesh(item, events, handler);
             }
             else {
@@ -72,7 +72,7 @@ export class Elements {
      */
     one(events : string, handler : (args : any) => void) {
         this.each(function(item) {
-            if (is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+            if (is.Mesh(item) && meshEvents.indexOf(events) !== -1) {
                 oneMesh(item, events, handler);
             }
             else {
@@ -89,7 +89,7 @@ export class Elements {
      */
     off(events : string, handler? : (args : any) => void) {
         this.each(function(item) {
-            if (is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+            if (is.Mesh(item) && meshEvents.indexOf(events) !== -1) {
                 offMesh(item, events, handler);
             }
             else {
