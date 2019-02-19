@@ -223,16 +223,7 @@ var _r = (function (BABYLON) {
                 return _scene;
             },
             set: function (value) {
-                if (is.Function(value)) {
-                    window["engine"] = global.engine;
-                    window["canvas"] = global.canvas;
-                    _scene = value();
-                    window["engine"] = null;
-                    window["canvas"] = null;
-                }
-                else {
-                    _scene = value;
-                }
+                _scene = value;
             },
             enumerable: true,
             configurable: true
@@ -3349,8 +3340,20 @@ var _r = (function (BABYLON) {
                 }
             }
             else {
-                // setter accept function and object.
-                global.scene = obj.scene;
+                if (is.Function(obj.scene)) {
+                    var result = eval("var canvas=_r.canvas; var engine = _r.engine; var scene=_r.scene; var createScene=" + obj.scene + ';createScene()');
+                    if (is.Scene(result)) {
+                        global.scene = result;
+                    }
+                }
+                else {
+                    if (is.Scene(obj.scene)) {
+                        global.scene = obj.scene;
+                    }
+                    else {
+                        throw new Error("invalid scene parameter in _r.launch");
+                    }
+                }
                 run(obj);
                 return new ImportPromise(global.scene);
             }

@@ -28,6 +28,11 @@ module.exports = function(grunt) {
                 files : [
                     { src : [  'test/playground-paste/test.js'] },
                 ]
+            },
+            nolaunch : {
+                files : [
+                    { src : [  'test/no-launch/test.js'] },
+                ]
             }
         }
     });
