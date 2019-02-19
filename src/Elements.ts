@@ -172,13 +172,6 @@ export class Elements {
         }
     }
 
-    dispose() {
-        for(let i = 0; i < this.length; i++) {
-            this[i].dispose();
-            delete this[i];
-        }
-    }
-
     /**
      * Iterate over elements and executing a function for each element.
      * @param callback A function to execute for each element.
@@ -316,6 +309,74 @@ export class Elements {
         return find(selector, this);
     }
 
+    /**
+     * Disposes all the assets in the container
+     */
+    dispose() {
+      for(let i = 0; i < this.length; i++) {
+        this[i].dispose();
+        delete this[i];
+      }
+    }
+
+    addToScene() {
+      this.each(function(element) {
+        if(is.Camera(element)) {
+          global.scene.addCamera(element);
+          return false;
+        }
+        if(is.Mesh(element)) {
+          global.scene.addMesh(element);
+          return false;
+        }
+        if(is.Material(element)) {
+          global.scene.addMaterial(element);
+          return false;
+        }
+        if(is.MultiMaterial(element)) {
+          global.scene.addMultiMaterial(element);
+          return false;
+        }
+        if(is.Texture(element)) {
+          global.scene.addTexture(element);
+          return false;
+        }
+        if(is.Light(element)) {
+          global.scene.addLight(element);
+          return false;
+        }
+      });
+    }
+
+    removeFromScene() {
+      this.each(function(element) {
+        if(is.Camera(element)) {
+          global.scene.removeCamera(element);
+          return false;
+        }
+        if(is.Mesh(element)) {
+          global.scene.removeMesh(element);
+          return false;
+        }
+        if(is.Material(element)) {
+          global.scene.removeMaterial(element);
+          return false;
+        }
+        if(is.MultiMaterial(element)) {
+          global.scene.removeMultiMaterial(element);
+          return false;
+        }
+        if(is.Texture(element)) {
+          global.scene.removeTexture(element);
+          return false;
+        }
+        if(is.Light(element)) {
+          global.scene.removeLight(element);
+          return false;
+        }
+      });
+    }
+
     // TODO
     patch(item : any) {
 
@@ -444,19 +505,9 @@ export function find(params : string, container : BABYLON.Scene | Elements | BAB
   }
   else {
     container.each(function(element) {
-      // Elements can contain a scene.
-      if(is.Scene(element) || is.AssetContainer(element)) {
-          let _elements = find(params, element);
-          _elements.each(function(element) {
-            elements.add(element);
-          })
+      if(selector.matchType(element) && selector.matchFilters(element)) {
+        elements.add(element);
       }
-      else {
-        if(selector.matchType(element) && selector.matchFilters(element)) {
-          elements.add(element);
-        }
-      }
-
     })
   }
   return elements;

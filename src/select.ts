@@ -6,10 +6,7 @@ import {global} from "./global.js";
 export function select(arg) {
     if(is.String(arg)) {
         if((<string> arg).toLowerCase() === "scene") {
-            let elements = new Elements();
-            elements[0] = global.scene;
-            elements.length = 1;
-            return elements;
+            return new Elements( global.scene);
         }
         let elements = find(arg, global.scene);
         // elements could be in a library not attached to the scene

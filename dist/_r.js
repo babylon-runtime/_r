@@ -241,33 +241,17 @@ var _r = (function (BABYLON) {
         return global;
     }());
 
-    /*! *****************************************************************************
-    Copyright (c) Microsoft Corporation. All rights reserved.
-    Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-    this file except in compliance with the License. You may obtain a copy of the
-    License at http://www.apache.org/licenses/LICENSE-2.0
-
-    THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-    WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-    MERCHANTABLITY OR NON-INFRINGEMENT.
-
-    See the Apache Version 2.0 License for specific language governing permissions
-    and limitations under the License.
-    ***************************************************************************** */
-    /* global Reflect, Promise */
-
-    var extendStatics = function(d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-
-    function __extends(d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    function activateCamera(camera) {
+        if (global.scene.activeCamera) {
+            global.scene.activeCamera.detachControl();
+        }
+        global.scene.setActiveCameraByName(camera);
+        global.scene.activeCamera.attachControl(global.canvas);
+        if (global.TRACE) {
+            console.groupCollapsed("[_r] - activate camera " + global.scene.activeCamera.name);
+            console.log(global.scene.activeCamera);
+            console.groupEnd();
+        }
     }
 
     var cache = [];
@@ -417,65 +401,151 @@ var _r = (function (BABYLON) {
         }
     }
 
-    var PROPERTIES = {
-        ActionManager: "actionManagers",
-        AnimationGroup: "animationGroups",
-        Animation: "animations",
-        Camera: "cameras",
-        EffectLayer: "effectLayers",
-        Geometry: "geometries",
-        Layer: "layers",
-        LensFlareSystem: "lensFlareSystems",
-        Light: "lights",
-        Mesh: "meshes",
-        Material: "materials",
-        MorphTargetManager: "morphTargetManagers",
-        MultiMaterial: "multiMaterials",
-        ParticleSystem: "particleSystems",
-        ProceduralTexture: "proceduralTextures",
-        ReflectionProbe: "reflectionProbes",
-        Skeleton: "skeletons",
-        Sound: "sounds",
-        Texture: "textures"
-    };
-    var Elements = /** @class */ (function (_super) {
-        __extends(Elements, _super);
+    var Selector = /** @class */ (function () {
+        function Selector(selector) {
+            this.type = "all";
+            var filters = [];
+            var type = "all";
+            selector.split(',').forEach(function (item) {
+                item = item.trim();
+                if (item.indexOf(":mesh") !== -1) {
+                    type = "mesh";
+                }
+                if (item.indexOf(":material") !== -1) {
+                    type = "material";
+                }
+                if (item.indexOf(":light") !== -1) {
+                    type = "light";
+                }
+                if (item.indexOf(":camera") !== -1) {
+                    type = "camera";
+                }
+                if (item.indexOf(":texture") !== -1) {
+                    type = "texture";
+                }
+                if (item.indexOf(":multimaterial") !== -1) {
+                    type = "multimaterial";
+                }
+                [":mesh", ":material", ":multimaterial", ":camera", ":light", ":texture"].forEach(function (type) {
+                    item = item.replace(type, '');
+                });
+                // [isVisible][alpha!= 0.1]
+                var regExpAttribute = /\[(.*?)\]/;
+                var matches = [];
+                var match;
+                while (match = regExpAttribute.exec(selector)) {
+                    matches.push(match[1]);
+                }
+                // TODO [material.diffuseTexture.name=texture*.jpg]
+                matches.forEach(function (expr) {
+                    if (expr.indexOf('!=') !== -1) {
+                        var split = expr.split('!=');
+                        filters.push(function (element) {
+                            if (element.hasOwnProperty(split[0])) {
+                                return element[split[0]] != split[1];
+                            }
+                            return false;
+                        });
+                    }
+                    else {
+                        if (expr.indexOf('=') !== -1) {
+                            filters.push(function (element) {
+                                if (element.hasOwnProperty(split[0])) {
+                                    return element[split[0]] == split[1];
+                                }
+                                return false;
+                            });
+                        }
+                        else {
+                            filters.push(function (element) {
+                                return element.hasOwnProperty(expr);
+                            });
+                        }
+                    }
+                });
+                item = item.replace(regExpAttribute, '');
+                // Here item only contains name selector i.e mesh.00*
+                var exp = item.replace(/\*/g, '.*');
+                var regExp = new RegExp('^' + exp + '$');
+                filters.push(function (element) {
+                    return element.hasOwnProperty('name') && regExp.test(element.name);
+                });
+            });
+            // TODO :not(selector)
+            this.filters = filters;
+            this.type = type;
+        }
+        Selector.prototype.matchFilters = function (element) {
+            for (var i = 0; i < this.filters.length; i++) {
+                if (!this.filters[i](element)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        Selector.prototype.matchType = function (element) {
+            if (this.type == "all") {
+                return true;
+            }
+            if (this.type == "mesh") {
+                return is.Mesh(element);
+            }
+            if (this.type == "light") {
+                return is.Light(element);
+            }
+            if (this.type == "material") {
+                return is.Material(element);
+            }
+            if (this.type == "multimaterial") {
+                return is.MultiMaterial(element);
+            }
+            if (this.type == "texture") {
+                return is.Texture(element);
+            }
+            if (this.type == "camera") {
+                return is.Camera(element);
+            }
+        };
+        return Selector;
+    }());
+
+    var Elements = /** @class */ (function () {
         function Elements() {
             var elements = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 elements[_i] = arguments[_i];
             }
-            var _this = _super.call(this, global.scene) || this;
-            _this.length = 0;
+            this.length = 0;
             for (var i = 0; i < elements.length; i++) {
-                _this.add(elements[i]);
+                this.add(elements[i]);
             }
-            return _this;
         }
         Elements.prototype.add = function (element) {
-            if (is.AssetContainer(element) || is.Scene(element)) {
-                for (var property in PROPERTIES) {
-                    var member = element[PROPERTIES[property]];
-                    if (member) {
-                        this.add(member);
-                    }
-                }
-                return;
-            }
             if (is.Array(element)) {
                 for (var i = 0; i < element.length; i++) {
                     this.add(element[i]);
                 }
                 return;
             }
-            for (var property in PROPERTIES) {
-                if (element instanceof BABYLON[property]) {
-                    this[this.length++] = element;
-                    this[PROPERTIES[property]].push(element);
-                    return;
+            if (is.AssetContainer(element) || is.Scene(element)) {
+                for (var i = 0; i < element.meshes.length; i++) {
+                    this[this.length++] = element.meshes[i];
                 }
+                for (var i = 0; i < element.lights.length; i++) {
+                    this[this.length++] = element.lights[i];
+                }
+                for (var i = 0; i < element.materials.length; i++) {
+                    this[this.length++] = element.materials[i];
+                }
+                for (var i = 0; i < element.textures.length; i++) {
+                    this[this.length++] = element.textures[i];
+                }
+                for (var i = 0; i < element.cameras.length; i++) {
+                    this[this.length++] = element.cameras[i];
+                }
+                return;
             }
-            console.error("_r.elements unrecognized item : ", element);
+            this[this.length++] = element;
         };
         Elements.prototype.contains = function (element) {
             return this.toArray().indexOf(element) !== -1;
@@ -550,14 +620,52 @@ var _r = (function (BABYLON) {
             }
         };
         Elements.prototype.show = function () {
-            _super.prototype.addAllToScene.call(this);
+            for (var i = 0; i < this.length; i++) {
+                if (is.Mesh(this[i])) {
+                    global.scene.addMesh(this[i]);
+                    continue;
+                }
+                if (is.Material(this[i])) {
+                    global.scene.addMaterial(this[i]);
+                    continue;
+                }
+                if (is.Light(this[i])) {
+                    global.scene.addMaterial(this[i]);
+                    continue;
+                }
+                if (is.Texture(this[i])) {
+                    global.scene.addTexture(this[i]);
+                    continue;
+                }
+                if (is.Camera(this[i])) {
+                    global.scene.addCamera(this[i]);
+                    continue;
+                }
+            }
         };
         Elements.prototype.hide = function () {
-            _super.prototype.removeAllFromScene.call(this);
-        };
-        Elements.prototype.dispose = function () {
-            // TODO on doit supprimer les références ici aussi...
-            _super.prototype.dispose.call(this);
+            for (var i = 0; i < this.length; i++) {
+                if (is.Mesh(this[i])) {
+                    global.scene.removeMesh(this[i]);
+                    continue;
+                }
+                if (is.Material(this[i])) {
+                    global.scene.removeMaterial(this[i]);
+                    continue;
+                }
+                if (is.Light(this[i])) {
+                    global.scene.removeMaterial(this[i]);
+                    continue;
+                }
+                if (is.Texture(this[i])) {
+                    global.scene.removeTexture(this[i]);
+                    continue;
+                }
+                if (is.Camera(this[i])) {
+                    global.scene.removeCamera(this[i]);
+                    continue;
+                }
+            }
         };
         /**
          * Iterate over elements and executing a function for each element.
@@ -691,6 +799,71 @@ var _r = (function (BABYLON) {
         Elements.prototype.select = function (selector) {
             return find(selector, this);
         };
+        /**
+         * Disposes all the assets in the container
+         */
+        Elements.prototype.dispose = function () {
+            for (var i = 0; i < this.length; i++) {
+                this[i].dispose();
+                delete this[i];
+            }
+        };
+        Elements.prototype.addToScene = function () {
+            this.each(function (element) {
+                if (is.Camera(element)) {
+                    global.scene.addCamera(element);
+                    return false;
+                }
+                if (is.Mesh(element)) {
+                    global.scene.addMesh(element);
+                    return false;
+                }
+                if (is.Material(element)) {
+                    global.scene.addMaterial(element);
+                    return false;
+                }
+                if (is.MultiMaterial(element)) {
+                    global.scene.addMultiMaterial(element);
+                    return false;
+                }
+                if (is.Texture(element)) {
+                    global.scene.addTexture(element);
+                    return false;
+                }
+                if (is.Light(element)) {
+                    global.scene.addLight(element);
+                    return false;
+                }
+            });
+        };
+        Elements.prototype.removeFromScene = function () {
+            this.each(function (element) {
+                if (is.Camera(element)) {
+                    global.scene.removeCamera(element);
+                    return false;
+                }
+                if (is.Mesh(element)) {
+                    global.scene.removeMesh(element);
+                    return false;
+                }
+                if (is.Material(element)) {
+                    global.scene.removeMaterial(element);
+                    return false;
+                }
+                if (is.MultiMaterial(element)) {
+                    global.scene.removeMultiMaterial(element);
+                    return false;
+                }
+                if (is.Texture(element)) {
+                    global.scene.removeTexture(element);
+                    return false;
+                }
+                if (is.Light(element)) {
+                    global.scene.removeLight(element);
+                    return false;
+                }
+            });
+        };
         // TODO
         Elements.prototype.patch = function (item) {
         };
@@ -726,118 +899,97 @@ var _r = (function (BABYLON) {
         Elements.prototype.fadeOut = function () {
         };
         return Elements;
-    }(BABYLON.AssetContainer));
-    function find(params, container) {
-        var i = 0;
-        var res = [];
-        // TODO : refactor this shit :
-        params.split(',').forEach(function (selector) {
-            selector = selector.trim();
-            var types = [];
-            if (selector.indexOf(':mesh') !== -1) {
-                selector = selector.replace(':mesh', '');
-                types.push("meshes");
-            }
-            if (selector.indexOf(':material') !== -1) {
-                selector = selector.replace(':material', '');
-                types.push("materials");
-            }
-            if (selector.indexOf(':light') !== -1) {
-                selector = selector.replace(':light', '');
-                types.push("lights");
-            }
-            if (selector.indexOf(':camera') !== -1) {
-                selector = selector.replace(':camera', '');
-                types.push("cameras");
-            }
-            if (selector.indexOf(':texture') !== -1) {
-                selector = selector.replace(':texture', '');
-                types.push("textures");
-            }
-            if (types.length == 0) {
-                types = ["meshes", "materials", "lights", "cameras", "textures"];
-            }
-            var attributes = [];
-            var regExpAttribute = /\[(.*?)\]/;
-            var matched = regExpAttribute.exec(selector);
-            if (matched) {
-                selector = selector.replace(matched[0], '');
-                var expr = matched[1];
-                var operator;
-                if (expr.indexOf('!=') != -1) {
-                    operator = '!=';
-                }
-                else {
-                    if (expr.indexOf('=') != -1) {
-                        operator = '=';
-                    }
-                }
-                if (operator) {
-                    var split = expr.split(operator);
-                    attributes.push({
-                        'property': split[0],
-                        'operator': operator,
-                        'value': split[1].replace(/[""]/g, '')
-                    });
-                }
-                else {
-                    attributes.push({
-                        'property': expr
-                    });
-                }
-            }
-            var exp = selector.replace(/\*/g, '.*'), regExp = new RegExp('^' + exp + '$');
-            types.forEach(function (_type) {
-                container[_type].forEach(function (_item) {
-                    if (regExp.test(_item.name)) {
-                        if (attributes.length > 0) {
-                            attributes.forEach(function (attribute) {
-                                if (attribute.hasOwnProperty('operator')) {
-                                    if (_item.hasOwnProperty(attribute.property)) {
-                                        switch (attribute.operator) {
-                                            case '=':
-                                                if (_item[attribute.property].toString() == attribute.value) {
-                                                    res[i++] = _item;
-                                                }
-                                                break;
-                                            case '!=':
-                                                if (_item[attribute.property].toString() != attribute.value) {
-                                                    res[i++] = _item;
-                                                }
-                                                break;
-                                            default:
-                                                console.error('BABYLON.Runtime._r : unrecognized operator ' + attribute.operator);
-                                        }
-                                    }
-                                }
-                                else {
-                                    if (_item.hasOwnProperty(attribute.property)) {
-                                        res[i++] = _item;
-                                    }
-                                }
-                            });
-                        }
-                        else {
-                            res[i++] = _item;
-                        }
-                    }
-                });
-            });
-        });
-        return new Elements(res);
+    }());
+    /**
+     * Helper to debug selector.
+     * @param element
+     * @param selector
+     * @returns {boolean} true if element match the selector, false otherwise
+     */
+    function match(element, params) {
+        var _selector = new Selector(params);
+        return _selector.matchType(element) && _selector.matchFilters(element);
     }
-
-    function activateCamera(camera) {
-        if (global.scene.activeCamera) {
-            global.scene.activeCamera.detachControl();
+    function find(params, container) {
+        var elements = new Elements();
+        var selector = new Selector(params);
+        if (is.Scene(container) || is.AssetContainer(container)) {
+            switch (selector.type) {
+                case "material":
+                    container.materials.forEach(function (material) {
+                        if (selector.matchFilters(material)) {
+                            elements.add(material);
+                        }
+                    });
+                    break;
+                case "mesh":
+                    container.meshes.forEach(function (mesh) {
+                        if (selector.matchFilters(mesh)) {
+                            elements.add(mesh);
+                        }
+                    });
+                    break;
+                case "light":
+                    container.lights.forEach(function (light) {
+                        if (selector.matchFilters(light)) {
+                            elements.add(light);
+                        }
+                    });
+                    break;
+                case "multimaterial":
+                    container.material.forEach(function (material) {
+                        if (is.MultiMaterial(material)) {
+                            if (selector.matchFilters(material)) {
+                                elements.add(material);
+                            }
+                        }
+                    });
+                    break;
+                case "texture":
+                    container.textures.forEach(function (texture) {
+                        if (selector.matchFilters(texture)) {
+                            elements.add(texture);
+                        }
+                    });
+                    break;
+                case "camera":
+                    container.cameras.forEach(function (camera) {
+                        if (selector.matchFilters(camera)) {
+                            elements.add(camera);
+                        }
+                    });
+                    break;
+                case "all":
+                    container.materials.forEach(function (material) {
+                        if (selector.matchFilters(material)) {
+                            elements.add(material);
+                        }
+                    });
+                    container.meshes.forEach(function (mesh) {
+                        if (selector.matchFilters(mesh)) {
+                            elements.add(mesh);
+                        }
+                    });
+                    container.lights.forEach(function (light) {
+                        if (selector.matchFilters(light)) {
+                            elements.add(light);
+                        }
+                    });
+                    container.textures.forEach(function (texture) {
+                        if (selector.matchFilters(texture)) {
+                            elements.add(texture);
+                        }
+                    });
+            }
         }
-        global.scene.setActiveCameraByName(camera);
-        global.scene.activeCamera.attachControl(global.canvas);
-        if (global.TRACE) {
-            console.groupCollapsed("[_r] - activate camera " + global.scene.activeCamera.name);
-            find(camera, global.scene).log();
-            console.groupEnd();
+        else {
+            container.each(function (element) {
+                if (selector.matchType(element) && selector.matchFilters(element)) {
+                    elements.add(element);
+                }
+            });
         }
+        return elements;
     }
 
     var libraries = [];
@@ -962,6 +1114,10 @@ var _r = (function (BABYLON) {
                 sceneFileName = any["scene"];
             }
         }
+        else {
+            rootUrl = any[0];
+            sceneFileName = any[1];
+        }
         if (global.TRACE) {
             console.groupCollapsed("[_r] - loadAssets & create library " + sceneFileName + " from " + rootUrl);
             BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.DETAILED_LOGGING;
@@ -981,26 +1137,23 @@ var _r = (function (BABYLON) {
     function select(arg) {
         if (is.String(arg)) {
             if (arg.toLowerCase() === "scene") {
-                var elements_1 = new Elements();
-                elements_1[0] = global.scene;
-                elements_1.length = 1;
-                return elements_1;
+                return new Elements(global.scene);
             }
-            var elements_2 = find(arg, global.scene);
+            var elements_1 = find(arg, global.scene);
             // elements could be in a library not attached to the scene
             for (var lib in libraries) {
                 var selection = libraries[lib].select(arg);
                 selection.each(function (item) {
                     // item could be in multiple libraries
-                    if (!elements_2.contains(item)) {
-                        elements_2.add(item);
+                    if (!elements_1.contains(item)) {
+                        elements_1.add(item);
                     }
                 });
             }
-            if (elements_2.length == 0) {
+            if (global.TRACE === true && elements_1.length == 0) {
                 console.warn('BABYLON.Runtime::no object(s) found for selector "' + arg + '"');
             }
-            return elements_2;
+            return elements_1;
         }
         else {
             return new Elements(arg);
@@ -3311,7 +3464,9 @@ var _r = (function (BABYLON) {
         one: one,
         trigger: trigger,
         select: select,
-        patch: patch
+        patch: patch,
+        match: match,
+        Selector: Selector
     };
 
     return index;
