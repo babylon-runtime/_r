@@ -33,6 +33,11 @@ module.exports = function(grunt) {
                 files : [
                     { src : [  'test/no-launch/test.js'] },
                 ]
+            },
+            customEvents : {
+                files : [
+                    { src : [  'test/custom-events/test.js'] },
+                ]
             }
         }
     });
