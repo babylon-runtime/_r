@@ -60,3 +60,57 @@ describe('one, on, trigger, off', function() {
         expect(_data.hello === "world").to.be.true;
     })
 });
+
+describe('global events', function() {
+    it("should work without select", function() {
+        var count = 0;
+        _r.one("customEvent", function() {
+            count += 1;
+        });
+        _r.trigger("customEvent");
+        _r.trigger("customEvent");
+        expect(count === 1).to.be.true;
+    });
+    it('off worked', function() {
+        var count = 0;
+        var callback = function() {
+            count += 1;
+        };
+        _r.on("customEvent", callback);
+        _r.trigger("customEvent");
+        _r.off("customEvent", callback);
+        _r.trigger("customEvent");
+        expect(count === 1).to.be.true;
+
+    });
+    it("global off", function() {
+        var count = 0;
+
+        var callback1 = function() {
+            count += 1;
+        };
+
+        var callback2 = function() {
+            count += 1;
+        };
+        _r.on("customEvent", callback1);
+        _r.on("customEvent", callback2);
+        _r.trigger("customEvent");
+        expect(count === 2).to.be.true;
+        _r.off("customEvent");
+        _r.trigger("customEvent");
+        _r.trigger("customEvent");
+        _r.trigger("customEvent");
+        expect(count === 2).to.be.true;
+    });
+    it("custom data", function() {
+        var _data = null;
+        _r.on("customEvent", function(data) {
+            _data = data;
+        });
+        _r.trigger("customEvent", {
+            hello : "world"
+        });
+        expect(_data.hello === "world").to.be.true;
+    })
+})

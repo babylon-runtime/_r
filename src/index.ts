@@ -44,10 +44,18 @@ export default {
     createLibrary : createLibrary,
     library : library,
     data : data,
-    on : on,
-    off : off,
-    one : one,
-    trigger : trigger,
+    on : function(event: string, handler: (...args: any[]) => void, repeat = true) {
+        on(this, event, handler, repeat);
+    },
+    off : function(event: string, handler?: (...args: any[]) => void) {
+        off(this, event, handler);
+    },
+    one : function(event: string, handler: (...args: any[]) => void) {
+        one(this, event, handler);
+    },
+    trigger : function(event: string, extraParameters?: any) {
+        trigger(this, event, extraParameters);
+    },
     select : select,
     patch : patch,
     match : match,

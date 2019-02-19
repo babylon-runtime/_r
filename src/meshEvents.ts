@@ -3,7 +3,7 @@ import { global } from "./global.js";
 import { data } from "./data.js";
 import { trigger } from "./events.js";
 
-export const meshTriggers = [
+export const meshEvents = [
   'NothingTrigger ',
   'OnDoublePickTrigger',
   'OnPickTrigger',
