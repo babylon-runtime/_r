@@ -9,7 +9,7 @@
   "scripts": {
     "build": "rollup -c",
     "release": "release-it",
-    "test": "karma start"
+    "test": "grunt"
   },
   "repository": {
     "type": "git",
@@ -25,6 +25,8 @@
     "@types/q": "^1.5.1",
     "babylonjs": "^3.3.0",
     "chai": "^4.2.0",
+    "grunt": "^1.0.3",
+    "grunt-karma": "^3.0.1",
     "karma": "^3.1.1",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^2.2.0",
