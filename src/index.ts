@@ -1,15 +1,14 @@
 import { global } from "./global.js";
 import { is } from "./is.js";
 import { launch, ready, start, pause } from "./launch.js";
-import { importScene, downloadScene} from "./import.js";
-import { createLibrary, library, libraries} from "./library.js";
+import { importScene, downloadScene } from "./import.js";
+import { createLibrary, library, libraries } from "./library.js";
 import { select } from "./select.js";
-import { data } from "./data.js"
+import { data } from "./data.js";
 import { on, off, one, trigger } from "./events.js";
 import { patch } from "./patch/patch.js";
 import { match } from "./Elements.js";
 import { Selector } from "./Selector.js";
-
 
 export default {
     get canvas() {
@@ -31,10 +30,10 @@ export default {
         global.engine = value;
     },
     get TRACE() {
-        return global.TRACE
+        return global.TRACE;
     },
     set TRACE(value) {
-        global.TRACE = value
+        global.TRACE = value;
     },
     launch : launch,
     ready : ready,
@@ -53,4 +52,4 @@ export default {
     patch : patch,
     match : match,
     Selector : Selector
-}
+};

@@ -1,42 +1,41 @@
-import {BABYLON} from "./BABYLON.js";
-import {global} from "./global.js";
-import {is} from "./is.js";
-import {on, one, off, trigger} from "./events.js";
-import {data} from "./data.js";
-import {onMesh, oneMesh, offMesh, meshTriggers} from "./meshTriggers.js";
-import {Selector} from "./Selector.js";
-
+import { BABYLON } from "./BABYLON.js";
+import { global } from "./global.js";
+import { is } from "./is.js";
+import { on, one, off, trigger } from "./events.js";
+import { data } from "./data.js";
+import { onMesh, oneMesh, offMesh, meshTriggers } from "./meshTriggers.js";
+import { Selector } from "./Selector.js";
 
 export class Elements {
     length : number;
     constructor(...elements : any) {
         this.length = 0;
-        for(let i = 0; i < elements.length; i++) {
-            this.add(elements[i])
+        for (let i = 0; i < elements.length; i++) {
+            this.add(elements[i]);
         }
     }
 
     add(element : any) {
-        if(is.Array(element)) {
-            for(let i = 0; i < element.length; i++) {
+        if (is.Array(element)) {
+            for (let i = 0; i < element.length; i++) {
                 this.add(element[i]);
             }
             return;
         }
-        if(is.AssetContainer(element) || is.Scene(element)) {
-            for(let i = 0; i < element.meshes.length; i++) {
+        if (is.AssetContainer(element) || is.Scene(element)) {
+            for (let i = 0; i < element.meshes.length; i++) {
                 this[this.length++] = element.meshes[i];
             }
-            for(let i = 0; i < element.lights.length; i++) {
+            for (let i = 0; i < element.lights.length; i++) {
                 this[this.length++] = element.lights[i];
             }
-            for(let i = 0; i < element.materials.length; i++) {
+            for (let i = 0; i < element.materials.length; i++) {
                 this[this.length++] = element.materials[i];
             }
-            for(let i = 0; i < element.textures.length; i++) {
+            for (let i = 0; i < element.textures.length; i++) {
                 this[this.length++] = element.textures[i];
             }
-            for(let i = 0; i < element.cameras.length; i++) {
+            for (let i = 0; i < element.cameras.length; i++) {
                 this[this.length++] = element.cameras[i];
             }
             return;
@@ -56,7 +55,7 @@ export class Elements {
      */
     on(events : string, handler : (args : any) => void) {
         this.each(function(item) {
-            if(is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+            if (is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
                 onMesh(item, events, handler);
             }
             else {
@@ -73,7 +72,7 @@ export class Elements {
      */
     one(events : string, handler : (args : any) => void) {
         this.each(function(item) {
-            if(is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+            if (is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
                 oneMesh(item, events, handler);
             }
             else {
@@ -90,7 +89,7 @@ export class Elements {
      */
     off(events : string, handler? : (args : any) => void) {
         this.each(function(item) {
-            if(is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+            if (is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
                 offMesh(item, events, handler);
             }
             else {
@@ -112,8 +111,8 @@ export class Elements {
     }
 
     data(key? : string, value? : any) {
-        if(key != null && value != null) {
-            for(let i = 0; i < this.length; i++) {
+        if (key != null && value != null) {
+            for (let i = 0; i < this.length; i++) {
                 data(this[i], key, value);
             }
         }
@@ -123,24 +122,24 @@ export class Elements {
     }
 
     show() {
-        for(let i = 0; i < this.length; i++) {
-            if(is.Mesh(this[i])) {
+        for (let i = 0; i < this.length; i++) {
+            if (is.Mesh(this[i])) {
                 global.scene.addMesh(this[i]);
                 continue;
             }
-            if(is.Material(this[i])) {
+            if (is.Material(this[i])) {
                 global.scene.addMaterial(this[i]);
                 continue;
             }
-            if(is.Light(this[i])) {
+            if (is.Light(this[i])) {
                 global.scene.addMaterial(this[i]);
                 continue;
             }
-            if(is.Texture(this[i])) {
+            if (is.Texture(this[i])) {
                 global.scene.addTexture(this[i]);
                 continue;
             }
-            if(is.Camera(this[i])) {
+            if (is.Camera(this[i])) {
                 global.scene.addCamera(this[i]);
                 continue;
             }
@@ -148,24 +147,24 @@ export class Elements {
     }
 
     hide() {
-        for(let i = 0; i < this.length; i++) {
-            if(is.Mesh(this[i])) {
+        for (let i = 0; i < this.length; i++) {
+            if (is.Mesh(this[i])) {
                 global.scene.removeMesh(this[i]);
                 continue;
             }
-            if(is.Material(this[i])) {
+            if (is.Material(this[i])) {
                 global.scene.removeMaterial(this[i]);
                 continue;
             }
-            if(is.Light(this[i])) {
+            if (is.Light(this[i])) {
                 global.scene.removeMaterial(this[i]);
                 continue;
             }
-            if(is.Texture(this[i])) {
+            if (is.Texture(this[i])) {
                 global.scene.removeTexture(this[i]);
                 continue;
             }
-            if(is.Camera(this[i])) {
+            if (is.Camera(this[i])) {
                 global.scene.removeCamera(this[i]);
                 continue;
             }
@@ -177,10 +176,10 @@ export class Elements {
      * @param callback A function to execute for each element.
      * @returns {_r.Elements}
      */
-    each(callback: Function) : Elements{
+    each(callback: Function) : Elements {
         for (let i = 0; i < this.length; i++) {
             /** We can break the .each() loop at a particular iteration by making the callback function return false. Returning non-false is the same as a continue statement in a for loop; it will skip immediately to the next iteration. **/
-            if(callback.call(this[i], this[i], i) == false) {
+            if (callback.call(this[i], this[i], i) == false) {
                 return;
             }
         }
@@ -197,7 +196,7 @@ export class Elements {
         let length = 0;
         this.each(function(element) {
             result[length++] = func(element);
-        })
+        });
         result.length = length;
         return result;
     }
@@ -207,10 +206,10 @@ export class Elements {
      * @param func A function used as a test for each element in the set. this is the current element.
      * @returns {_r.Elements}
      */
-    filter(func : (obj : any) => boolean) : Elements{
+    filter(func : (obj : any) => boolean) : Elements {
         let result = new Elements();
         this.each(function(element) {
-            if(func(element)) {
+            if (func(element)) {
                 result.add(element);
             }
         });
@@ -235,9 +234,9 @@ export class Elements {
      * @param value Optional value to set for the attribute.
      * @returns {any}
      */
-    attr(attribute : string, value?:any) {
+    attr(attribute : string, value? : any) {
         if (value != null) {
-            this.each(function (item) {
+            this.each(function(item) {
                 item[attribute] = value;
             });
             return this;
@@ -260,7 +259,7 @@ export class Elements {
      * @returns {_r.Elements}
      */
     log(property?: string) {
-        this.each(function (item) {
+        this.each(function(item) {
             if (property) {
                 console.log(item[property]);
             }
@@ -276,22 +275,21 @@ export class Elements {
      * @returns {_r.Elements}
      */
     concat(...elements : any[]) : Elements {
-        var self = this;
-        elements.forEach(function(element) {
+        elements.forEach((element) => {
             let base;
-            if(element instanceof Elements) {
+            if (element instanceof Elements) {
                 base = element;
             }
             else {
-                if(is.String(element)) {
+                if (is.String(element)) {
                     base = new Elements(element);
                 }
                 else {
-                    if(is.Array(element)) {
+                    if (is.Array(element)) {
                         base = new Elements();
                         element.forEach(function(item) {
                             base[base.length++] = item;
-                        })
+                        });
                     }
                     else {
                         base = new Elements(element);
@@ -299,8 +297,8 @@ export class Elements {
                 }
             }
             base.each(function(item) {
-                self[self.length++] = item;
-            })
+                this[this.length++] = item;
+            });
         });
         return this;
     }
@@ -313,7 +311,7 @@ export class Elements {
      * Disposes all the assets in the container
      */
     dispose() {
-      for(let i = 0; i < this.length; i++) {
+      for (let i = 0; i < this.length; i++) {
         this[i].dispose();
         delete this[i];
       }
@@ -321,27 +319,27 @@ export class Elements {
 
     addToScene() {
       this.each(function(element) {
-        if(is.Camera(element)) {
+        if (is.Camera(element)) {
           global.scene.addCamera(element);
           return false;
         }
-        if(is.Mesh(element)) {
+        if (is.Mesh(element)) {
           global.scene.addMesh(element);
           return false;
         }
-        if(is.Material(element)) {
+        if (is.Material(element)) {
           global.scene.addMaterial(element);
           return false;
         }
-        if(is.MultiMaterial(element)) {
+        if (is.MultiMaterial(element)) {
           global.scene.addMultiMaterial(element);
           return false;
         }
-        if(is.Texture(element)) {
+        if (is.Texture(element)) {
           global.scene.addTexture(element);
           return false;
         }
-        if(is.Light(element)) {
+        if (is.Light(element)) {
           global.scene.addLight(element);
           return false;
         }
@@ -350,27 +348,27 @@ export class Elements {
 
     removeFromScene() {
       this.each(function(element) {
-        if(is.Camera(element)) {
+        if (is.Camera(element)) {
           global.scene.removeCamera(element);
           return false;
         }
-        if(is.Mesh(element)) {
+        if (is.Mesh(element)) {
           global.scene.removeMesh(element);
           return false;
         }
-        if(is.Material(element)) {
+        if (is.Material(element)) {
           global.scene.removeMaterial(element);
           return false;
         }
-        if(is.MultiMaterial(element)) {
+        if (is.MultiMaterial(element)) {
           global.scene.removeMultiMaterial(element);
           return false;
         }
-        if(is.Texture(element)) {
+        if (is.Texture(element)) {
           global.scene.removeTexture(element);
           return false;
         }
-        if(is.Light(element)) {
+        if (is.Light(element)) {
           global.scene.removeLight(element);
           return false;
         }
@@ -434,70 +432,70 @@ export function match(element : any, params : string) {
 export function find(params : string, container : BABYLON.Scene | Elements | BABYLON.AssetContainer) : Elements {
   let elements = new Elements();
   let selector = new Selector(params);
-  if(is.Scene(container) || is.AssetContainer(container)) {
-    switch(selector.type) {
+  if (is.Scene(container) || is.AssetContainer(container)) {
+    switch (selector.type) {
       case "material" :
         container.materials.forEach(function(material) {
-          if(selector.matchFilters(material)) {
+          if (selector.matchFilters(material)) {
             elements.add(material);
           }
         });
         break;
       case "mesh" :
-        container.meshes.forEach(function(mesh){
-          if(selector.matchFilters(mesh)) {
+        container.meshes.forEach(function(mesh) {
+          if (selector.matchFilters(mesh)) {
             elements.add(mesh);
           }
         });
         break;
       case "light":
-        container.lights.forEach(function(light){
-          if(selector.matchFilters(light)) {
+        container.lights.forEach(function(light) {
+          if (selector.matchFilters(light)) {
             elements.add(light);
           }
         });
         break;
       case "multimaterial":
         container.material.forEach(function(material) {
-          if(is.MultiMaterial(material)) {
-            if(selector.matchFilters(material)) {
+          if (is.MultiMaterial(material)) {
+            if (selector.matchFilters(material)) {
               elements.add(material);
             }
           }
         });
         break;
       case "texture":
-        container.textures.forEach(function(texture){
-          if(selector.matchFilters(texture)) {
+        container.textures.forEach(function(texture) {
+          if (selector.matchFilters(texture)) {
             elements.add(texture);
           }
         });
         break;
       case "camera":
-        container.cameras.forEach(function(camera){
-          if(selector.matchFilters(camera)) {
+        container.cameras.forEach(function(camera) {
+          if (selector.matchFilters(camera)) {
             elements.add(camera);
           }
         });
         break;
       case "all":
         container.materials.forEach(function(material) {
-          if(selector.matchFilters(material)) {
+          if (selector.matchFilters(material)) {
             elements.add(material);
           }
         });
-        container.meshes.forEach(function(mesh){
-          if(selector.matchFilters(mesh)) {
+        container.meshes.forEach(function(mesh) {
+          if (selector.matchFilters(mesh)) {
             elements.add(mesh);
           }
         });
-        container.lights.forEach(function(light){
-          if(selector.matchFilters(light)) {
+        container.lights.forEach(function(light) {
+          if (selector.matchFilters(light)) {
             elements.add(light);
           }
         });
-        container.textures.forEach(function(texture){
-          if(selector.matchFilters(texture)) {
+        container.textures.forEach(function(texture) {
+          if (selector.matchFilters(texture)) {
             elements.add(texture);
           }
         });
@@ -505,11 +503,10 @@ export function find(params : string, container : BABYLON.Scene | Elements | BAB
   }
   else {
     container.each(function(element) {
-      if(selector.matchType(element) && selector.matchFilters(element)) {
+      if (selector.matchType(element) && selector.matchFilters(element)) {
         elements.add(element);
       }
-    })
+    });
   }
   return elements;
 }
-

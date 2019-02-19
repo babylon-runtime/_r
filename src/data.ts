@@ -1,4 +1,4 @@
-import {is} from "./is.js";
+import { is } from "./is.js";
 
 let cache = [];
 let expando = '_r' + Date.now();
