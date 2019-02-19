@@ -324,7 +324,7 @@ var _r = (function (BABYLON) {
       }
   }
 
-  var meshTriggers = [
+  var meshEvents = [
       'NothingTrigger ',
       'OnDoublePickTrigger',
       'OnPickTrigger',
@@ -549,7 +549,7 @@ var _r = (function (BABYLON) {
        */
       Elements.prototype.on = function (events, handler) {
           this.each(function (item) {
-              if (is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+              if (is.Mesh(item) && meshEvents.indexOf(events) !== -1) {
                   onMesh(item, events, handler);
               }
               else {
@@ -565,7 +565,7 @@ var _r = (function (BABYLON) {
        */
       Elements.prototype.one = function (events, handler) {
           this.each(function (item) {
-              if (is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+              if (is.Mesh(item) && meshEvents.indexOf(events) !== -1) {
                   oneMesh(item, events, handler);
               }
               else {
@@ -581,7 +581,7 @@ var _r = (function (BABYLON) {
        */
       Elements.prototype.off = function (events, handler) {
           this.each(function (item) {
-              if (is.Mesh(item) && meshTriggers.indexOf(events) !== -1) {
+              if (is.Mesh(item) && meshEvents.indexOf(events) !== -1) {
                   offMesh(item, events, handler);
               }
               else {
@@ -3461,10 +3461,19 @@ var _r = (function (BABYLON) {
       createLibrary: createLibrary,
       library: library,
       data: data,
-      on: on,
-      off: off,
-      one: one,
-      trigger: trigger,
+      on: function (event, handler, repeat) {
+          if (repeat === void 0) { repeat = true; }
+          on(this, event, handler, repeat);
+      },
+      off: function (event, handler) {
+          off(this, event, handler);
+      },
+      one: function (event, handler) {
+          one(this, event, handler);
+      },
+      trigger: function (event, extraParameters) {
+          trigger(this, event, extraParameters);
+      },
       select: select,
       patch: patch,
       match: match,
