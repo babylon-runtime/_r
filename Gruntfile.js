@@ -15,16 +15,20 @@ module.exports = function(grunt) {
                     'node_modules/babylonjs/babylon.js', 'dist/_r.js'
                 ]
             },
-            continuous : {
+            cornellBox : {
                 files : [
                     { src : [ 'test/cornellBox/test.js'] }]
             },
-            selector : {
+            selectors : {
                 files : [
                     { src : [  'test/selectors/test.js'] },
                 ]
+            },
+            playground : {
+                files : [
+                    { src : [  'test/playground-paste/test.js'] },
+                ]
             }
-
         }
     });
     // Default task(s).

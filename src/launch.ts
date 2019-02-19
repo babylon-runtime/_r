@@ -71,8 +71,21 @@ export function launch(obj : IRuntimeLoading | string) {
             }
         }
         else {
-            // setter accept function and object.
-            global.scene = obj.scene;
+            if(is.Function(obj.scene)) {
+                let result = eval("var canvas=_r.canvas; var engine = _r.engine; var scene=_r.scene; var createScene=" + obj.scene + ';createScene()');
+                if(is.Scene(result)) {
+                    global.scene = result;
+                }
+            }
+            else {
+                if(is.Scene(obj.scene)) {
+                    global.scene = obj.scene;
+                }
+                else {
+                    throw new Error("invalid scene parameter in _r.launch");
+                }
+            }
+
             run(obj);
             return new ImportPromise(global.scene);
         }

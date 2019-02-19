@@ -65,16 +65,7 @@ export class global {
     }
 
     static set scene(value) {
-        if(is.Function(value)) {
-            window["engine"] = global.engine;
-            window["canvas"] = global.canvas;
-            _scene = value();
-            window["engine"] = null;
-            window["canvas"] = null;
-        }
-        else {
-            _scene = value;
-        }
+        _scene = value;
     }
 
     static TRACE = false;
