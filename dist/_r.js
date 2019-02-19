@@ -1464,7 +1464,7 @@ var _r = (function (BABYLON) {
       Array.prototype.map || function (callback, thisp) {
           var self = this;
           var collect = [];
-          array_reduce(self, function (undefined, value, index) {
+          array_reduce(self, function (undefined$1, value, index) {
               collect.push(callback.call(thisp, value, index, self));
           }, void 0);
           return collect;
@@ -1769,7 +1769,7 @@ var _r = (function (BABYLON) {
               promise.source = newPromise;
           }
 
-          array_reduce(messages, function (undefined, message) {
+          array_reduce(messages, function (undefined$1, message) {
               Q.nextTick(function () {
                   newPromise.promiseDispatch.apply(newPromise, message);
               });
@@ -1807,7 +1807,7 @@ var _r = (function (BABYLON) {
               return;
           }
 
-          array_reduce(progressListeners, function (undefined, progressListener) {
+          array_reduce(progressListeners, function (undefined$1, progressListener) {
               Q.nextTick(function () {
                   progressListener(progress);
               });
@@ -2732,7 +2732,7 @@ var _r = (function (BABYLON) {
       return when(promises, function (promises) {
           var pendingCount = 0;
           var deferred = defer();
-          array_reduce(promises, function (undefined, promise, index) {
+          array_reduce(promises, function (undefined$1, promise, index) {
               var snapshot;
               if (
                   isPromise(promise) &&

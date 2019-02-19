@@ -12,7 +12,7 @@ module.exports = function(grunt) {
                 browsers: ['Chrome'],
                 singleRun: true,
                 files : [
-                    'node_modules/babylonjs/babylon.js', 'dist/_r.js'
+                    'node_modules/babylonjs/babylon.js', 'dist/_r.min.js'
                 ]
             },
             cornellBox : {
