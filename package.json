@@ -11,7 +11,7 @@
     "release": "npm run build && release-it",
     "lint": "tslint src/**/*.ts{,x}",
     "test": "grunt",
-    "typescript" : "rollup -c"
+    "typescript": "rollup -c"
   },
   "repository": {
     "type": "git",
