@@ -38,8 +38,14 @@ module.exports = function(grunt) {
                 files : [
                     { src : [  'test/custom-events/test.js'] },
                 ]
-            },  /**
-            allInPatch : {
+            },
+            animate : {
+                files : [
+                    { src : [ 'test/animate/test.js'] }
+                ]
+            },
+            /**
+             allInPatch : {
                 proxies : {
                     'scene.js' : 'test/all-in-patch/scene.js'
                 },

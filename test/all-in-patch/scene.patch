@@ -2,7 +2,6 @@
 [
     {
         "scene" : function() {
-            console.log("scene");
             var scene = new BABYLON.Scene(engine);
 
             //Create a light
