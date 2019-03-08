@@ -1,7 +1,7 @@
 var _r = (function (BABYLON) {
   'use strict';
 
-  console.log("babylon runtime v(0.0.3)")
+  console.log("babylon runtime v(0.0.4)")
 
   // this will let us :
 
@@ -232,6 +232,71 @@ var _r = (function (BABYLON) {
       return global;
   }());
 
+  /**
+   * Merge the contents of two or more objects together into the first object.
+   *
+   * - If first parameter is equal to true, the merge becomes recursive (aka. deep copy). Passing false for this argument is not supported.
+   * - When two or more object arguments are supplied to _r.extend(), properties from all of the objects are added to the target object. Arguments that are null or undefined are ignored.
+   *
+   * @param args
+   * @returns {any}
+   */
+  function extend() {
+      var args = [];
+      for (var _i = 0; _i < arguments.length; _i++) {
+          args[_i] = arguments[_i];
+      }
+      /**
+       * inspired by https://j11y.io/jquery/#v=1.11.2&fn=jQuery.extend
+       * (https://github.com/jquery/jquery/blob/master/src/core.js)
+       */
+      var options, name, src, copy, isArray, clone, target = args[0], i = 1, length = args.length, deep = false;
+      // Handle a deep copy situation
+      if (typeof target === "boolean") {
+          deep = target;
+          target = arguments[1] || {};
+          // skip the boolean and the target
+          i++;
+      }
+      // Handle case when target is a string or something (possible in deep copy)
+      if (typeof target !== "object" && !is.Function(target)) {
+          target = {};
+      }
+      for (; i < length; i++) {
+          // Only deal with non-null/undefined values
+          if ((options = arguments[i]) != null) {
+              // Extend the base object
+              for (name in options) {
+                  src = target[name];
+                  copy = options[name];
+                  // Prevent never-ending loop
+                  if (target == copy) {
+                      continue;
+                  }
+                  // Recurse if we're merging plain objects or arrays
+                  if (deep && copy && (is.PlainObject(copy) || (isArray = is.Array(copy)))) {
+                      if (isArray) {
+                          isArray = false;
+                          clone = src && is.Array(src) ? src : [];
+                      }
+                      else {
+                          clone = src && is.PlainObject(src) ? src : {};
+                      }
+                      // Never move original objects, clone them
+                      target[name] = extend(deep, clone, copy);
+                  }
+                  else {
+                      // Don't bring in undefined values
+                      if (copy !== undefined) {
+                          target[name] = copy;
+                      }
+                  }
+              }
+          }
+      }
+      return target;
+  }
+
   function activateCamera(camera) {
       if (global.scene.activeCamera) {
           global.scene.activeCamera.detachControl();
@@ -397,70 +462,68 @@ var _r = (function (BABYLON) {
           this.type = "all";
           var filters = [];
           var type = "all";
-          selector.split(',').forEach(function (item) {
-              item = item.trim();
-              if (item.indexOf(":mesh") !== -1) {
-                  type = "mesh";
+          var item = selector.trim();
+          if (item.indexOf(":mesh") !== -1) {
+              type = "mesh";
+          }
+          if (item.indexOf(":material") !== -1) {
+              type = "material";
+          }
+          if (item.indexOf(":light") !== -1) {
+              type = "light";
+          }
+          if (item.indexOf(":camera") !== -1) {
+              type = "camera";
+          }
+          if (item.indexOf(":texture") !== -1) {
+              type = "texture";
+          }
+          if (item.indexOf(":multimaterial") !== -1) {
+              type = "multimaterial";
+          }
+          [":mesh", ":material", ":multimaterial", ":camera", ":light", ":texture"].forEach(function (type) {
+              item = item.replace(type, '');
+          });
+          // [isVisible][alpha!= 0.1]
+          var regExpAttribute = /\[(.*?)\]/;
+          var matches = [];
+          var match;
+          while (match = regExpAttribute.exec(selector)) {
+              matches.push(match[1]);
+          }
+          // TODO [material.diffuseTexture.name=texture*.jpg]
+          matches.forEach(function (expr) {
+              if (expr.indexOf('!=') !== -1) {
+                  var split = expr.split('!=');
+                  filters.push(function (element) {
+                      if (element.hasOwnProperty(split[0])) {
+                          return element[split[0]] != split[1];
+                      }
+                      return false;
+                  });
               }
-              if (item.indexOf(":material") !== -1) {
-                  type = "material";
-              }
-              if (item.indexOf(":light") !== -1) {
-                  type = "light";
-              }
-              if (item.indexOf(":camera") !== -1) {
-                  type = "camera";
-              }
-              if (item.indexOf(":texture") !== -1) {
-                  type = "texture";
-              }
-              if (item.indexOf(":multimaterial") !== -1) {
-                  type = "multimaterial";
-              }
-              [":mesh", ":material", ":multimaterial", ":camera", ":light", ":texture"].forEach(function (type) {
-                  item = item.replace(type, '');
-              });
-              // [isVisible][alpha!= 0.1]
-              var regExpAttribute = /\[(.*?)\]/;
-              var matches = [];
-              var match;
-              while (match = regExpAttribute.exec(selector)) {
-                  matches.push(match[1]);
-              }
-              // TODO [material.diffuseTexture.name=texture*.jpg]
-              matches.forEach(function (expr) {
-                  if (expr.indexOf('!=') !== -1) {
-                      var split = expr.split('!=');
+              else {
+                  if (expr.indexOf('=') !== -1) {
                       filters.push(function (element) {
                           if (element.hasOwnProperty(split[0])) {
-                              return element[split[0]] != split[1];
+                              return element[split[0]] == split[1];
                           }
                           return false;
                       });
                   }
                   else {
-                      if (expr.indexOf('=') !== -1) {
-                          filters.push(function (element) {
-                              if (element.hasOwnProperty(split[0])) {
-                                  return element[split[0]] == split[1];
-                              }
-                              return false;
-                          });
-                      }
-                      else {
-                          filters.push(function (element) {
-                              return element.hasOwnProperty(expr);
-                          });
-                      }
+                      filters.push(function (element) {
+                          return element.hasOwnProperty(expr);
+                      });
                   }
-              });
-              item = item.replace(regExpAttribute, '');
-              // Here item only contains name selector i.e mesh.00*
-              var exp = item.replace(/\*/g, '.*');
-              var regExp = new RegExp('^' + exp + '$');
-              filters.push(function (element) {
-                  return element.hasOwnProperty('name') && regExp.test(element.name);
-              });
+              }
+          });
+          item = item.replace(regExpAttribute, '');
+          // Here item only contains name selector i.e mesh.00*
+          var exp = item.replace(/\*/g, '.*');
+          var regExp = new RegExp('^' + exp + '$');
+          filters.push(function (element) {
+              return element.hasOwnProperty('name') && regExp.test(element.name);
           });
           // TODO :not(selector)
           this.filters = filters;
@@ -860,27 +923,27 @@ var _r = (function (BABYLON) {
       //TODO
       /**
        ready(callback : Function) {
-          if(this.isReady) {
-              callback.call(this, this);
-          }
-          else {
-
-          }
-      }**/
+            if(this.isReady) {
+                callback.call(this, this);
+            }
+            else {
+    
+            }
+        }**/
       // TODO
       Elements.prototype.remove = function (element) {
           /**
            let index = this.toArray().indexOf(element);
            if(index) {
-
-          }
-           for (let property in PROPERTIES) {
-              if(element instanceof BABYLON[property]) {
-                  this[this.length++] = element;
-                  super[PROPERTIES[property]].push(element);
-                  return;
+      
               }
-          }**/
+           for (let property in PROPERTIES) {
+                  if(element instanceof BABYLON[property]) {
+                      this[this.length++] = element;
+                      super[PROPERTIES[property]].push(element);
+                      return;
+                  }
+              }**/
       };
       //TODO
       Elements.prototype.fadeIn = function () {
@@ -902,83 +965,91 @@ var _r = (function (BABYLON) {
   }
   function find(params, container) {
       var elements = new Elements();
-      var selector = new Selector(params);
-      if (is.Scene(container) || is.AssetContainer(container)) {
-          switch (selector.type) {
-              case "material":
-                  container.materials.forEach(function (material) {
-                      if (selector.matchFilters(material)) {
-                          elements.add(material);
-                      }
-                  });
-                  break;
-              case "mesh":
-                  container.meshes.forEach(function (mesh) {
-                      if (selector.matchFilters(mesh)) {
-                          elements.add(mesh);
-                      }
-                  });
-                  break;
-              case "light":
-                  container.lights.forEach(function (light) {
-                      if (selector.matchFilters(light)) {
-                          elements.add(light);
-                      }
-                  });
-                  break;
-              case "multimaterial":
-                  container.material.forEach(function (material) {
-                      if (is.MultiMaterial(material)) {
+      params.split(',').forEach(function (item) {
+          item = item.trim();
+          var selector = new Selector(item);
+          if (is.Scene(container) || is.AssetContainer(container)) {
+              switch (selector.type) {
+                  case "material":
+                      container.materials.forEach(function (material) {
                           if (selector.matchFilters(material)) {
                               elements.add(material);
                           }
-                      }
-                  });
-                  break;
-              case "texture":
-                  container.textures.forEach(function (texture) {
-                      if (selector.matchFilters(texture)) {
-                          elements.add(texture);
-                      }
-                  });
-                  break;
-              case "camera":
-                  container.cameras.forEach(function (camera) {
-                      if (selector.matchFilters(camera)) {
-                          elements.add(camera);
-                      }
-                  });
-                  break;
-              case "all":
-                  container.materials.forEach(function (material) {
-                      if (selector.matchFilters(material)) {
-                          elements.add(material);
-                      }
-                  });
-                  container.meshes.forEach(function (mesh) {
-                      if (selector.matchFilters(mesh)) {
-                          elements.add(mesh);
-                      }
-                  });
-                  container.lights.forEach(function (light) {
-                      if (selector.matchFilters(light)) {
-                          elements.add(light);
-                      }
-                  });
-                  container.textures.forEach(function (texture) {
-                      if (selector.matchFilters(texture)) {
-                          elements.add(texture);
-                      }
-                  });
-          }
-      }
-      else {
-          container.each(function (element) {
-              if (selector.matchType(element) && selector.matchFilters(element)) {
-                  elements.add(element);
+                      });
+                      break;
+                  case "mesh":
+                      container.meshes.forEach(function (mesh) {
+                          if (selector.matchFilters(mesh)) {
+                              elements.add(mesh);
+                          }
+                      });
+                      break;
+                  case "light":
+                      container.lights.forEach(function (light) {
+                          if (selector.matchFilters(light)) {
+                              elements.add(light);
+                          }
+                      });
+                      break;
+                  case "multimaterial":
+                      container.material.forEach(function (material) {
+                          if (is.MultiMaterial(material)) {
+                              if (selector.matchFilters(material)) {
+                                  elements.add(material);
+                              }
+                          }
+                      });
+                      break;
+                  case "texture":
+                      container.textures.forEach(function (texture) {
+                          if (selector.matchFilters(texture)) {
+                              elements.add(texture);
+                          }
+                      });
+                      break;
+                  case "camera":
+                      container.cameras.forEach(function (camera) {
+                          if (selector.matchFilters(camera)) {
+                              elements.add(camera);
+                          }
+                      });
+                      break;
+                  case "all":
+                      container.materials.forEach(function (material) {
+                          if (selector.matchFilters(material)) {
+                              elements.add(material);
+                          }
+                      });
+                      container.meshes.forEach(function (mesh) {
+                          if (selector.matchFilters(mesh)) {
+                              elements.add(mesh);
+                          }
+                      });
+                      container.lights.forEach(function (light) {
+                          if (selector.matchFilters(light)) {
+                              elements.add(light);
+                          }
+                      });
+                      container.textures.forEach(function (texture) {
+                          if (selector.matchFilters(texture)) {
+                              elements.add(texture);
+                          }
+                      });
+                      container.cameras.forEach(function (camera) {
+                          if (selector.matchFilters(camera)) {
+                              elements.add(camera);
+                          }
+                      });
               }
-          });
-      }
+          }
+          else {
+              container.each(function (element) {
+                  if (selector.matchType(element) && selector.matchFilters(element)) {
+                      elements.add(element);
+                  }
+              });
+          }
+      });
       return elements;
   }
 
@@ -3225,41 +3296,205 @@ var _r = (function (BABYLON) {
 
   });
 
+  function loop() {
+      global.scene.render();
+  }
+  function start() {
+      isStarted = true;
+      global.engine.runRenderLoop(loop);
+  }
+  function pause() {
+      isStarted = false;
+      global.engine.stopRenderLoop(loop);
+  }
+  var isStarted = false;
+
   function patch() {
       var args = [];
       for (var _i = 0; _i < arguments.length; _i++) {
           args[_i] = arguments[_i];
       }
-      var promises = [];
-      if (args.length === 1) {
-          args[0].forEach(function (item) {
-              var selector = Object.getOwnPropertyNames(item)[0];
-              select(selector).each(function (element) {
-                  promises.push(applyPatch(element, item[selector]));
-              });
-          });
-      }
-      else {
-          if (args.length === 2) {
-              select(args[0]).each(function (element) {
-                  promises.push(applyPatch(element, args[1]));
+      if (args.length == 1) {
+          if (is.PatchFile(args[0])) {
+              if (global.TRACE) {
+                  console.groupCollapsed(args[0]);
+              }
+              return downloadPatchFile(args[0]).then(function (data) {
+                  return patch(data).then(function () {
+                      console.groupEnd();
+                  });
               });
           }
           else {
-              console.error("not implemented");
+              // patch([...])
+              if (is.Array(args[0])) {
+                  return patchChain(args[0]);
+              }
+              else {
+                  // patch({"*:mesh" : { isVisible : false }})
+                  if (is.PlainObject(args[0])) {
+                      var selector = Object.getOwnPropertyNames(args[0])[0];
+                      return patch(selector, args[0][selector]);
+                  }
+              }
           }
       }
-      return promises.reduce(Q.when, Q());
+      else {
+          if (is.String(args[0])) {
+              if (global.TRACE) {
+                  console.groupCollapsed(args[0]);
+              }
+              // patch("*:mesh", { position : { x : 10}}
+              switch (args[0]) {
+                  case "scene":
+                      if (is.Function(args[1])) {
+                          var result = execute(args[1]);
+                          if (is.Scene(result)) {
+                              global.scene = result;
+                          }
+                          if (!isStarted) {
+                              start();
+                          }
+                          if (global.TRACE) {
+                              console.groupEnd();
+                          }
+                          return Q(global.scene);
+                      }
+                      else {
+                          return patchElement(global.scene, args[1]).then(function () {
+                              if (global.TRACE) {
+                                  console.groupEnd();
+                              }
+                          });
+                      }
+                  case "exec":
+                      if (global.TRACE) {
+                          console.groupEnd();
+                      }
+                      return Q(execute(args[1]));
+                  default:
+                      var elements = select(args[0]).toArray();
+                      return patchElements(elements, args[1]).then(function () {
+                          if (global.TRACE) {
+                              console.groupEnd();
+                          }
+                      });
+              }
+          }
+          else {
+              // patch(mesh1, { isVisible : false })
+              return patchElement(args[0], args[1]);
+          }
+      }
   }
-  function applyPatch(element, patch) {
+  function execute(func) {
+      try {
+          if (global.TRACE) {
+              console.log(func);
+          }
+          var result = eval("var canvas=_r.canvas; var engine = _r.engine; var scene=_r.scene; var exec=" + func + ';exec()');
+          return result;
+      }
+      catch (ex) {
+          console.error(ex);
+      }
+  }
+  function patchElement(element, patch) {
       var properties = Object.getOwnPropertyNames(patch);
-      var promises = [];
-      properties.forEach(function (property) {
-          promises.push(resolveProperty(element, property, patch));
-      });
-      return promises.reduce(Q.when, Q());
+      var index = 0;
+      function patchPropertyChain() {
+          if (index === properties.length) {
+              return Q();
+          }
+          else {
+              return patchProperty(element, properties[index], patch).then(function () {
+                  index += 1;
+                  return patchPropertyChain();
+              });
+          }
+      }
+      return patchPropertyChain();
   }
-  function resolveProperty(element, property, source) {
+  function patchChain(patches) {
+      var index = 0;
+      function patchItem() {
+          if (index === patches.length) {
+              return Q();
+          }
+          else {
+              return patch(patches[index]).then(function () {
+                  index += 1;
+                  return patchItem();
+              });
+          }
+      }
+      return patchItem();
+  }
+  function patchElements(elements, _patch) {
+      var names = [];
+      if (global.TRACE) {
+          elements.forEach(function (element) {
+              names.push(element.name);
+          });
+          console.log(names.join(','));
+          console.log(_patch);
+      }
+      var index = 0;
+      function patchElementChain() {
+          if (index === elements.length) {
+              return Q();
+          }
+          else {
+              return patch(elements[index], _patch).then(function () {
+                  index += 1;
+                  return patchElementChain();
+              });
+          }
+      }
+      return patchElementChain();
+  }
+  function downloadPatchFile(file) {
+      var deferred = Q.defer();
+      var xhr = new XMLHttpRequest();
+      xhr.open("get", file, true);
+      xhr.onload = function () {
+          var status = xhr.status;
+          if (status == 200) {
+              var data = void 0;
+              var isJson = false;
+              try {
+                  data = JSON.parse(xhr.response);
+                  isJson = true;
+              }
+              catch (error) {
+                  isJson = false;
+              }
+              if (!isJson) {
+                  try {
+                      data = window["eval"].call(window, xhr.response);
+                  }
+                  catch (error) {
+                      var __patch = void 0;
+                      eval('var __patch = ' + xhr.response);
+                      data = __patch;
+                  }
+              }
+              if (data) {
+                  deferred.resolve(data);
+              }
+              else {
+                  console.warn('BABYLON.Runtime::no data found in ' + file);
+                  deferred.resolve([{}]);
+              }
+          }
+          else {
+              deferred.reject(status);
+          }
+      };
+      xhr.send();
+      return deferred.promise;
+  }
+  function patchProperty(element, property, source) {
       if (is.Primitive(source[property])) {
           element[property] = source[property];
           return Q(source[property]);
@@ -3271,15 +3506,21 @@ var _r = (function (BABYLON) {
                   return Q(source[property]);
               }
               else {
-                  var res = source[property].call(element);
-                  if (is.Promise(res)) {
-                      return res.then(function (result) {
-                          element[property] = result;
-                      });
+                  try {
+                      var res = source[property].call(element);
+                      if (is.Promise(res)) {
+                          return res.then(function (result) {
+                              element[property] = result;
+                          });
+                      }
+                      else {
+                          element[property] = res;
+                          return Q(res);
+                      }
                   }
-                  else {
-                      element[property] = res;
-                      return Q(res);
+                  catch (ex) {
+                      console.error(ex);
+                      return Q.reject(ex);
                   }
               }
           }
@@ -3287,136 +3528,166 @@ var _r = (function (BABYLON) {
               if (!element[property]) {
                   element[property] = {};
               }
-              return applyPatch(element[property], source[property]);
+              return patchElement(element[property], source[property]);
           }
       }
   }
 
   var isReady = true;
   var callbacks = [];
+  var options = {
+      container: null,
+      assets: null,
+      scene: null,
+      activeCamera: null,
+      patch: null,
+      ktx: false,
+      enableOfflineSupport: false,
+      progressLoading: null,
+      loadingScreen: null,
+  };
   function launch(obj) {
       isReady = false;
-      if (is.String(obj)) {
-          return importScene(obj).ready(function () {
-              run(obj);
-          });
+      options = extend(options, obj);
+      // CANVAS
+      if (options.container) {
+          global.canvas = options.container;
       }
-      obj = obj;
-      if (obj.container) {
-          global.canvas = obj.container;
-      }
-      if (obj.ktx) {
-          if (is.Array(obj.ktx)) {
-              global.engine.setTextureFormatToUse(obj.ktx);
+      // KTX
+      if (options.ktx) {
+          if (is.Array(options.ktx)) {
+              global.engine.setTextureFormatToUse(options.ktx);
           }
           else {
-              if (obj.ktx === true) {
+              if (options.ktx === true) {
                   global.engine.setTextureFormatToUse(['-astc.ktx', '-dxt.ktx', '-pvrtc.ktx', '-etc2.ktx']);
               }
           }
       }
-      if (obj.enableOfflineSupport) {
-          global.engine.enableOfflineSupport = obj.enableOfflineSupport;
+      // ENABLE OFFLINE SUPPORT
+      if (options.enableOfflineSupport) {
+          global.engine.enableOfflineSupport = options.enableOfflineSupport;
       }
       else {
           global.engine.enableOfflineSupport = false;
       }
-      if (obj.loadingScreen) {
-          global.engine.loadingScreen = obj.loadingScreen;
+      // LOADING SCREEN
+      if (options.loadingScreen) {
+          global.engine.loadingScreen = options.loadingScreen;
       }
-      if (obj.scene) {
-          if (is.String(obj.scene)) {
+      // RESIZE
+      window.addEventListener('resize', function () {
+          global.engine.resize();
+      });
+      return _createScene().then(function () {
+          return _patch().then(function () {
+              _checkActiveCamera();
+              _beforeFirstRender();
+              start$1();
+              isReady = true;
+              callbacks.forEach(function (callback) {
+                  try {
+                      callback.call(global.scene);
+                  }
+                  catch (ex) {
+                      console.error(ex);
+                  }
+              });
+              callbacks.length = 0;
+          });
+      });
+  }
+  function _createScene() {
+      var defer = Q.defer();
+      if (options.scene) {
+          if (is.String(options.scene)) {
               // scene is a filename
-              if (obj.assets) {
-                  return importScene(obj.assets, obj.scene).ready(function () {
-                      run(obj);
+              if (options.assets) {
+                  importScene(options.assets, options.scene).ready(function () {
+                      defer.resolve();
                   });
               }
               else {
-                  return importScene(obj.scene).ready(function (res) {
-                      run(obj);
+                  importScene(options.scene).ready(function (res) {
+                      defer.resolve();
                   });
               }
           }
           else {
-              if (is.Function(obj.scene)) {
-                  var result = eval("var canvas=_r.canvas; var engine = _r.engine; var scene=_r.scene; var createScene=" + obj.scene + ';createScene()');
-                  if (is.Scene(result)) {
-                      global.scene = result;
+              if (is.Function(options.scene)) {
+                  try {
+                      var result = eval("var canvas=_r.canvas; var engine = _r.engine; var scene=_r.scene; var createScene=" + options.scene + ';createScene()');
+                      if (is.Scene(result)) {
+                          global.scene = result;
+                      }
+                  }
+                  catch (ex) {
+                      defer.reject(ex);
+                      throw ex;
                   }
               }
               else {
-                  if (is.Scene(obj.scene)) {
-                      global.scene = obj.scene;
+                  if (is.Scene(options.scene)) {
+                      global.scene = options.scene;
                   }
                   else {
+                      defer.reject("invalid scene parameter in _r.launch");
                       throw new Error("invalid scene parameter in _r.launch");
                   }
               }
-              run(obj);
-              return new ImportPromise(global.scene);
+              defer.resolve();
           }
       }
+      else {
+          defer.resolve();
+      }
+      return defer.promise;
   }
-  function run(obj) {
-      if (obj.activeCamera) {
-          if (is.String(obj.activeCamera)) {
-              activateCamera(obj.activeCamera);
+  function _patch() {
+      if (options.patch) {
+          return patch(options.patch);
+      }
+      else {
+          return Q();
+      }
+  }
+  function _beforeFirstRender() {
+      if (options.beforeFirstRender && is.Function(options.beforeFirstRender)) {
+          options.beforeFirstRender();
+      }
+  }
+  function _checkActiveCamera() {
+      if (is.String(options.activeCamera)) {
+          activateCamera(options.activeCamera);
+      }
+      else {
+          if (is.Function(options.activeCamera)) {
+              try {
+                  var camera = options.activeCamera.call(global.scene);
+                  activateCamera(camera.name);
+              }
+              catch (ex) {
+                  console.error("_r.launch() error on activeCamera", ex);
+              }
           }
           else {
-              if (is.Function(obj.activeCamera)) {
-                  try {
-                      var camera = obj.activeCamera.call(global.scene);
-                      activateCamera(camera.name);
-                  }
-                  catch (ex) {
-                      console.error("_r.launch() error on activeCamera", ex);
-                  }
-              }
-              else {
-                  activateCamera(obj.activeCamera.name);
+              if (is.Camera(options.activeCamera)) {
+                  activateCamera(options.activeCamera.name);
               }
           }
       }
       if (!global.scene.activeCamera && global.scene.cameras.length > 0) {
           activateCamera(global.scene.cameras[0].name);
       }
-      window.addEventListener('resize', function () {
-          global.engine.resize();
-      });
-      if (obj.patch) {
-          patch(obj.patch).then(function () {
-              if (obj.beforeFirstRender && is.Function(obj.beforeFirstRender)) {
-                  obj.beforeFirstRender();
-              }
-              start();
-              isReady = true;
-              callbacks.forEach(function (callback) {
-                  callback.call(global.scene);
-              });
-              callbacks.length = 0;
-          });
-      }
-      else {
-          if (obj.beforeFirstRender && is.Function(obj.beforeFirstRender)) {
-              obj.beforeFirstRender();
-          }
-          start();
-          isReady = true;
-          callbacks.forEach(function (callback) {
-              callback.call(global.scene);
-          });
-          callbacks.length = 0;
+      if (global.scene.activeCamera && global.scene.activeCamera.inputs && !global.scene.activeCamera.inputs.attachedElement) {
+          global.scene.activeCamera.attachControl(global.canvas);
       }
   }
-  function loop() {
+  function loop$1() {
       global.scene.render();
   }
-  function start() {
-      global.engine.runRenderLoop(loop);
-  }
-  function pause() {
-      global.engine.stopRenderLoop(loop);
+  function start$1() {
+      global.engine.runRenderLoop(loop$1);
   }
   function ready(callback) {
       if (isReady) {
@@ -3425,6 +3696,365 @@ var _r = (function (BABYLON) {
       else {
           callbacks.push(callback);
       }
+  }
+
+  function color(expr) {
+      if (expr instanceof BABYLON.Color3 || expr instanceof BABYLON.Color4) {
+          return expr;
+      }
+      if (is.HexColor(expr)) {
+          return BABYLON.Color3.FromHexString(expr);
+      }
+      if (is.PlainObject(expr)) {
+          if (expr.hasOwnProperty("r") || expr.hasOwnProperty("g") || expr.hasOwnProperty("b") || expr.hasOwnProperty("a")) {
+              var r = expr["r"] || 0;
+              var g = expr["g"] || 0;
+              var b = expr["b"] || 0;
+              if (expr["a"]) {
+                  return new BABYLON.Color4(r, g, b, expr["a"]);
+              }
+              else {
+                  return new BABYLON.Color3(r, g, b);
+              }
+          }
+          else {
+              console.error("_r.to.Color - invalid color : ", expr);
+              return new BABYLON.Color3(0, 0, 0);
+          }
+      }
+      if (is.Array(expr)) {
+          if (expr.length == 3) {
+              return BABYLON.Color3.FromArray(expr);
+          }
+          if (expr.length == 4) {
+              return BABYLON.Color4.FromArray(expr);
+          }
+          console.error("_r.to.Color - invalid color : ", expr);
+          return new BABYLON.Color3(0, 0, 0);
+      }
+      if (is.String(expr)) {
+          expr = expr.trim().toLocaleLowerCase();
+          if (expr.indexOf('rgb(') == 0) {
+              var rgb = expr.substring(expr.indexOf('(') + 1, expr.lastIndexOf(')')).split(/,\s*/);
+              var r = parseFloat(rgb[0]);
+              var g = parseFloat(rgb[1]);
+              var b = parseFloat(rgb[2]);
+              return new BABYLON.Color3(!isNaN(r) ? (r / 255) : 0, !isNaN(g) ? (g / 255) : 0, !isNaN(b) ? (b / 255) : 0);
+          }
+          else {
+              if (expr.indexOf('rgba(') == 0) {
+                  var rgba = expr.substring(expr.indexOf('(') + 1, expr.lastIndexOf(')')).split(/,\s*/);
+                  var r = parseFloat(rgba[0]);
+                  var g = parseFloat(rgba[1]);
+                  var b = parseFloat(rgba[2]);
+                  var a = parseFloat(rgba[3]);
+                  return new BABYLON.Color4(!isNaN(r) ? (r / 255) : 0, !isNaN(g) ? (g / 255) : 0, !isNaN(b) ? (b / 255) : 0, !isNaN(a) ? (a / 255) : 0);
+              }
+              else {
+                  switch (expr) {
+                      case 'red':
+                          return BABYLON.Color3.Red();
+                      case 'green':
+                          return BABYLON.Color3.Green();
+                      case 'blue':
+                          return BABYLON.Color3.Blue();
+                      case 'black':
+                          return BABYLON.Color3.Black();
+                      case 'white':
+                          return BABYLON.Color3.White();
+                      case 'purple':
+                          return BABYLON.Color3.Purple();
+                      case 'magenta':
+                      case 'pink':
+                          return BABYLON.Color3.Magenta();
+                      case 'yellow':
+                          return BABYLON.Color3.Yellow();
+                      case 'teal':
+                      case 'cyan':
+                          return BABYLON.Color3.Teal();
+                      case 'gray':
+                      case 'grey':
+                          return BABYLON.Color3.Gray();
+                      case 'random':
+                          return BABYLON.Color3.Random();
+                      default:
+                          console.error("_r.to.Color - invalid color : ", expr);
+                          return new BABYLON.Color3(0, 0, 0);
+                  }
+              }
+          }
+      }
+  }
+
+  var Animation = /** @class */ (function () {
+      function Animation(elements, property, value) {
+          this.elements = elements;
+          this.property = property;
+          this.value = value;
+          this.fps = 30;
+          this.duration = 0.4;
+          this.speedRatio = 1;
+          this.elements = select(elements);
+          this.loop = false;
+          var element = select(elements)[0];
+          if (is.Vector2(element[property])) {
+              this.animationType = BABYLON.Animation.ANIMATIONTYPE_VECTOR2;
+              return;
+          }
+          if (is.Vector3(element[property])) {
+              this.animationType = BABYLON.Animation.ANIMATIONTYPE_VECTOR3;
+              return;
+          }
+          if (is.Number(element[property])) {
+              this.animationType = BABYLON.Animation.ANIMATIONTYPE_FLOAT;
+              return;
+          }
+          if (is.Color(element[property])) {
+              this.animationType = BABYLON.Animation.ANIMATIONTYPE_COLOR3;
+              return;
+          }
+          if (is.Quaternion(element[property])) {
+              this.animationType = BABYLON.Animation.ANIMATIONTYPE_QUATERNION;
+              return;
+          }
+          if (is.Matrix(element[property])) {
+              this.animationType = BABYLON.Animation.ANIMATIONTYPE_MATRIX;
+              return;
+          }
+      }
+      Animation.prototype.getKeys = function (element) {
+          var _this = this;
+          if (this.keys) {
+              return this.keys;
+          }
+          else {
+              var initialValue = element[this.property];
+              var finalValue_1;
+              switch (this.animationType) {
+                  case BABYLON.Animation.ANIMATIONTYPE_COLOR3:
+                      finalValue_1 = initialValue.clone();
+                      patch(finalValue_1, color(this.value));
+                      break;
+                  case BABYLON.Animation.ANIMATIONTYPE_FLOAT:
+                      finalValue_1 = this.value;
+                      break;
+                  case BABYLON.Animation.ANIMATIONTYPE_MATRIX:
+                      finalValue_1 = initialValue.clone();
+                      patch(finalValue_1, this.value);
+                      break;
+                  default:
+                      finalValue_1 = initialValue.clone();
+                      var properties = Object.getOwnPropertyNames(this.value);
+                      properties.forEach(function (property) {
+                          finalValue_1[property] = _this.value[property];
+                      });
+                      break;
+              }
+              return [
+                  {
+                      frame: 0,
+                      value: initialValue
+                  },
+                  {
+                      frame: this.fps * this.duration,
+                      value: finalValue_1
+                  }
+              ];
+          }
+      };
+      Animation.prototype.onComplete = function () {
+          if (this.animatables) {
+              this.animatables.forEach(function (animatable) {
+                  if (animatable.animationStarted) {
+                      return;
+                  }
+              });
+              if (this.onAnimationEnd) {
+                  this.onAnimationEnd();
+              }
+          }
+      };
+      Animation.prototype.getLoopMode = function () {
+          if (is.Boolean(this.loop)) {
+              if (this.loop) {
+                  return BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT;
+              }
+          }
+          if (is.String(this.loop)) {
+              if (this.loop.toLowerCase() == "cycle") {
+                  return BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE;
+              }
+              if (this.loop.toLocaleLowerCase() == "relative" || this.loop.toLocaleLowerCase() == "pingpong") {
+                  return BABYLON.Animation.ANIMATIONLOOPMODE_RELATIVE;
+              }
+          }
+          else {
+              if (is.Number(this.loop)) {
+                  return this.loop;
+              }
+          }
+          return BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT;
+      };
+      Animation.prototype.play = function (from, to) {
+          var _this = this;
+          var loop = this.getLoopMode();
+          this.elements.each(function (element) {
+              if (!element.animations) {
+                  element.animations = [];
+              }
+              var animation = new BABYLON.Animation("_r.animation" + element.animations.length, _this.property, _this.fps, _this.animationType, loop);
+              var keys = _this.getKeys(element);
+              animation.setKeys(keys);
+              if (_this.enableBlending == true) {
+                  animation.enableBlending = true;
+                  if (_this.blendingSpeed) {
+                      animation.blendingSpeed = _this.blendingSpeed;
+                  }
+              }
+              if (_this.easing) {
+                  animation.setEasingFunction(Animation.getEasingFunction(_this.easing));
+              }
+              element.animations.push(animation);
+              if (!_this.animatables) {
+                  _this.animatables = [];
+              }
+              /**
+              let animatable = global.scene.beginAnimation(element, from ? from : 0, to ? to : this.fps * this.duration, (this.loop != false), this.speedRatio, () => {
+                this.onComplete();
+              });
+              //animatable.onAnimationEnd = ;
+              this.animatables.push(animatable);**/
+          });
+          /**
+          this.elements.each((element) => {
+            global.scene.beginDirectAnimation(element, element.animations, from ? from : 0, to ? to : this.fps * this.duration, this.speedRatio, () => {
+              this.onComplete();
+            });
+          });**/
+          if (this.animatables && this.animatables.length > 0) {
+              if (this.onAnimationStart) {
+                  this.onAnimationStart();
+              }
+          }
+      };
+      Animation.prototype.pause = function () {
+          this.elements.each(function (element) {
+              var animatable = global.scene.getAnimatableByTarget(element);
+              animatable.pause();
+          });
+      };
+      Animation.prototype.restart = function () {
+          this.elements.each(function (element) {
+              var animatable = global.scene.getAnimatableByTarget(element);
+              animatable.restart();
+          });
+      };
+      Animation.prototype.stop = function () {
+          this.elements.each(function (element) {
+              var animatable = global.scene.getAnimatableByTarget(element);
+              animatable.stop();
+          });
+      };
+      Animation.prototype.reset = function () {
+          this.elements.each(function (element) {
+              var animatable = global.scene.getAnimatableByTarget(element);
+              animatable.reset();
+          });
+      };
+      Animation.getEasingFunction = function (easing) {
+          var mode;
+          var func;
+          if (easing.indexOf("easeInOut") != -1) {
+              mode = BABYLON.EasingFunction.EASINGMODE_EASEINOUT;
+              func = easing.replace("easeInOut", "");
+          }
+          else {
+              if (easing.indexOf("easeIn") != -1) {
+                  mode = BABYLON.EasingFunction.EASINGMODE_EASEIN;
+                  func = easing.replace("easeIn", "");
+              }
+              else {
+                  if (easing.indexOf("easeOut") != -1) {
+                      mode = BABYLON.EasingFunction.EASINGMODE_EASEOUT;
+                      func = easing.replace("easeOut", "");
+                  }
+                  else {
+                      console.info("_r::unrecognized easing function " + easing);
+                      return null;
+                  }
+              }
+          }
+          var easingFunction;
+          switch (func) {
+              case "Sine":
+                  easingFunction = new BABYLON.SineEase();
+                  easingFunction.setEasingMode(mode);
+                  return easingFunction;
+              case "Quad":
+                  easingFunction = new BABYLON.QuadraticEase();
+                  easingFunction.setEasingMode(mode);
+                  return easingFunction;
+              case "Cubic":
+                  easingFunction = new BABYLON.CubicEase();
+                  easingFunction.setEasingMode(mode);
+                  return easingFunction;
+              case "Quart":
+                  easingFunction = new BABYLON.QuarticEase();
+                  easingFunction.setEasingMode(mode);
+                  return easingFunction;
+              case "Quint":
+                  easingFunction = new BABYLON.QuinticEase();
+                  easingFunction.setEasingMode(mode);
+                  return easingFunction;
+              case "Expo":
+                  easingFunction = new BABYLON.ExponentialEase();
+                  easingFunction.setEasingMode(mode);
+                  return easingFunction;
+              case "Circ":
+                  easingFunction = new BABYLON.CircleEase();
+                  easingFunction.setEasingMode(mode);
+                  return easingFunction;
+              case "Back":
+                  easingFunction = new BABYLON.BackEase();
+                  easingFunction.setEasingMode(mode);
+                  return easingFunction;
+              case "Elastic":
+                  easingFunction = new BABYLON.ElasticEase();
+                  easingFunction.setEasingMode(mode);
+                  return easingFunction;
+              case "Bounce":
+                  easingFunction = new BABYLON.BounceEase();
+                  easingFunction.setEasingMode(mode);
+                  return easingFunction;
+              default:
+                  console.warn("_r::unrecognized easing function " + easing);
+                  return null;
+          }
+      };
+      return Animation;
+  }());
+  function animate(elements, properties, options) {
+      var defer = Q.defer();
+      Object.getOwnPropertyNames(properties).forEach(function (property) {
+          var animation = new Animation(elements, property, properties[property]);
+          if (is.Number(options)) {
+              animation.duration = options;
+          }
+          else {
+              for (var option in options) {
+                  animation[option] = options[option];
+              }
+          }
+          animation.play();
+      });
+      select(elements).each(function (element) {
+          global.scene.beginDirectAnimation(element, element.animations, undefined, undefined, false, 1, function () {
+              if (options.onComplete) {
+                  options.onComplete(element);
+              }
+          });
+      });
+      return defer.promise;
   }
 
   var index = {
@@ -3477,7 +4107,11 @@ var _r = (function (BABYLON) {
       select: select,
       patch: patch,
       match: match,
-      Selector: Selector
+      Selector: Selector,
+      is: is,
+      color: color,
+      animate: animate,
+      extend: extend
   };
 
   return index;

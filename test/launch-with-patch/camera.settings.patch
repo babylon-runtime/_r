@@ -1,0 +1,11 @@
+// noinspection BadExpressionStatementJS
+[
+    {
+        "camera" : {
+            wheelPrecision : 100,
+            minZ : 0.001,
+            fov : 1.8,
+            speed : 0.1
+        }
+    }
+]

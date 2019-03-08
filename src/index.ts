@@ -1,14 +1,18 @@
 import { global } from "./global.js";
 import { is } from "./is.js";
-import { launch, ready, start, pause } from "./launch.js";
+import { launch, ready } from "./launch.js";
+import { start, pause } from "./renderLoop.js";
 import { importScene, downloadScene } from "./import.js";
 import { createLibrary, library, libraries } from "./library.js";
 import { select } from "./select.js";
 import { data } from "./data.js";
 import { on, off, one, trigger } from "./events.js";
-import { patch } from "./patch/patch.js";
+import { patch } from "./patch.js";
 import { match } from "./Elements.js";
 import { Selector } from "./Selector.js";
+import { color } from './color.js';
+import { animate } from "./animate.js";
+import { extend } from "./extend.js";
 
 export default {
     get canvas() {
@@ -59,5 +63,9 @@ export default {
     select : select,
     patch : patch,
     match : match,
-    Selector : Selector
+    Selector : Selector,
+    is : is,
+    color : color,
+    animate : animate,
+    extend : extend
 };

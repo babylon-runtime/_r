@@ -1,6 +1,5 @@
 import { is } from "./is.js";
 import { BABYLON } from "./BABYLON.js";
-import { applyPatch } from "./patch/patch";
 
 let _scene, _engine, _canvas;
 

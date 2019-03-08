@@ -1,0 +1,177 @@
+// noinspection BadExpressionStatementJS
+[
+    {
+        "scene" : function() {
+            console.log("scene");
+            var scene = new BABYLON.Scene(engine);
+
+            //Create a light
+            var light = new BABYLON.PointLight("Omni", new BABYLON.Vector3(-60, 60, 80), scene);
+
+            //Create an Arc Rotate Camera - aimed negative z this time
+            var camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, 1.0, 110, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+
+            //Creation of 6 spheres
+            var sphere1 = BABYLON.Mesh.CreateSphere("Sphere1", 10.0, 9.0, scene);
+            var sphere2 = BABYLON.Mesh.CreateSphere("Sphere2", 2.0, 9.0, scene);//Only two segments
+            var sphere3 = BABYLON.Mesh.CreateSphere("Sphere3", 10.0, 9.0, scene);
+            var sphere4 = BABYLON.Mesh.CreateSphere("Sphere4", 10.0, 9.0, scene);
+            var sphere5 = BABYLON.Mesh.CreateSphere("Sphere5", 10.0, 9.0, scene);
+            var sphere6 = BABYLON.Mesh.CreateSphere("Sphere6", 10.0, 9.0, scene);
+            //Creation of a plane
+            var plane = BABYLON.Mesh.CreatePlane("plane", 120, scene);
+
+            return scene;
+        }
+    },
+    {
+        "plane" : {
+            position : {
+                y : -5
+            },
+            rotation : {
+                x : Math.PI /2
+            },
+            material : function() {
+                console.log("1. plane")
+                var material = new BABYLON.StandardMaterial("texturePlane", _r.scene);
+                _r.patch(material,
+                    {
+                        diffuseTexture : function() {
+                            var texture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/grass.jpg", _r.scene);
+                            _r.patch(texture, {
+                                uScale : 5.0,
+                                vScale : 5.0
+                            });
+                            return texture;
+                        },
+                        backFaceCulling: false
+                    }
+                );
+                return material
+            }
+        }
+    },
+    {
+        "Sphere1" : {
+            position : {
+                x : 40
+            },
+            material : function() {
+                console.log("2. Sphere1")
+                var material = new BABYLON.StandardMaterial("texture1", _r.scene);
+                _r.patch(material,
+                    { wireframe : true }
+                );
+                return material
+            }
+        }
+    },
+    {
+        "Sphere2" : {
+            position : {
+                x : 25
+            },
+            material : function() {
+                console.log("3.Sphere2")
+                var material = new BABYLON.StandardMaterial("texture2", _r.scene);
+                _r.patch(material,
+                    {
+                        diffuseColor : new BABYLON.Color3(1, 0, 0),
+                        alpha : 0.3
+                    }
+                );
+                return material
+            }
+        }
+    },
+    {
+        "Sphere3" : {
+            position : {
+                x : 10
+            },
+            material : function() {
+                var material = new BABYLON.StandardMaterial("texture3", _r.scene);
+                _r.patch(material,
+                    {
+                        diffuseTexture : function() {
+                            var texture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/misc.jpg", _r.scene);
+                            return texture;
+                        }
+                    }
+                );
+                return material
+            }
+        }
+    },
+    {
+        "Sphere4" : {
+            position : {
+                x : -5
+            },
+            material : function() {
+                var material = new BABYLON.StandardMaterial("texture4", _r.scene);
+                _r.patch(material,
+                    {
+                        diffuseTexture : function() {
+                            var texture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/misc.jpg", _r.scene);
+                            _r.patch(texture, {
+                                vOffset : 0.1,
+                                uOffset : 0.4
+                            });
+                            return texture;
+                        }
+                    }
+                );
+                return material
+            }
+        }
+    },
+    {
+        "Sphere5": {
+            position : {
+                x : -20
+            },
+            material : function() {
+                var material = new BABYLON.StandardMaterial("texture5", _r.scene);
+                _r.patch(material,
+                    {
+                        diffuseTexture : function() {
+                            var texture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/tree.png", _r.scene);
+                            texture.hasAlpha = true;
+                            return texture;
+                        }
+                    }
+                );
+                return material
+            }
+        }
+    },
+    {
+        "Sphere6": {
+            position : {
+                x : -35
+            },
+            material : function() {
+                var material = new BABYLON.StandardMaterial("texture6", _r.scene);
+                _r.patch(material,
+                    {
+                        diffuseTexture : function() {
+                            var texture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/tree.png", _r.scene);
+                            texture.hasAlpha = true;
+                            return texture;
+                        },
+                        backFaceCulling : false
+                    }
+                );
+                return material
+            }
+        }
+    },
+    {
+        "*:mesh" : {
+            visibility : 0.5
+        }
+    }
+];

@@ -44,4 +44,9 @@ describe('Selectors', function() {
             expect(_r.library("https://models.babylonjs.com/CornellBox/cornellBox.babylon").select("*:mesh").length === 4).to.be.true;
         });
     });
+    describe("comma separated", function() {
+        it('_r.select("cornellBox.*:material, *:mesh").length === 11', function() {
+            expect(_r.select("cornellBox.*:material, *:mesh").length === 11).to.be.true;
+        });
+    })
 });

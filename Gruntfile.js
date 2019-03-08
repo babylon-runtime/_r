@@ -1,5 +1,5 @@
+const path = require('path');
 module.exports = function(grunt) {
-    // Load the plugin that provides the "uglify" task.
     grunt.loadNpmTasks('grunt-karma');
     // Project configuration.
     grunt.initConfig({
@@ -17,7 +17,7 @@ module.exports = function(grunt) {
             },
             cornellBox : {
                 files : [
-                    { src : [ 'test/cornellBox/test.js'] }]
+                    { src : [ 'test/patch/test.js'] }]
             },
             selectors : {
                 files : [
@@ -38,7 +38,17 @@ module.exports = function(grunt) {
                 files : [
                     { src : [  'test/custom-events/test.js'] },
                 ]
-            }
+            },  /**
+            allInPatch : {
+                proxies : {
+                    'scene.js' : 'test/all-in-patch/scene.js'
+                },
+                files : [
+                    {
+                        src : [  'test/all-in-patch/test.js']
+                    },
+                ]
+            }**/
         }
     });
     // Default task(s).

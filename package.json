@@ -1,6 +1,6 @@
 {
   "name": "babylon-runtime",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "",
   "main": "index.js",
   "directories": {
@@ -10,7 +10,8 @@
     "build": "npm run lint && rollup -c && npm run test",
     "release": "npm run build && release-it",
     "lint": "tslint src/**/*.ts{,x}",
-    "test": "grunt"
+    "test": "grunt",
+    "typescript" : "rollup -c"
   },
   "repository": {
     "type": "git",
