@@ -31,4 +31,19 @@ describe('plane', function() {
         expect(texture.vOffset === 0.1).to.be.true;
         expect(texture.uOffset === 0.4).to.be.true;
     });
+    it('should provide context', function() {
+        let mesh, material;
+        _r.patch({
+            "Sphere4" : {
+                material : {
+                    diffuseTexture : function(_mesh, _material) {
+                        mesh = _mesh;
+                        material = _material;
+                    }
+                }
+            }
+        });
+        expect(mesh.name === "Sphere4").to.be.true;
+        expect(material.name === "texture4").to.be.true;
+    })
 });
