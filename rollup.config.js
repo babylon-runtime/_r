@@ -8,7 +8,7 @@ export default [{
         format: 'iife',
         name: '_r',
         sourcemap : true,
-        intro : 'console.log("babylon runtime v(' + pkg.version + ')")'
+        intro : 'console.log("babylon runtime v' + pkg.version + '")'
     },
     external : [
         '../node_modules/babylonjs/es6.js'
@@ -23,7 +23,7 @@ export default [{
         format: 'iife',
         name: '_r',
         sourcemap : true,
-        intro : 'console.log("babylon runtime v(' + pkg.version + ')")'
+        intro : 'console.log("babylon runtime v' + pkg.version + '")'
     },
     external : [
         '../node_modules/babylonjs/es6.js'
