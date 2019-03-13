@@ -100,6 +100,10 @@ export module is {
     return typeof x === "string";
   }
 
+  export function Size(n: any): boolean {
+    return n instanceof BABYLON.Size;
+  }
+
   export function PatchFile(expr: string) {
     if (typeof expr !== 'string') {
       return false;

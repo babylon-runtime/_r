@@ -22,7 +22,7 @@ export class Elements {
       }
       return;
     }
-    if (is.AssetContainer(element) || is.Scene(element)) {
+    if (is.AssetContainer(element) /**|| is.Scene(element)**/) {
       for (let i = 0; i < element.meshes.length; i++) {
         this[this.length++] = element.meshes[i];
       }
@@ -304,7 +304,12 @@ export class Elements {
   }
 
   select(selector : string) {
-    return find(selector, this);
+    if (this.length === 1 && is.Scene(this[0])) {
+      return find(selector, this[0]);
+    }
+    else {
+      return find(selector, this);
+    }
   }
 
   /**
@@ -458,7 +463,7 @@ export function find(params : string, container : BABYLON.Scene | Elements | BAB
           });
           break;
         case "multimaterial":
-          container.material.forEach(function(material) {
+          container.materials.forEach(function(material) {
             if (is.MultiMaterial(material)) {
               if (selector.matchFilters(material)) {
                 elements.add(material);

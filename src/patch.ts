@@ -110,31 +110,6 @@ export function patchChain(patches : Array<any>) : Q.Promise<null> {
   return patchItem();
 }
 
-export function patchElements(elements : Array<any>, _patch : any) : Q.Promise<null> {
-  let names = [];
-  if (global.TRACE) {
-    elements.forEach((element) => {
-      names.push(element.name);
-    });
-    console.log(names.join(','));
-    console.log(_patch);
-  }
-
-  let index = 0;
-  function patchElementChain() : Q.Promise<null> {
-    if (index === elements.length) {
-      return Q();
-    }
-    else {
-      return patch(elements[index], _patch).then(() => {
-        index += 1;
-        return patchElementChain();
-      });
-    }
-  }
-  return patchElementChain();
-}
-
 export function downloadPatchFile(file : string) : Q.Promise<Array<any>> {
   let deferred = Q.defer();
   let xhr = new XMLHttpRequest();
@@ -177,6 +152,31 @@ export function downloadPatchFile(file : string) : Q.Promise<Array<any>> {
   return deferred.promise;
 }
 
+export function patchElements(elements : Array<any>, _patch : any, context? : Array<any>) : Q.Promise<null> {
+  let names = [];
+  if (global.TRACE) {
+    elements.forEach((element) => {
+      names.push(element.name);
+    });
+    console.log(names.join(','));
+    console.log(_patch);
+  }
+
+  let index = 0;
+  function patchElementChain() : Q.Promise<null> {
+    if (index === elements.length) {
+      return Q();
+    }
+    else {
+      return patchElement(elements[index], _patch, context).then(() => {
+        index += 1;
+        return patchElementChain();
+      });
+    }
+  }
+  return patchElementChain();
+}
+
 export function patchElement(element, patch, context? : Array<any>) : Q.Promise<any> {
   let properties = Object.getOwnPropertyNames(patch);
   let index = 0;
@@ -196,8 +196,27 @@ export function patchElement(element, patch, context? : Array<any>) : Q.Promise<
 
 export function patchProperty(element, property, source, context? : Array<any>): Q.Promise<any> {
   if (is.Primitive(source[property])) {
-    element[property] = source[property];
-    return Q(source[property]);
+    let plugin = patch.getPlugin(element, source, property);
+    if (plugin) {
+      let result = plugin.resolve(element, source, property);
+      if (result) {
+        if (is.Promise(result)) {
+          return result.then((_result) => {
+            element[property] = _result;
+            return Q(element[property]);
+          });
+        }
+        else {
+          element[property] = result;
+        }
+        element[property] = result;
+      }
+      return Q(source[property]);
+    }
+    else {
+      element[property] = source[property];
+      return Q(source[property]);
+    }
   }
   else {
     if (is.Function(source[property])) {
@@ -236,13 +255,32 @@ export function patchProperty(element, property, source, context? : Array<any>):
       if (!element[property]) {
         element[property] = {};
       }
-      if (context) {
-        context.push(element);
+      let plugin = patch.getPlugin(element, source, property);
+      if (plugin) {
+        let result = plugin.resolve(element, source, property);
+        if (result) {
+          if (is.Promise(result)) {
+            return result.then((_result) => {
+              element[property] = _result;
+              return Q(element[property]);
+            });
+          }
+          else {
+            element[property] = result;
+          }
+          element[property] = result;
+        }
+        return Q(source[property]);
       }
       else {
-        context = [element];
+        if (context) {
+          context.push(element);
+        }
+        else {
+          context = [element];
+        }
+        return patchElement(element[property], source[property], context);
       }
-      return patchElement(element[property], source[property], context);
     }
   }
 }
@@ -251,9 +289,18 @@ export namespace patch {
   export let plugins : Array<IPatchPlugin> = [];
   export interface IPatchPlugin {
     test : (element, source, property) => boolean;
-    resolve : (element, source, property) => void;
+    resolve : (element, source, property) => any;
   }
   export function registerPlugin(plugin : IPatchPlugin) {
     plugins.push(plugin);
+  }
+  export function getPlugin(element, source, property) : IPatchPlugin | null {
+    let plugin = null;
+    for (let i = 0; i < plugins.length; i++) {
+      if (plugins[i].test(element, source, property)) {
+        plugin = plugins[i];
+      }
+    }
+    return plugin;
   }
 }

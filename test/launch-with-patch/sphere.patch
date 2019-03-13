@@ -1,0 +1,12 @@
+// noinspection BadExpressionStatementJS
+[{
+    "sphere1" : {
+        material : function(mesh) {
+            return new BABYLON.StandardMaterial('material.' + mesh.name, _r.scene);
+        }
+    }
+},{
+    "material.sphere1" : {
+        diffuseColor : "#ff00ff"
+    }
+}];

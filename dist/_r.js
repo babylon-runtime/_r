@@ -1,7 +1,7 @@
 var _r = (function (BABYLON) {
   'use strict';
 
-  console.log("babylon runtime v(0.0.4)")
+  console.log("babylon runtime v0.0.5")
 
   // this will let us :
 
@@ -106,6 +106,10 @@ var _r = (function (BABYLON) {
           return typeof x === "string";
       }
       is.String = String;
+      function Size(n) {
+          return n instanceof BABYLON.Size;
+      }
+      is.Size = Size;
       function PatchFile(expr) {
           if (typeof expr !== 'string') {
               return false;
@@ -581,7 +585,7 @@ var _r = (function (BABYLON) {
               }
               return;
           }
-          if (is.AssetContainer(element) || is.Scene(element)) {
+          if (is.AssetContainer(element) /**|| is.Scene(element)**/) {
               for (var i = 0; i < element.meshes.length; i++) {
                   this[this.length++] = element.meshes[i];
               }
@@ -850,7 +854,12 @@ var _r = (function (BABYLON) {
           return this;
       };
       Elements.prototype.select = function (selector) {
-          return find(selector, this);
+          if (this.length === 1 && is.Scene(this[0])) {
+              return find(selector, this[0]);
+          }
+          else {
+              return find(selector, this);
+          }
       };
       /**
        * Disposes all the assets in the container
@@ -992,7 +1001,7 @@ var _r = (function (BABYLON) {
                       });
                       break;
                   case "multimaterial":
-                      container.material.forEach(function (material) {
+                      container.materials.forEach(function (material) {
                           if (is.MultiMaterial(material)) {
                               if (selector.matchFilters(material)) {
                                   elements.add(material);
@@ -3399,22 +3408,6 @@ var _r = (function (BABYLON) {
           console.error(ex);
       }
   }
-  function patchElement(element, patch) {
-      var properties = Object.getOwnPropertyNames(patch);
-      var index = 0;
-      function patchPropertyChain() {
-          if (index === properties.length) {
-              return Q();
-          }
-          else {
-              return patchProperty(element, properties[index], patch).then(function () {
-                  index += 1;
-                  return patchPropertyChain();
-              });
-          }
-      }
-      return patchPropertyChain();
-  }
   function patchChain(patches) {
       var index = 0;
       function patchItem() {
@@ -3429,29 +3422,6 @@ var _r = (function (BABYLON) {
           }
       }
       return patchItem();
-  }
-  function patchElements(elements, _patch) {
-      var names = [];
-      if (global.TRACE) {
-          elements.forEach(function (element) {
-              names.push(element.name);
-          });
-          console.log(names.join(','));
-          console.log(_patch);
-      }
-      var index = 0;
-      function patchElementChain() {
-          if (index === elements.length) {
-              return Q();
-          }
-          else {
-              return patch(elements[index], _patch).then(function () {
-                  index += 1;
-                  return patchElementChain();
-              });
-          }
-      }
-      return patchElementChain();
   }
   function downloadPatchFile(file) {
       var deferred = Q.defer();
@@ -3494,10 +3464,68 @@ var _r = (function (BABYLON) {
       xhr.send();
       return deferred.promise;
   }
-  function patchProperty(element, property, source) {
+  function patchElements(elements, _patch, context) {
+      var names = [];
+      if (global.TRACE) {
+          elements.forEach(function (element) {
+              names.push(element.name);
+          });
+          console.log(names.join(','));
+          console.log(_patch);
+      }
+      var index = 0;
+      function patchElementChain() {
+          if (index === elements.length) {
+              return Q();
+          }
+          else {
+              return patchElement(elements[index], _patch, context).then(function () {
+                  index += 1;
+                  return patchElementChain();
+              });
+          }
+      }
+      return patchElementChain();
+  }
+  function patchElement(element, patch, context) {
+      var properties = Object.getOwnPropertyNames(patch);
+      var index = 0;
+      function patchPropertyChain() {
+          if (index === properties.length) {
+              return Q();
+          }
+          else {
+              return patchProperty(element, properties[index], patch, context).then(function () {
+                  index += 1;
+                  return patchPropertyChain();
+              });
+          }
+      }
+      return patchPropertyChain();
+  }
+  function patchProperty(element, property, source, context) {
       if (is.Primitive(source[property])) {
-          element[property] = source[property];
-          return Q(source[property]);
+          var plugin = patch.getPlugin(element, source, property);
+          if (plugin) {
+              var result = plugin.resolve(element, source, property);
+              if (result) {
+                  if (is.Promise(result)) {
+                      return result.then(function (_result) {
+                          element[property] = _result;
+                          return Q(element[property]);
+                      });
+                  }
+                  else {
+                      element[property] = result;
+                  }
+                  element[property] = result;
+              }
+              return Q(source[property]);
+          }
+          else {
+              element[property] = source[property];
+              return Q(source[property]);
+          }
       }
       else {
           if (is.Function(source[property])) {
@@ -3507,14 +3535,22 @@ var _r = (function (BABYLON) {
               }
               else {
                   try {
-                      var res = source[property].call(element);
+                      if (context) {
+                          context.push(element);
+                      }
+                      else {
+                          context = [element];
+                      }
+                      var res = source[property].apply(element, context);
                       if (is.Promise(res)) {
                           return res.then(function (result) {
                               element[property] = result;
                           });
                       }
                       else {
-                          element[property] = res;
+                          if (res) {
+                              element[property] = res;
+                          }
                           return Q(res);
                       }
                   }
@@ -3528,10 +3564,52 @@ var _r = (function (BABYLON) {
               if (!element[property]) {
                   element[property] = {};
               }
-              return patchElement(element[property], source[property]);
+              var plugin = patch.getPlugin(element, source, property);
+              if (plugin) {
+                  var result = plugin.resolve(element, source, property);
+                  if (result) {
+                      if (is.Promise(result)) {
+                          return result.then(function (_result) {
+                              element[property] = _result;
+                              return Q(element[property]);
+                          });
+                      }
+                      else {
+                          element[property] = result;
+                      }
+                      element[property] = result;
+                  }
+                  return Q(source[property]);
+              }
+              else {
+                  if (context) {
+                      context.push(element);
+                  }
+                  else {
+                      context = [element];
+                  }
+                  return patchElement(element[property], source[property], context);
+              }
           }
       }
   }
+  (function (patch) {
+      patch.plugins = [];
+      function registerPlugin(plugin) {
+          patch.plugins.push(plugin);
+      }
+      patch.registerPlugin = registerPlugin;
+      function getPlugin(element, source, property) {
+          var plugin = null;
+          for (var i = 0; i < patch.plugins.length; i++) {
+              if (patch.plugins[i].test(element, source, property)) {
+                  plugin = patch.plugins[i];
+              }
+          }
+          return plugin;
+      }
+      patch.getPlugin = getPlugin;
+  })(patch || (patch = {}));
 
   var isReady = true;
   var callbacks = [];
@@ -3786,276 +3864,277 @@ var _r = (function (BABYLON) {
       }
   }
 
-  var Animation = /** @class */ (function () {
-      function Animation(elements, property, value) {
-          this.elements = elements;
-          this.property = property;
-          this.value = value;
-          this.fps = 30;
-          this.duration = 0.4;
-          this.speedRatio = 1;
-          this.elements = select(elements);
-          this.loop = false;
-          var element = select(elements)[0];
-          if (is.Vector2(element[property])) {
-              this.animationType = BABYLON.Animation.ANIMATIONTYPE_VECTOR2;
-              return;
-          }
-          if (is.Vector3(element[property])) {
-              this.animationType = BABYLON.Animation.ANIMATIONTYPE_VECTOR3;
-              return;
-          }
-          if (is.Number(element[property])) {
-              this.animationType = BABYLON.Animation.ANIMATIONTYPE_FLOAT;
-              return;
-          }
-          if (is.Color(element[property])) {
-              this.animationType = BABYLON.Animation.ANIMATIONTYPE_COLOR3;
-              return;
-          }
-          if (is.Quaternion(element[property])) {
-              this.animationType = BABYLON.Animation.ANIMATIONTYPE_QUATERNION;
-              return;
-          }
-          if (is.Matrix(element[property])) {
-              this.animationType = BABYLON.Animation.ANIMATIONTYPE_MATRIX;
-              return;
-          }
+  function getEasingFunction(easing) {
+      var mode;
+      var func;
+      if (easing.indexOf("easeInOut") != -1) {
+          mode = BABYLON.EasingFunction.EASINGMODE_EASEINOUT;
+          func = easing.replace("easeInOut", "");
       }
-      Animation.prototype.getKeys = function (element) {
-          var _this = this;
-          if (this.keys) {
-              return this.keys;
+      else {
+          if (easing.indexOf("easeIn") != -1) {
+              mode = BABYLON.EasingFunction.EASINGMODE_EASEIN;
+              func = easing.replace("easeIn", "");
           }
           else {
-              var initialValue = element[this.property];
-              var finalValue_1;
-              switch (this.animationType) {
-                  case BABYLON.Animation.ANIMATIONTYPE_COLOR3:
-                      finalValue_1 = initialValue.clone();
-                      patch(finalValue_1, color(this.value));
-                      break;
-                  case BABYLON.Animation.ANIMATIONTYPE_FLOAT:
-                      finalValue_1 = this.value;
-                      break;
-                  case BABYLON.Animation.ANIMATIONTYPE_MATRIX:
-                      finalValue_1 = initialValue.clone();
-                      patch(finalValue_1, this.value);
-                      break;
-                  default:
-                      finalValue_1 = initialValue.clone();
-                      var properties = Object.getOwnPropertyNames(this.value);
-                      properties.forEach(function (property) {
-                          finalValue_1[property] = _this.value[property];
-                      });
-                      break;
-              }
-              return [
-                  {
-                      frame: 0,
-                      value: initialValue
-                  },
-                  {
-                      frame: this.fps * this.duration,
-                      value: finalValue_1
-                  }
-              ];
-          }
-      };
-      Animation.prototype.onComplete = function () {
-          if (this.animatables) {
-              this.animatables.forEach(function (animatable) {
-                  if (animatable.animationStarted) {
-                      return;
-                  }
-              });
-              if (this.onAnimationEnd) {
-                  this.onAnimationEnd();
-              }
-          }
-      };
-      Animation.prototype.getLoopMode = function () {
-          if (is.Boolean(this.loop)) {
-              if (this.loop) {
-                  return BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT;
-              }
-          }
-          if (is.String(this.loop)) {
-              if (this.loop.toLowerCase() == "cycle") {
-                  return BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE;
-              }
-              if (this.loop.toLocaleLowerCase() == "relative" || this.loop.toLocaleLowerCase() == "pingpong") {
-                  return BABYLON.Animation.ANIMATIONLOOPMODE_RELATIVE;
-              }
-          }
-          else {
-              if (is.Number(this.loop)) {
-                  return this.loop;
-              }
-          }
-          return BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT;
-      };
-      Animation.prototype.play = function (from, to) {
-          var _this = this;
-          var loop = this.getLoopMode();
-          this.elements.each(function (element) {
-              if (!element.animations) {
-                  element.animations = [];
-              }
-              var animation = new BABYLON.Animation("_r.animation" + element.animations.length, _this.property, _this.fps, _this.animationType, loop);
-              var keys = _this.getKeys(element);
-              animation.setKeys(keys);
-              if (_this.enableBlending == true) {
-                  animation.enableBlending = true;
-                  if (_this.blendingSpeed) {
-                      animation.blendingSpeed = _this.blendingSpeed;
-                  }
-              }
-              if (_this.easing) {
-                  animation.setEasingFunction(Animation.getEasingFunction(_this.easing));
-              }
-              element.animations.push(animation);
-              if (!_this.animatables) {
-                  _this.animatables = [];
-              }
-              /**
-              let animatable = global.scene.beginAnimation(element, from ? from : 0, to ? to : this.fps * this.duration, (this.loop != false), this.speedRatio, () => {
-                this.onComplete();
-              });
-              //animatable.onAnimationEnd = ;
-              this.animatables.push(animatable);**/
-          });
-          /**
-          this.elements.each((element) => {
-            global.scene.beginDirectAnimation(element, element.animations, from ? from : 0, to ? to : this.fps * this.duration, this.speedRatio, () => {
-              this.onComplete();
-            });
-          });**/
-          if (this.animatables && this.animatables.length > 0) {
-              if (this.onAnimationStart) {
-                  this.onAnimationStart();
-              }
-          }
-      };
-      Animation.prototype.pause = function () {
-          this.elements.each(function (element) {
-              var animatable = global.scene.getAnimatableByTarget(element);
-              animatable.pause();
-          });
-      };
-      Animation.prototype.restart = function () {
-          this.elements.each(function (element) {
-              var animatable = global.scene.getAnimatableByTarget(element);
-              animatable.restart();
-          });
-      };
-      Animation.prototype.stop = function () {
-          this.elements.each(function (element) {
-              var animatable = global.scene.getAnimatableByTarget(element);
-              animatable.stop();
-          });
-      };
-      Animation.prototype.reset = function () {
-          this.elements.each(function (element) {
-              var animatable = global.scene.getAnimatableByTarget(element);
-              animatable.reset();
-          });
-      };
-      Animation.getEasingFunction = function (easing) {
-          var mode;
-          var func;
-          if (easing.indexOf("easeInOut") != -1) {
-              mode = BABYLON.EasingFunction.EASINGMODE_EASEINOUT;
-              func = easing.replace("easeInOut", "");
-          }
-          else {
-              if (easing.indexOf("easeIn") != -1) {
-                  mode = BABYLON.EasingFunction.EASINGMODE_EASEIN;
-                  func = easing.replace("easeIn", "");
+              if (easing.indexOf("easeOut") != -1) {
+                  mode = BABYLON.EasingFunction.EASINGMODE_EASEOUT;
+                  func = easing.replace("easeOut", "");
               }
               else {
-                  if (easing.indexOf("easeOut") != -1) {
-                      mode = BABYLON.EasingFunction.EASINGMODE_EASEOUT;
-                      func = easing.replace("easeOut", "");
-                  }
-                  else {
-                      console.info("_r::unrecognized easing function " + easing);
-                      return null;
-                  }
+                  console.info("_r::unrecognized easing function " + easing);
+                  return null;
               }
           }
-          var easingFunction;
-          switch (func) {
-              case "Sine":
-                  easingFunction = new BABYLON.SineEase();
-                  easingFunction.setEasingMode(mode);
-                  return easingFunction;
-              case "Quad":
-                  easingFunction = new BABYLON.QuadraticEase();
-                  easingFunction.setEasingMode(mode);
-                  return easingFunction;
-              case "Cubic":
-                  easingFunction = new BABYLON.CubicEase();
-                  easingFunction.setEasingMode(mode);
-                  return easingFunction;
-              case "Quart":
-                  easingFunction = new BABYLON.QuarticEase();
-                  easingFunction.setEasingMode(mode);
-                  return easingFunction;
-              case "Quint":
-                  easingFunction = new BABYLON.QuinticEase();
-                  easingFunction.setEasingMode(mode);
-                  return easingFunction;
-              case "Expo":
-                  easingFunction = new BABYLON.ExponentialEase();
-                  easingFunction.setEasingMode(mode);
-                  return easingFunction;
-              case "Circ":
-                  easingFunction = new BABYLON.CircleEase();
-                  easingFunction.setEasingMode(mode);
-                  return easingFunction;
-              case "Back":
-                  easingFunction = new BABYLON.BackEase();
-                  easingFunction.setEasingMode(mode);
-                  return easingFunction;
-              case "Elastic":
-                  easingFunction = new BABYLON.ElasticEase();
-                  easingFunction.setEasingMode(mode);
-                  return easingFunction;
-              case "Bounce":
-                  easingFunction = new BABYLON.BounceEase();
-                  easingFunction.setEasingMode(mode);
-                  return easingFunction;
-              default:
-                  console.warn("_r::unrecognized easing function " + easing);
-                  return null;
+      }
+      var easingFunction;
+      switch (func) {
+          case "Sine":
+              easingFunction = new BABYLON.SineEase();
+              easingFunction.setEasingMode(mode);
+              return easingFunction;
+          case "Quad":
+              easingFunction = new BABYLON.QuadraticEase();
+              easingFunction.setEasingMode(mode);
+              return easingFunction;
+          case "Cubic":
+              easingFunction = new BABYLON.CubicEase();
+              easingFunction.setEasingMode(mode);
+              return easingFunction;
+          case "Quart":
+              easingFunction = new BABYLON.QuarticEase();
+              easingFunction.setEasingMode(mode);
+              return easingFunction;
+          case "Quint":
+              easingFunction = new BABYLON.QuinticEase();
+              easingFunction.setEasingMode(mode);
+              return easingFunction;
+          case "Expo":
+              easingFunction = new BABYLON.ExponentialEase();
+              easingFunction.setEasingMode(mode);
+              return easingFunction;
+          case "Circ":
+              easingFunction = new BABYLON.CircleEase();
+              easingFunction.setEasingMode(mode);
+              return easingFunction;
+          case "Back":
+              easingFunction = new BABYLON.BackEase();
+              easingFunction.setEasingMode(mode);
+              return easingFunction;
+          case "Elastic":
+              easingFunction = new BABYLON.ElasticEase();
+              easingFunction.setEasingMode(mode);
+              return easingFunction;
+          case "Bounce":
+              easingFunction = new BABYLON.BounceEase();
+              easingFunction.setEasingMode(mode);
+              return easingFunction;
+          default:
+              console.warn("_r::unrecognized easing function " + easing);
+              return null;
+      }
+  }
+  function getLoopMode(options) {
+      if (is.Boolean(options.loopMode)) {
+          if (options.loopMode) {
+              return BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT;
           }
-      };
-      return Animation;
-  }());
-  function animate(elements, properties, options) {
-      var defer = Q.defer();
-      Object.getOwnPropertyNames(properties).forEach(function (property) {
-          var animation = new Animation(elements, property, properties[property]);
-          if (is.Number(options)) {
-              animation.duration = options;
+      }
+      if (is.String(options.loopMode)) {
+          if (options.loopMode.toLowerCase() == "cycle") {
+              return BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE;
+          }
+          if (options.loopMode.toLocaleLowerCase() == "relative" || this.loop.toLocaleLowerCase() == "pingpong") {
+              return BABYLON.Animation.ANIMATIONLOOPMODE_RELATIVE;
+          }
+      }
+      else {
+          if (is.Number(options.loopMode)) {
+              return options.loopMode;
+          }
+      }
+      return BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT;
+  }
+  function getAnimationType(element, property) {
+      if (is.Vector2(element[property])) {
+          return BABYLON.Animation.ANIMATIONTYPE_VECTOR2;
+      }
+      if (is.Vector3(element[property])) {
+          return BABYLON.Animation.ANIMATIONTYPE_VECTOR3;
+      }
+      if (is.Number(element[property])) {
+          return BABYLON.Animation.ANIMATIONTYPE_FLOAT;
+      }
+      if (is.Color(element[property])) {
+          return BABYLON.Animation.ANIMATIONTYPE_COLOR3;
+      }
+      if (is.Quaternion(element[property])) {
+          return BABYLON.Animation.ANIMATIONTYPE_QUATERNION;
+      }
+      if (is.Matrix(element[property])) {
+          return BABYLON.Animation.ANIMATIONTYPE_MATRIX;
+      }
+      if (is.Size(element[property])) {
+          return BABYLON.Animation.ANIMATIONTYPE_SIZE;
+      }
+      return null;
+  }
+  function isAnimatable(element, property) {
+      return getAnimationType(element, property) !== null;
+  }
+  function getKeys(element, property, newValue, options) {
+      if (options.keys) {
+          return options.keys;
+      }
+      var initial = element[property];
+      var final;
+      switch (getAnimationType(element, property)) {
+          case BABYLON.Animation.ANIMATIONTYPE_COLOR3:
+              final = initial.clone();
+              patch(final, color(newValue));
+              break;
+          case BABYLON.Animation.ANIMATIONTYPE_FLOAT:
+              final = newValue;
+              break;
+          case BABYLON.Animation.ANIMATIONTYPE_MATRIX:
+              final = initial.clone();
+              patch(final, newValue);
+              break;
+          default:
+              final = initial.clone();
+              var properties = Object.getOwnPropertyNames(newValue);
+              properties.forEach(function (property) {
+                  final[property] = newValue[property];
+              });
+              break;
+      }
+      return [
+          {
+              frame: 0,
+              value: initial
+          },
+          {
+              frame: options.fps * options.duration,
+              value: final
+          }
+      ];
+  }
+  function getAnimationsForElement(element, patch, options) {
+      var animations = [];
+      var properties = Object.getOwnPropertyNames(patch);
+      if (!element.animations) {
+          element.animations = [];
+      }
+      properties.forEach(function (property) {
+          if (!isAnimatable(element, property)) {
+              console.error(property + " is not animatable");
           }
           else {
-              for (var option in options) {
-                  animation[option] = options[option];
+              var animation = new BABYLON.Animation("_r.animation" + element.animations.length, property, options.fps, getAnimationType(element, property), getLoopMode(options));
+              var keys = getKeys(element, property, patch[property], options);
+              animation.setKeys(keys);
+              if (options.easing) {
+                  animation.setEasingFunction(getEasingFunction(options.easing));
+              }
+              element.animations.push(animation);
+              animations.push(animation);
+          }
+      });
+      return animations;
+  }
+  function findSomethingToAnimate(element, patch) {
+      var properties = Object.getOwnPropertyNames(patch);
+      var animatables = [];
+      properties.forEach(function (property) {
+          if (isAnimatable(element, property)) {
+              animatables.push({
+                  element: element,
+                  property: property,
+                  patch: patch[property]
+              });
+          }
+          else {
+              if (!is.Primitive(patch[property])) {
+                  var _animatables = findSomethingToAnimate(element[property], patch[property]);
+                  animatables = animatables.concat(_animatables);
+              }
+              else {
+                  return [];
               }
           }
-          animation.play();
       });
-      select(elements).each(function (element) {
-          global.scene.beginDirectAnimation(element, element.animations, undefined, undefined, false, 1, function () {
-              if (options.onComplete) {
-                  options.onComplete(element);
-              }
-          });
-      });
-      return defer.promise;
+      return animatables;
   }
+  var defaultOptions = {
+      fps: 30,
+      duration: 0.4,
+      speedRatio: 1,
+      loopMode: false
+  };
+  var count = 0;
+  function animate(elements, patch, options) {
+      var _elements = select(elements);
+      var _options = {};
+      if (is.Number(options)) {
+          _options.duration = options;
+      }
+      else {
+          _options = options;
+      }
+      _options = extend({}, defaultOptions, _options);
+      var group = new BABYLON.AnimationGroup("_r.animate.AnimationsGroup" + count++);
+      _elements.each(function (item) {
+          var _animatables = findSomethingToAnimate(item, patch);
+          _animatables.forEach(function (animatable) {
+              var _element = animatable.element;
+              var _patch = {};
+              _patch[animatable.property] = animatable.patch;
+              var animations = getAnimationsForElement(_element, _patch, _options);
+              animations.forEach(function (animation) {
+                  group.addTargetedAnimation(animation, _element);
+              });
+          });
+          /**
+          let animations = getAnimationsForElement(item, patch, _options);
+          animations.forEach((animation) => {
+            group.addTargetedAnimation(animation, item);
+          });**/
+      });
+      group.speedRatio = _options.speedRatio;
+      if (_options.complete) {
+          group.onAnimationGroupEndObservable.add(_options.complete);
+      }
+      group.play();
+      return group;
+  }
+
+  patch.registerPlugin({
+      test: function (element, source, property) {
+          return element[property] instanceof BABYLON.Color3 || element[property] instanceof BABYLON.Color4;
+      },
+      resolve: function (element, source, property) {
+          return color(source[property]);
+      }
+  });
+
+  patch.registerPlugin({
+      test: function (element, source, property) {
+          return property.trim() === "*";
+      },
+      resolve: function (element, source, property) {
+          if (is.MultiMaterial(element)) {
+              return patchElements(element.subMaterials, source[property], element);
+          }
+          else {
+              if (is.Array(element)) {
+                  return patchElements(element, source[property]);
+              }
+              else {
+                  return patchElement(element, source[property]);
+              }
+          }
+      }
+  });
 
   var index = {
       get canvas() {

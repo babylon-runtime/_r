@@ -13,6 +13,7 @@ import { Selector } from "./Selector.js";
 import { color } from './color.js';
 import { animate } from "./animate.js";
 import { extend } from "./extend.js";
+import "./patch.plugins/index.js";
 
 export default {
     get canvas() {
