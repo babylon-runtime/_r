@@ -326,27 +326,21 @@ export class Elements {
     this.each(function(element) {
       if (is.Camera(element)) {
         global.scene.addCamera(element);
-        return false;
       }
       if (is.Mesh(element)) {
         global.scene.addMesh(element);
-        return false;
       }
       if (is.Material(element)) {
         global.scene.addMaterial(element);
-        return false;
       }
       if (is.MultiMaterial(element)) {
         global.scene.addMultiMaterial(element);
-        return false;
       }
       if (is.Texture(element)) {
         global.scene.addTexture(element);
-        return false;
       }
       if (is.Light(element)) {
         global.scene.addLight(element);
-        return false;
       }
     });
   }

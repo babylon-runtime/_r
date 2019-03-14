@@ -3,7 +3,7 @@ import { extend }  from "./extend.js";
 import { global } from "./global.js";
 import { BABYLON } from './BABYLON.js';
 import { activateCamera } from "./activateCamera.js";
-import { importScene, ImportPromise } from "./import.js";
+import { downloadScene } from "./download.js";
 import { patch, patchChain } from "./patch.js";
 import "../node_modules/q/q.js";
 
@@ -95,13 +95,14 @@ function _createScene() : Q.Promise<null> {
     if (is.String(options.scene)) {
       // scene is a filename
       if (options.assets) {
-        importScene(options.assets, <string> options.scene).ready(function() {
-          defer.resolve();
+        return downloadScene({
+          scene : <string> options.scene,
+          assets : options.assets
         });
       }
       else {
-        importScene(<string> options.scene).ready(function(res) {
-          defer.resolve();
+        return downloadScene({
+          scene : <string> options.scene
         });
       }
     }

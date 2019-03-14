@@ -2,8 +2,8 @@ import { global } from "./global.js";
 import { is } from "./is.js";
 import { launch, ready } from "./launch.js";
 import { start, pause } from "./renderLoop.js";
-import { importScene, downloadScene } from "./import.js";
-import { createLibrary, library, libraries } from "./library.js";
+import { downloadScene, downloadTexture, downloadCubeTexture } from "./download.js";
+import { createLibrary, library } from "./library.js";
 import { select } from "./select.js";
 import { data } from "./data.js";
 import { on, off, one, trigger } from "./events.js";
@@ -13,6 +13,7 @@ import { Selector } from "./Selector.js";
 import { color } from './color.js';
 import { animate } from "./animate.js";
 import { extend } from "./extend.js";
+import { activateCamera } from "./activateCamera.js";
 import "./patch.plugins/index.js";
 
 export default {
@@ -44,8 +45,9 @@ export default {
     ready : ready,
     start : start,
     pause : pause,
-    import : importScene,
-    download : downloadScene,
+    downloadScene : downloadScene,
+    downloadTexture : downloadTexture,
+    downloadCubeTexture : downloadCubeTexture,
     createLibrary : createLibrary,
     library : library,
     data : data,
@@ -68,5 +70,6 @@ export default {
     is : is,
     color : color,
     animate : animate,
-    extend : extend
+    extend : extend,
+    activeCamera : activateCamera
 };

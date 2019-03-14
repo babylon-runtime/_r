@@ -44,6 +44,11 @@ module.exports = function(grunt) {
                     { src : [ 'test/animate/test.js'] }
                 ]
             },
+            download : {
+                files : [
+                    { src : [ 'test/download/test.js']}
+                ]
+            }
             /**
              allInPatch : {
                 proxies : {

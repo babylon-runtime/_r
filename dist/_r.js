@@ -874,27 +874,21 @@ var _r = (function (BABYLON) {
           this.each(function (element) {
               if (is.Camera(element)) {
                   global.scene.addCamera(element);
-                  return false;
               }
               if (is.Mesh(element)) {
                   global.scene.addMesh(element);
-                  return false;
               }
               if (is.Material(element)) {
                   global.scene.addMaterial(element);
-                  return false;
               }
               if (is.MultiMaterial(element)) {
                   global.scene.addMultiMaterial(element);
-                  return false;
               }
               if (is.Texture(element)) {
                   global.scene.addTexture(element);
-                  return false;
               }
               if (is.Light(element)) {
                   global.scene.addLight(element);
-                  return false;
               }
           });
       };
@@ -1084,124 +1078,6 @@ var _r = (function (BABYLON) {
   }
   function library(name) {
       return libraries[name];
-  }
-
-  // Error handling in promise can be tricky, for instance errors in then must be catch, we don't want that for our users, so we provide a ready function.
-  // + We need progress to track async operation.
-  var ImportPromise = /** @class */ (function () {
-      function ImportPromise(promise) {
-          var _this = this;
-          this.promise = promise;
-          this._progressCallbacks = [];
-          this._readyCallbacks = [];
-          this._errorCallbacks = [];
-          this._isReady = false;
-          this._error = false;
-          if (promise.then) {
-              promise.then(function (container) {
-                  _this._isReady = true;
-                  _this._readyCallbacks.forEach(function (callback) {
-                      callback(container);
-                  });
-              });
-              promise.catch(function (ex) {
-                  _this._error = true;
-                  _this._exception = ex;
-                  _this._errorCallbacks.forEach(function (callback) {
-                      callback(ex);
-                  });
-              });
-          }
-          else {
-              this._isReady = true;
-              this._result = promise;
-          }
-      }
-      ImportPromise.prototype.triggerProgress = function (progress) {
-          this._progressCallbacks.forEach(function (callback) {
-              callback(progress);
-          });
-      };
-      ImportPromise.prototype.progress = function (callback) {
-          this._progressCallbacks.push(callback);
-          return this;
-      };
-      ImportPromise.prototype.ready = function (callback) {
-          if (this._isReady) {
-              callback(this._result);
-          }
-          else {
-              this._readyCallbacks.push(callback);
-          }
-          return this;
-      };
-      ImportPromise.prototype.error = function (callback) {
-          if (!this._isReady) {
-              this._errorCallbacks.push(callback);
-          }
-          else {
-              if (this._error) {
-                  callback(this._exception);
-              }
-          }
-          return this;
-      };
-      return ImportPromise;
-  }());
-  function importScene() {
-      var any = [];
-      for (var _i = 0; _i < arguments.length; _i++) {
-          any[_i] = arguments[_i];
-      }
-      return load.apply(void 0, any).ready(function (assetContainer) {
-          assetContainer.addAllToScene();
-          return assetContainer.scene;
-      });
-  }
-  function downloadScene() {
-      var any = [];
-      for (var _i = 0; _i < arguments.length; _i++) {
-          any[_i] = arguments[_i];
-      }
-      return load.apply(void 0, any);
-  }
-  function load() {
-      var any = [];
-      for (var _i = 0; _i < arguments.length; _i++) {
-          any[_i] = arguments[_i];
-      }
-      var rootUrl, sceneFileName;
-      if (any.length === 1) {
-          if (is.String(any[0])) {
-              // argument is a filename and assets are in the same folder
-              var url = any[0];
-              sceneFileName = url.split('/').pop();
-              rootUrl = url.replace(sceneFileName, "");
-          }
-          else {
-              // argument is an object
-              rootUrl = any["assets"];
-              sceneFileName = any["scene"];
-          }
-      }
-      else {
-          rootUrl = any[0];
-          sceneFileName = any[1];
-      }
-      if (global.TRACE) {
-          console.groupCollapsed("[_r] - loadAssets & create library " + sceneFileName + " from " + rootUrl);
-          BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.DETAILED_LOGGING;
-      }
-      var promise = BABYLON.SceneLoader.LoadAssetContainerAsync(rootUrl, sceneFileName, global.scene, function (e) {
-          importPromise.triggerProgress(e);
-      }).then(function (container) {
-          createLibrary(rootUrl + sceneFileName, container);
-          BABYLON.SceneLoader.loggingLevel = BABYLON.SceneLoader.NO_LOGGING;
-          console.groupEnd();
-          return container;
-      });
-      var importPromise = new ImportPromise(promise);
-      return importPromise;
   }
 
   function select(arg) {
@@ -3611,6 +3487,88 @@ var _r = (function (BABYLON) {
       patch.getPlugin = getPlugin;
   })(patch || (patch = {}));
 
+  function downloadScene(options) {
+      var assets, fileName;
+      if (options.assets) {
+          assets = options.assets;
+          fileName = options.scene;
+      }
+      else {
+          fileName = options.scene.split('/').pop();
+          assets = options.scene.replace(fileName, '');
+      }
+      var promise = BABYLON.SceneLoader.LoadAssetContainerAsync(assets, fileName, global.scene, function (e) {
+          if (options.progress) {
+              options.progress(e);
+          }
+      }).then(function (assetContainer) {
+          // success
+          createLibrary(assets + fileName, assetContainer);
+          if (options.patch) {
+              return patch(options.patch).then(function () {
+                  if (options.addAllToScene !== false) {
+                      assetContainer.addAllToScene();
+                  }
+                  if (options.ready) {
+                      options.ready(assetContainer);
+                  }
+              });
+          }
+          else {
+              if (options.addAllToScene !== false) {
+                  assetContainer.addAllToScene();
+              }
+              if (options.ready) {
+                  options.ready(assetContainer);
+              }
+          }
+      }, function (reason) {
+          // error
+          if (options.error) {
+              options.error(reason);
+          }
+      });
+      return promise;
+  }
+  function downloadTexture(options) {
+      var defer = Q.defer();
+      var assetsManager = new BABYLON.AssetsManager(global.scene);
+      var task = assetsManager.addTextureTask(options.name, options.url, options.noMipmap, options.invertY, options.samplingMode);
+      task.onSuccess = function (task) {
+          defer.resolve(task.texture);
+          if (options.ready) {
+              options.ready(task.texture);
+          }
+      };
+      task.onError = function (reason) {
+          defer.reject(reason);
+          if (options.error) {
+              options.error(reason);
+          }
+      };
+      assetsManager.load();
+      return defer.promise;
+  }
+  function downloadCubeTexture(options) {
+      var defer = Q.defer();
+      var assetsManager = new BABYLON.AssetsManager(global.scene);
+      var task = assetsManager.addTextureTask(options.name, options.url, options.extensions, options.files);
+      task.onSuccess = function (task) {
+          defer.resolve(task.texture);
+          if (options.ready) {
+              options.ready(task.texture);
+          }
+      };
+      task.onError = function (reason) {
+          defer.reject(reason);
+          if (options.error) {
+              options.error(reason);
+          }
+      };
+      assetsManager.load();
+      return defer.promise;
+  }
+
   var isReady = true;
   var callbacks = [];
   var options = {
@@ -3681,13 +3639,14 @@ var _r = (function (BABYLON) {
           if (is.String(options.scene)) {
               // scene is a filename
               if (options.assets) {
-                  importScene(options.assets, options.scene).ready(function () {
-                      defer.resolve();
+                  return downloadScene({
+                      scene: options.scene,
+                      assets: options.assets
                   });
               }
               else {
-                  importScene(options.scene).ready(function (res) {
-                      defer.resolve();
+                  return downloadScene({
+                      scene: options.scene
                   });
               }
           }
@@ -4165,8 +4124,9 @@ var _r = (function (BABYLON) {
       ready: ready,
       start: start,
       pause: pause,
-      import: importScene,
-      download: downloadScene,
+      downloadScene: downloadScene,
+      downloadTexture: downloadTexture,
+      downloadCubeTexture: downloadCubeTexture,
       createLibrary: createLibrary,
       library: library,
       data: data,
@@ -4190,7 +4150,8 @@ var _r = (function (BABYLON) {
       is: is,
       color: color,
       animate: animate,
-      extend: extend
+      extend: extend,
+      activeCamera: activateCamera
   };
 
   return index;
