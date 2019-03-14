@@ -31,7 +31,27 @@ before(function(done) {
             var ground = BABYLON.Mesh.CreateGround("ground1", 6, 6, 2, scene);
 
             return scene;
-        }
+        },
+        patch : [{
+                "sphere1": {
+                    material: function () {
+                        return new BABYLON.StandardMaterial("material.sphere1", _r.scene);
+                    }
+                },
+            },
+            {
+                "material.sphere1" : {
+                    diffuseTexture :  function() {
+                        return _r.downloadTexture({ url : "https://www.babylonjs-playground.com/textures/grass.jpg" })
+                    }
+                }
+            },
+            {
+                "https://www.babylonjs-playground.com/textures/grass.jpg" : {
+                    uScale : 2
+                }
+            }
+        ]
     });
     _r.ready(done);
 });

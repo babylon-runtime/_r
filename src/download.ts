@@ -2,7 +2,7 @@ import { global } from "./global.js";
 import { BABYLON } from "./BABYLON.js";
 import { createLibrary } from "./library.js";
 import { patch } from "./patch.js";
-
+import "../node_modules/q/q.js";
 declare const Q;
 
 export interface IDownloadAsyncOptions {
