@@ -3437,6 +3437,12 @@ var _r = (function (BABYLON) {
               }
           }
           else {
+              if (is.Promise(source[property])) {
+                  return source[property].then(function (_result) {
+                      element[property] = _result;
+                      return Q(element[property]);
+                  });
+              }
               if (!element[property]) {
                   element[property] = {};
               }
