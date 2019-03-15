@@ -7,6 +7,7 @@ import { createLibrary, library } from "./library.js";
 import { select } from "./select.js";
 import { data } from "./data.js";
 import { on, off, one, trigger } from "./events.js";
+import { keyEvents, onKeyEvent, oneKeyEvent, offKeyEvent } from "./keyEvents.js";
 import { patch } from "./patch.js";
 import { match } from "./Elements.js";
 import { Selector } from "./Selector.js";
@@ -52,13 +53,28 @@ export default {
     library : library,
     data : data,
     on : function(event: string, handler: (...args: any[]) => void, repeat = true) {
-        on(this, event, handler, repeat);
+        if (keyEvents.indexOf(event) != -1) {
+           onKeyEvent(event, handler, repeat);
+        }
+        else {
+            on(this, event, handler, repeat);
+        }
     },
     off : function(event: string, handler?: (...args: any[]) => void) {
-        off(this, event, handler);
+        if (keyEvents.indexOf(event) != -1) {
+            offKeyEvent(event, handler);
+        }
+        else {
+            off(this, event, handler);
+        }
     },
     one : function(event: string, handler: (...args: any[]) => void) {
-        one(this, event, handler);
+        if (keyEvents.indexOf(event) != -1) {
+            oneKeyEvent(event, handler);
+        }
+        else {
+            one(this, event, handler);
+        }
     },
     trigger : function(event: string, extraParameters?: any) {
         trigger(this, event, extraParameters);

@@ -1,5 +1,8 @@
-var _r = (function (BABYLON) {
-  'use strict';
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('../node_modules/babylonjs/es6.js')) :
+  typeof define === 'function' && define.amd ? define(['../node_modules/babylonjs/es6.js'], factory) :
+  (global = global || self, global._r = factory(global.BABYLON));
+}(this, function (BABYLON) { 'use strict';
 
   console.log("babylon runtime v0.0.5")
 
@@ -409,8 +412,6 @@ var _r = (function (BABYLON) {
       'OnEveryFrameTrigger',
       'OnIntersectionEnterTrigger',
       'OnIntersectionExitTrigger',
-      'OnKeyDownTrigger',
-      'OnKeyUpTrigger'
   ];
   function onMesh(mesh, event, handler, repeat) {
       if (repeat === void 0) { repeat = true; }
@@ -585,7 +586,7 @@ var _r = (function (BABYLON) {
               }
               return;
           }
-          if (is.AssetContainer(element) /**|| is.Scene(element)**/) {
+          if (is.AssetContainer(element)) {
               for (var i = 0; i < element.meshes.length; i++) {
                   this[this.length++] = element.meshes[i];
               }
@@ -683,7 +684,7 @@ var _r = (function (BABYLON) {
                   global.scene.addMesh(this[i]);
                   continue;
               }
-              if (is.Material(this[i])) {
+              if (is.Material(this[i]) || is.MultiMaterial(this[i])) {
                   global.scene.addMaterial(this[i]);
                   continue;
               }
@@ -707,7 +708,7 @@ var _r = (function (BABYLON) {
                   global.scene.removeMesh(this[i]);
                   continue;
               }
-              if (is.Material(this[i])) {
+              if (is.Material(this[i]) || is.MultiMaterial(this[i])) {
                   global.scene.removeMaterial(this[i]);
                   continue;
               }
@@ -3741,6 +3742,59 @@ var _r = (function (BABYLON) {
       }
   }
 
+  var keyEvents = [
+      'OnKeyDownTrigger',
+      'OnKeyUpTrigger'
+  ];
+  function onKeyEvent(event, handler, repeat) {
+      if (repeat === void 0) { repeat = true; }
+      if (!global.scene.actionManager) {
+          global.scene.actionManager = new BABYLON.ActionManager(global.scene);
+      }
+      var action = new BABYLON.ExecuteCodeAction(BABYLON.ActionManager[event], function (evt) {
+          trigger(global.scene, event, evt);
+      });
+      global.scene.actionManager.registerAction(action);
+      var events = data(global.scene, "_r.events");
+      if (!events) {
+          data(global.scene, "_r.events", []);
+          events = data(global.scene, "_r.events");
+      }
+      if (!events[event]) {
+          events[event] = [];
+      }
+      events[event].push({
+          handler: handler,
+          repeat: repeat,
+          action: action
+      });
+  }
+  function oneKeyEvent(event, handler) {
+      onKeyEvent(event, handler, false);
+  }
+  function offKeyEvent(event, handler) {
+      var events = data(global.scene, '_r.events');
+      if (events[event]) {
+          if (handler) {
+              events[event] = events[event].filter(function (_event) {
+                  if (_event.handler.toString() == handler.toString()) {
+                      if (_event.action) {
+                          var index = global.scene.actionManager.actions.indexOf(_event.action);
+                          global.scene.actionManager.actions.splice(index, 1);
+                      }
+                      if (_event.listener) {
+                          global.scene.removeEventListener(_event, _event.listener);
+                      }
+                  }
+                  return _event.handler.toString() !== handler.toString();
+              });
+          }
+          else {
+              events[event] = [];
+          }
+      }
+  }
+
   function color(expr) {
       if (expr instanceof BABYLON.Color3 || expr instanceof BABYLON.Color4) {
           return expr;
@@ -4138,13 +4192,28 @@ var _r = (function (BABYLON) {
       data: data,
       on: function (event, handler, repeat) {
           if (repeat === void 0) { repeat = true; }
-          on(this, event, handler, repeat);
+          if (keyEvents.indexOf(event) != -1) {
+              onKeyEvent(event, handler, repeat);
+          }
+          else {
+              on(this, event, handler, repeat);
+          }
       },
       off: function (event, handler) {
-          off(this, event, handler);
+          if (keyEvents.indexOf(event) != -1) {
+              offKeyEvent(event, handler);
+          }
+          else {
+              off(this, event, handler);
+          }
       },
       one: function (event, handler) {
-          one(this, event, handler);
+          if (keyEvents.indexOf(event) != -1) {
+              oneKeyEvent(event, handler);
+          }
+          else {
+              one(this, event, handler);
+          }
       },
       trigger: function (event, extraParameters) {
           trigger(this, event, extraParameters);
@@ -4162,5 +4231,5 @@ var _r = (function (BABYLON) {
 
   return index;
 
-}(BABYLON));
+}));
 //# sourceMappingURL=_r.js.map

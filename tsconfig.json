@@ -5,7 +5,7 @@
     "sourceMap": true
   },
   "exclude": [
-    "node_modules"
+    "node_modules/**"
   ],
   "lib" : [
       "ES2015.Promise"

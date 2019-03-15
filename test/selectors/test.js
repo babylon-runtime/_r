@@ -8,6 +8,7 @@ before(function(done) {
 });
 
 describe('Selectors', function() {
+    this.timeout(10000);
     describe('Basic', function() {
         it('_r.select("*:mesh").length === 4', function() {
             expect(_r.select("*:mesh").length === 4).to.be.true;

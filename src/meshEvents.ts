@@ -19,8 +19,7 @@ export const meshEvents = [
   'OnEveryFrameTrigger',
   'OnIntersectionEnterTrigger',
   'OnIntersectionExitTrigger',
-  'OnKeyDownTrigger',
-  'OnKeyUpTrigger'
+
 ];
 
 export function onMesh(mesh: BABYLON.Mesh, event: string, handler: (args: any) => void, repeat = true) {

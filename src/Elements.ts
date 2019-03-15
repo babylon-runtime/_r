@@ -22,7 +22,7 @@ export class Elements {
       }
       return;
     }
-    if (is.AssetContainer(element) /**|| is.Scene(element)**/) {
+    if (is.AssetContainer(element)) {
       for (let i = 0; i < element.meshes.length; i++) {
         this[this.length++] = element.meshes[i];
       }
@@ -43,7 +43,7 @@ export class Elements {
     this[this.length++] = element;
   }
 
-  contains(element : any) {
+  contains(element : any) : boolean {
     return this.toArray().indexOf(element) !== -1;
   }
 
@@ -127,7 +127,7 @@ export class Elements {
         global.scene.addMesh(this[i]);
         continue;
       }
-      if (is.Material(this[i])) {
+      if (is.Material(this[i]) || is.MultiMaterial(this[i])) {
         global.scene.addMaterial(this[i]);
         continue;
       }
@@ -152,7 +152,7 @@ export class Elements {
         global.scene.removeMesh(this[i]);
         continue;
       }
-      if (is.Material(this[i])) {
+      if (is.Material(this[i]) || is.MultiMaterial(this[i])) {
         global.scene.removeMaterial(this[i]);
         continue;
       }

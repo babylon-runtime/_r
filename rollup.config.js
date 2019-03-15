@@ -5,7 +5,7 @@ export default [{
     input: 'src/index.ts',
     output: {
         file: 'dist/_r.js',
-        format: 'iife',
+        format: 'umd',
         name: '_r',
         sourcemap : true,
         intro : 'console.log("babylon runtime v' + pkg.version + '")'
@@ -20,7 +20,7 @@ export default [{
     input: 'src/index.ts',
     output: {
         file: 'dist/_r.min.js',
-        format: 'iife',
+        format: 'umd',
         name: '_r',
         sourcemap : true,
         intro : 'console.log("babylon runtime v' + pkg.version + '")'
@@ -32,4 +32,4 @@ export default [{
         typescript(),
         uglify()
     ]
-} ];
+}];
