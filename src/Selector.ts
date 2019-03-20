@@ -39,30 +39,81 @@ export class Selector {
       selector = selector.replace(regExpAttribute, '');
     }
     // TODO [material.diffuseTexture.name=texture*.jpg]
-    matches.forEach(function(expr) {
+    matches.forEach((expr) => {
       if (expr.indexOf('!=') !== -1) {
         let split = expr.split('!=');
-        filters.push(function(element) {
-          if (element.hasOwnProperty(split[0])) {
-            return element[split[0]] != JSON.parse(split[1]);
+        let left = split[0].trim();
+        let right = split[1].trim();
+        try {
+          right = JSON.parse(right);
+        }
+        catch {
+          try {
+            right = JSON.parse(JSON.stringify(right));
           }
-          return false;
-        });
+          catch {
+            console.error("_r.select - incorrect parameter : " + right);
+          }
+        }
+        let func = (element) => {
+          let _split = left.split('.');
+          let _element = element;
+          for (let i = 0; i < _split.length; i++) {
+            if (_element != null && _element[_split[i]] != null) {
+              _element = _element[_split[i]];
+            } else {
+              _element = null;
+            }
+          }
+          return _element != null && _element != right;
+        };
+        filters.push(func);
       }
       else {
         if (expr.indexOf('=') !== -1) {
-          filters.push(function(element) {
-            let split = expr.split('=');
-            if (element.hasOwnProperty(split[0])) {
-              return element[split[0]] == JSON.parse(split[1]);
+          let split = expr.split('=');
+          let left = split[0].trim();
+          let right = split[1].trim();
+          try {
+            right = JSON.parse(right);
+          }
+          catch {
+            try {
+              right = JSON.parse(JSON.stringify(right));
             }
-            return false;
-          });
+            catch {
+              console.error("_r.select - incorrect parameter : " + right);
+            }
+          }
+          let func = (element) => {
+            let _split = left.split('.');
+            let _element = element;
+            for (let i = 0; i < _split.length; i++) {
+              if (_element != null && _element[_split[i]] != null) {
+                _element = _element[_split[i]];
+              } else {
+                _element = null;
+              }
+            }
+            return _element != null && _element == right;
+          };
+          filters.push(func);
         }
         else {
-          filters.push(function(element) {
-            return element[expr] != null;
-          });
+          let func = (element) => {
+            let left = expr.trim();
+            let _split = left.split('.');
+            let _element = element;
+            for (let i = 0; i < _split.length; i++) {
+              if (_element != null && _element[_split[i]] != null) {
+                _element = _element[_split[i]];
+              } else {
+                _element = null;
+              }
+            }
+            return _element != null;
+          };
+          filters.push(func);
         }
       }
     });

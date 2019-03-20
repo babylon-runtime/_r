@@ -110,6 +110,9 @@ function _createScene() : Q.Promise<null> {
       if (is.Function(options.scene)) {
         try {
           let result = eval("var canvas=_r.canvas; var engine = _r.engine; var scene=_r.scene; var createScene=" + options.scene + ';createScene()');
+          if (BABYLON.Engine.LastCreatedEngine.scenes.length == 2) {
+            BABYLON.Engine.LastCreatedEngine.scenes[0].dispose();
+          }
           if (is.Scene(result)) {
             global.scene = result;
           }

@@ -4,7 +4,6 @@ import { data } from "./data.js";
 import { trigger } from "./events.js";
 
 export const meshEvents = [
-  'NothingTrigger ',
   'OnDoublePickTrigger',
   'OnPickTrigger',
   'OnLeftPickTrigger',
@@ -15,11 +14,7 @@ export const meshEvents = [
   'OnPickOutTrigger',
   'OnLongPressTrigger',
   'OnPointerOverTrigger',
-  'OnPointerOutTrigger',
-  'OnEveryFrameTrigger',
-  'OnIntersectionEnterTrigger',
-  'OnIntersectionExitTrigger',
-
+  'OnPointerOutTrigger'
 ];
 
 export function onMesh(mesh: BABYLON.Mesh, event: string, handler: (args: any) => void, repeat = true) {

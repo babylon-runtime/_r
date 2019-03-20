@@ -57,5 +57,38 @@ describe('Selectors', function() {
             expect(_r.select("*:mesh[isVisible=true]").length === 3).to.be.true;
 
         })
+    });
+    describe("attribute cascade", function() {
+        it("*:mesh[position.x=-1]", function() {
+            expect(_r.select("*:mesh[position.x=-1]").length === 1).to.be.true;
+            expect(_r.select("*:mesh[position.x!=-1]").length == 3).to.be.true;
+            expect(_r.select("*:mesh[position.x =-1]").length === 1).to.be.true;
+            expect(_r.select("*:mesh[ position.x = -1 ]").length === 1).to.be.true;
+        });
+    });
+    describe("multiple attributes", function() {
+        it("*:mesh[isVisible=false][visibility=0.5]", function() {
+            _r.select("*:mesh")[1].isVisible = false;
+            _r.select("*:mesh")[1].visibility = 0.5;
+            expect(_r.select("*:mesh[isVisible=false][visibility=0.5]").length == 1).to.be.true;
+        })
+    });
+    describe("deep attribute", function() {
+        it("*:mesh[material.diffuseTexture.name=https://www.babylonjs-playground.com/textures/grass.jpg]", function(done) {
+            _r.select("suzanne.000").patch({
+                isVisible : true,
+                material : {
+                    diffuseTexture :_r.downloadTexture({
+                        url : "https://www.babylonjs-playground.com/textures/grass.jpg"
+                    })
+                }
+            }).done(function() {
+                var elements = _r.select("*:mesh[material.diffuseTexture.name=https://www.babylonjs-playground.com/textures/grass.jpg]");
+                expect(elements.length == 1).to.be.true;
+                expect(elements[0].name == "suzanne.000");
+                expect()
+                done();
+            })
+        })
     })
 });

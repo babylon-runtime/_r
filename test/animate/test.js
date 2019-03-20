@@ -32,7 +32,6 @@ before(function() {
 
 describe('animate', function() {
     this.timeout(5000);
-
     it('simple', function (done) {
         _r.animate('Box1', {
             position : {
@@ -108,18 +107,6 @@ describe('animate', function() {
             }
         })
     });
-    it("click", function() {
-        _r.select("*:mesh").on("OnPickTrigger", function() {
-            _r.select(this).finish();
-            console.log(_r.select(this)[0]);
-        });
-        _r.animate("Box1", {
-            rotation : {
-                y : 0
-            }
-        }, {
-            duration : 1
-        })
-    })
+
 });
 

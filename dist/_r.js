@@ -398,7 +398,6 @@
   }
 
   var meshEvents = [
-      'NothingTrigger ',
       'OnDoublePickTrigger',
       'OnPickTrigger',
       'OnLeftPickTrigger',
@@ -409,10 +408,7 @@
       'OnPickOutTrigger',
       'OnLongPressTrigger',
       'OnPointerOverTrigger',
-      'OnPointerOutTrigger',
-      'OnEveryFrameTrigger',
-      'OnIntersectionEnterTrigger',
-      'OnIntersectionExitTrigger',
+      'OnPointerOutTrigger'
   ];
   function onMesh(mesh, event, handler, repeat) {
       if (repeat === void 0) { repeat = true; }
@@ -501,28 +497,82 @@
           // TODO [material.diffuseTexture.name=texture*.jpg]
           matches.forEach(function (expr) {
               if (expr.indexOf('!=') !== -1) {
-                  var split_1 = expr.split('!=');
-                  filters.push(function (element) {
-                      if (element.hasOwnProperty(split_1[0])) {
-                          return element[split_1[0]] != JSON.parse(split_1[1]);
+                  var split = expr.split('!=');
+                  var left_1 = split[0].trim();
+                  var right_1 = split[1].trim();
+                  try {
+                      right_1 = JSON.parse(right_1);
+                  }
+                  catch (_a) {
+                      try {
+                          right_1 = JSON.parse(JSON.stringify(right_1));
                       }
-                      return false;
-                  });
+                      catch (_b) {
+                          console.error("_r.select - incorrect parameter : " + right_1);
+                      }
+                  }
+                  var func = function (element) {
+                      var _split = left_1.split('.');
+                      var _element = element;
+                      for (var i = 0; i < _split.length; i++) {
+                          if (_element != null && _element[_split[i]] != null) {
+                              _element = _element[_split[i]];
+                          }
+                          else {
+                              _element = null;
+                          }
+                      }
+                      return _element != null && _element != right_1;
+                  };
+                  filters.push(func);
               }
               else {
                   if (expr.indexOf('=') !== -1) {
-                      filters.push(function (element) {
-                          var split = expr.split('=');
-                          if (element.hasOwnProperty(split[0])) {
-                              return element[split[0]] == JSON.parse(split[1]);
+                      var split = expr.split('=');
+                      var left_2 = split[0].trim();
+                      var right_2 = split[1].trim();
+                      try {
+                          right_2 = JSON.parse(right_2);
+                      }
+                      catch (_c) {
+                          try {
+                              right_2 = JSON.parse(JSON.stringify(right_2));
                           }
-                          return false;
-                      });
+                          catch (_d) {
+                              console.error("_r.select - incorrect parameter : " + right_2);
+                          }
+                      }
+                      var func = function (element) {
+                          var _split = left_2.split('.');
+                          var _element = element;
+                          for (var i = 0; i < _split.length; i++) {
+                              if (_element != null && _element[_split[i]] != null) {
+                                  _element = _element[_split[i]];
+                              }
+                              else {
+                                  _element = null;
+                              }
+                          }
+                          return _element != null && _element == right_2;
+                      };
+                      filters.push(func);
                   }
                   else {
-                      filters.push(function (element) {
-                          return element[expr] != null;
-                      });
+                      var func = function (element) {
+                          var left = expr.trim();
+                          var _split = left.split('.');
+                          var _element = element;
+                          for (var i = 0; i < _split.length; i++) {
+                              if (_element != null && _element[_split[i]] != null) {
+                                  _element = _element[_split[i]];
+                              }
+                              else {
+                                  _element = null;
+                              }
+                          }
+                          return _element != null;
+                      };
+                      filters.push(func);
                   }
               }
           });
@@ -767,6 +817,7 @@
        */
       Elements.prototype.log = function (property) {
           this.each(function (item) {
+              console.log('yo', item);
               if (property) {
                   console.log(item[property]);
               }
@@ -3647,6 +3698,9 @@
               if (is.Function(options.scene)) {
                   try {
                       var result = eval("var canvas=_r.canvas; var engine = _r.engine; var scene=_r.scene; var createScene=" + options.scene + ';createScene()');
+                      if (BABYLON.Engine.LastCreatedEngine.scenes.length == 2) {
+                          BABYLON.Engine.LastCreatedEngine.scenes[0].dispose();
+                      }
                       if (is.Scene(result)) {
                           global.scene = result;
                       }
@@ -3940,22 +3994,22 @@
       }
   }
   function getLoopMode(options) {
-      if (is.Boolean(options.loopMode)) {
-          if (options.loopMode) {
+      if (is.Boolean(options.loop)) {
+          if (options.loop) {
               return BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT;
           }
       }
-      if (is.String(options.loopMode)) {
-          if (options.loopMode.toLowerCase() == "cycle") {
+      if (is.String(options.loop)) {
+          if (options.loop.toLowerCase() == "cycle") {
               return BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE;
           }
-          if (options.loopMode.toLocaleLowerCase() == "relative" || this.loop.toLocaleLowerCase() == "pingpong") {
+          if (options.loop.toLocaleLowerCase() == "relative" || this.loop.toLocaleLowerCase() == "pingpong") {
               return BABYLON.Animation.ANIMATIONLOOPMODE_RELATIVE;
           }
       }
       else {
-          if (is.Number(options.loopMode)) {
-              return options.loopMode;
+          if (is.Number(options.loop)) {
+              return options.loop;
           }
       }
       return BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT;
@@ -4083,6 +4137,14 @@
       }
       else {
           _options = options;
+          if (_options.loop) {
+              if (is.Boolean(_options.loop) && _options.loop) {
+                  _options.loop = 'cycle';
+              }
+          }
+          else {
+              _options.loop = false;
+          }
       }
       _options = extend({}, defaultOptions, _options);
       return _options;
@@ -4112,7 +4174,12 @@
           var index = targetedAnimation.target.animations.indexOf(targetedAnimation.animation);
           targetedAnimation.target.animations = targetedAnimation.target.animations.splice(index, 1);
       });
-      group.play();
+      if (_options.loop != false) {
+          group.play(true);
+      }
+      else {
+          group.play();
+      }
       return group;
   }
   global.fn["animate"] = function (options) {

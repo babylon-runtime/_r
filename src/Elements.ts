@@ -212,6 +212,7 @@ export class Elements {
    */
   log(property?: string) {
     this.each(function(item) {
+      console.log('yo', item);
       if (property) {
         console.log(item[property]);
       }

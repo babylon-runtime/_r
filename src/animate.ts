@@ -75,21 +75,21 @@ function getEasingFunction(easing: string): BABYLON.EasingFunction {
 }
 
 function getLoopMode(options : IAnimationOptions): number {
-  if (is.Boolean(options.loopMode)) {
-    if (options.loopMode) {
+  if (is.Boolean(options.loop)) {
+    if (options.loop) {
       return BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT;
     }
   }
-  if (is.String(options.loopMode)) {
-    if ((<string> options.loopMode).toLowerCase() == "cycle") {
+  if (is.String(options.loop)) {
+    if ((<string> options.loop).toLowerCase() == "cycle") {
       return BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE;
     }
-    if ((<string>options.loopMode).toLocaleLowerCase() == "relative" || (<string>this.loop).toLocaleLowerCase() == "pingpong") {
+    if ((<string>options.loop).toLocaleLowerCase() == "relative" || (<string>this.loop).toLocaleLowerCase() == "pingpong") {
       return BABYLON.Animation.ANIMATIONLOOPMODE_RELATIVE;
     }
   } else {
-    if (is.Number(options.loopMode)) {
-      return <number>options.loopMode;
+    if (is.Number(options.loop)) {
+      return <number>options.loop;
     }
   }
   return BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT;
@@ -216,7 +216,7 @@ export interface IAnimationOptions {
   speedRatio?: number;
   from?: number;
   to?: number;
-  loopMode?: boolean | string | number;
+  loop?: boolean | string | number;
   easing?: string;
   complete?: () => void;
   keys? : [];
@@ -236,6 +236,14 @@ function getOptions(options? : number | IAnimationOptions) {
   }
   else {
     _options = <IAnimationOptions> options;
+    if (_options.loop) {
+      if (is.Boolean(_options.loop) && _options.loop) {
+        _options.loop = 'cycle';
+      }
+    }
+    else {
+      _options.loop = false;
+    }
   }
   _options = extend({}, defaultOptions, _options);
   return _options;
@@ -267,7 +275,13 @@ export function animate(elements : any, patch : any, options? : number | IAnimat
     let index = targetedAnimation.target.animations.indexOf(targetedAnimation.animation);
     targetedAnimation.target.animations = targetedAnimation.target.animations.splice(index, 1);
   });
-  group.play();
+  if (_options.loop != false) {
+    group.play(true);
+  }
+  else {
+    group.play();
+  }
+
   return group;
 }
 
