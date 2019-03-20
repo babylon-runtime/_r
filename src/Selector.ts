@@ -36,14 +36,15 @@ export class Selector {
     let match;
     while (match = regExpAttribute.exec(selector)) {
       matches.push(match[1]);
+      selector = selector.replace(regExpAttribute, '');
     }
     // TODO [material.diffuseTexture.name=texture*.jpg]
     matches.forEach(function(expr) {
       if (expr.indexOf('!=') !== -1) {
-        var split = expr.split('!=');
+        let split = expr.split('!=');
         filters.push(function(element) {
           if (element.hasOwnProperty(split[0])) {
-            return element[split[0]] != split[1];
+            return element[split[0]] != JSON.parse(split[1]);
           }
           return false;
         });
@@ -51,15 +52,16 @@ export class Selector {
       else {
         if (expr.indexOf('=') !== -1) {
           filters.push(function(element) {
+            let split = expr.split('=');
             if (element.hasOwnProperty(split[0])) {
-              return element[split[0]] == split[1];
+              return element[split[0]] == JSON.parse(split[1]);
             }
             return false;
           });
         }
         else {
           filters.push(function(element) {
-            return element.hasOwnProperty(expr);
+            return element[expr] != null;
           });
         }
       }

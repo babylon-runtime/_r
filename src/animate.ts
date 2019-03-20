@@ -4,6 +4,7 @@ import { select } from "./select.js";
 import { extend } from "./extend.js";
 import { color } from "./color.js";
 import { patch } from "./patch.js";
+import { global } from "./global.js";
 
 function getEasingFunction(easing: string): BABYLON.EasingFunction {
   let mode;
@@ -228,10 +229,7 @@ const defaultOptions = {
   loopMode : false
 };
 
-let count = 0;
-
-export function animate(elements : any, patch : any, options? : number | IAnimationOptions) : BABYLON.AnimationGroup {
-  let _elements = select(elements);
+function getOptions(options? : number | IAnimationOptions) {
   let _options : IAnimationOptions = {};
   if (is.Number(options)) {
     _options.duration = <number> options;
@@ -240,6 +238,14 @@ export function animate(elements : any, patch : any, options? : number | IAnimat
     _options = <IAnimationOptions> options;
   }
   _options = extend({}, defaultOptions, _options);
+  return _options;
+}
+
+let count = 0;
+
+export function animate(elements : any, patch : any, options? : number | IAnimationOptions) : BABYLON.AnimationGroup {
+  let _elements = select(elements);
+  let _options  = getOptions(options);
   let group = new BABYLON.AnimationGroup("_r.animate.AnimationsGroup" + count++);
   _elements.each((item) => {
     let _animatables = findSomethingToAnimate(item, patch);
@@ -252,11 +258,51 @@ export function animate(elements : any, patch : any, options? : number | IAnimat
         group.addTargetedAnimation(animation, _element);
       });
     });
-    /**
-    let animations = getAnimationsForElement(item, patch, _options);
+  });
+  group.speedRatio = _options.speedRatio;
+  if (_options.complete) {
+    group.onAnimationGroupEndObservable.add(_options.complete);
+  }
+  group.onAnimationEndObservable.add((targetedAnimation) => {
+    let index = targetedAnimation.target.animations.indexOf(targetedAnimation.animation);
+    targetedAnimation.target.animations = targetedAnimation.target.animations.splice(index, 1);
+  });
+  group.play();
+  return group;
+}
+
+global.fn["animate"] = function(options) {
+  return animate(this.toArray(), options);
+};
+
+global.fn["fadeOut"] = function(options) {
+  let _options  = getOptions(options);
+  let group = new BABYLON.AnimationGroup("_r.animate.AnimationsGroup" + count++);
+  this.each((item) => {
+    let animations = [];
+    if (is.Mesh(item)) {
+      animations = getAnimationsForElement(item, {
+        visibility : 0
+      }, _options);
+    }
+    if (is.Material(item)) {
+      animations = getAnimationsForElement(item, {
+        alpha : 0
+      }, _options);
+    }
+    if (is.Texture(item)) {
+      animations = getAnimationsForElement(item, {
+        level : 0
+      }, _options);
+    }
+    if (is.Light(item)) {
+      animations = getAnimationsForElement(item, {
+        intensity : 0
+      }, _options);
+    }
     animations.forEach((animation) => {
       group.addTargetedAnimation(animation, item);
-    });**/
+    });
   });
   group.speedRatio = _options.speedRatio;
   if (_options.complete) {
@@ -264,4 +310,54 @@ export function animate(elements : any, patch : any, options? : number | IAnimat
   }
   group.play();
   return group;
-}
+};
+
+global.fn["fadeIn"] = function(options) {
+  let _options  = getOptions(options);
+  let group = new BABYLON.AnimationGroup("_r.animate.AnimationsGroup" + count++);
+  this.each((item) => {
+    let animations = [];
+    if (is.Mesh(item)) {
+      animations = getAnimationsForElement(item, {
+        visibility : 1
+      }, _options);
+    }
+    if (is.Material(item)) {
+      animations = getAnimationsForElement(item, {
+        alpha : 1
+      }, _options);
+    }
+    if (is.Texture(item)) {
+      animations = getAnimationsForElement(item, {
+        level : 1
+      }, _options);
+    }
+    if (is.Light(item)) {
+      animations = getAnimationsForElement(item, {
+        intensity : 1
+      }, _options);
+    }
+    animations.forEach((animation) => {
+      group.addTargetedAnimation(animation, item);
+    });
+  });
+  group.speedRatio = _options.speedRatio;
+  if (_options.complete) {
+    group.onAnimationGroupEndObservable.add(_options.complete);
+  }
+  group.play();
+  return group;
+};
+
+/**
+ * Stop the currently-running animation, remove all queued animations, and complete all animations for the matched elements.
+ */
+global.fn["finish"] = function() {
+  this.each((item) => {
+    let animatables = global.scene.getAllAnimatablesByTarget(item);
+    animatables.forEach((animatable) => {
+      animatable.stop();
+    });
+    item.animations = [];
+  });
+};

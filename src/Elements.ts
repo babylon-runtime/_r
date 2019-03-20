@@ -121,56 +121,6 @@ export class Elements {
     }
   }
 
-  show() {
-    for (let i = 0; i < this.length; i++) {
-      if (is.Mesh(this[i])) {
-        global.scene.addMesh(this[i]);
-        continue;
-      }
-      if (is.Material(this[i]) || is.MultiMaterial(this[i])) {
-        global.scene.addMaterial(this[i]);
-        continue;
-      }
-      if (is.Light(this[i])) {
-        global.scene.addMaterial(this[i]);
-        continue;
-      }
-      if (is.Texture(this[i])) {
-        global.scene.addTexture(this[i]);
-        continue;
-      }
-      if (is.Camera(this[i])) {
-        global.scene.addCamera(this[i]);
-        continue;
-      }
-    }
-  }
-
-  hide() {
-    for (let i = 0; i < this.length; i++) {
-      if (is.Mesh(this[i])) {
-        global.scene.removeMesh(this[i]);
-        continue;
-      }
-      if (is.Material(this[i]) || is.MultiMaterial(this[i])) {
-        global.scene.removeMaterial(this[i]);
-        continue;
-      }
-      if (is.Light(this[i])) {
-        global.scene.removeMaterial(this[i]);
-        continue;
-      }
-      if (is.Texture(this[i])) {
-        global.scene.removeTexture(this[i]);
-        continue;
-      }
-      if (is.Camera(this[i])) {
-        global.scene.removeCamera(this[i]);
-        continue;
-      }
-    }
-  }
-
   /**
    * Iterate over elements and executing a function for each element.
    * @param callback A function to execute for each element.
@@ -185,7 +135,9 @@ export class Elements {
     }
     return this;
   }
-
+  forEach(callback : Function) : Elements {
+    return this.each(callback);
+  }
   /**
    * Pass each element in the current matched set through a function, producing a new jQuery object containing the return values.
    * @param func A function object that will be invoked for each element in the current set.
@@ -373,23 +325,6 @@ export class Elements {
       }
     });
   }
-
-  // TODO
-  patch(item : any) {
-
-  }
-
-  //TODO
-  /**
-   ready(callback : Function) {
-        if(this.isReady) {
-            callback.call(this, this);
-        }
-        else {
-
-        }
-    }**/
-
   // TODO
   remove(element : any) {
     /**
@@ -405,18 +340,8 @@ export class Elements {
             }
         }**/
   }
-
-  //TODO
-  fadeIn() {
-
-  }
-
-  // TODO
-  fadeOut() {
-
-  }
-
 }
+
 /**
  * Helper to debug selector.
  * @param element

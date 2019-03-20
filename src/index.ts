@@ -16,6 +16,7 @@ import { animate } from "./animate.js";
 import { extend } from "./extend.js";
 import { activateCamera } from "./activateCamera.js";
 import "./patch.plugins/index.js";
+import { patchElements } from "./patch.js";
 
 export default {
     get canvas() {
@@ -82,10 +83,10 @@ export default {
     select : select,
     patch : patch,
     match : match,
-    Selector : Selector,
     is : is,
     color : color,
     animate : animate,
     extend : extend,
-    activeCamera : activateCamera
+    activeCamera : activateCamera,
+    fn : global.fn
 };

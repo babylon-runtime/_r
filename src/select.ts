@@ -4,11 +4,12 @@ import { libraries } from "./library.js";
 import { global } from "./global.js";
 
 export function select(arg) {
+  let elements;
   if (is.String(arg)) {
     if ((<string> arg).toLowerCase() === "scene") {
       return new Elements(global.scene);
     }
-    let elements = find(arg, global.scene);
+    elements = find(arg, global.scene);
     // elements could be in a library not attached to the scene
 
     for (let lib in libraries) {
@@ -23,9 +24,15 @@ export function select(arg) {
     if (global.TRACE === true && elements.length == 0) {
       console.warn('BABYLON.Runtime::no object(s) found for selector "' + arg + '"');
     }
-    return elements;
   }
   else {
-    return new Elements(arg);
+    elements = new Elements(arg);
   }
+  // plugins
+  for (let plugin in global.fn) {
+    Elements.prototype[plugin] = (options) => {
+      return global.fn[plugin].call(elements, options);
+    };
+  }
+  return elements;
 }

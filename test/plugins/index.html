@@ -1,7 +1,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Patching</title>
+    <title>Plugins</title>
     <link href="../../node_modules/mocha/mocha.css" rel="stylesheet" />
 </head>
 <body>
@@ -14,7 +14,7 @@
 <script type="module">
     import {default as _r} from "../../src/index.js";
     window._r = _r;
-    //_r.TRACE = true;
+   // _r.TRACE = true;
     import "./test.js";
     mocha.checkLeaks();
     mocha.run();

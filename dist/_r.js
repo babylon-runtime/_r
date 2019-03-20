@@ -4,7 +4,7 @@
   (global = global || self, global._r = factory(global.BABYLON));
 }(this, function (BABYLON) { 'use strict';
 
-  console.log("babylon runtime v0.0.5")
+  console.log("babylon runtime v0.0.6")
 
   // this will let us :
 
@@ -235,6 +235,7 @@
           enumerable: true,
           configurable: true
       });
+      global.fn = {};
       global.TRACE = false;
       return global;
   }());
@@ -495,14 +496,15 @@
           var match;
           while (match = regExpAttribute.exec(selector)) {
               matches.push(match[1]);
+              selector = selector.replace(regExpAttribute, '');
           }
           // TODO [material.diffuseTexture.name=texture*.jpg]
           matches.forEach(function (expr) {
               if (expr.indexOf('!=') !== -1) {
-                  var split = expr.split('!=');
+                  var split_1 = expr.split('!=');
                   filters.push(function (element) {
-                      if (element.hasOwnProperty(split[0])) {
-                          return element[split[0]] != split[1];
+                      if (element.hasOwnProperty(split_1[0])) {
+                          return element[split_1[0]] != JSON.parse(split_1[1]);
                       }
                       return false;
                   });
@@ -510,15 +512,16 @@
               else {
                   if (expr.indexOf('=') !== -1) {
                       filters.push(function (element) {
+                          var split = expr.split('=');
                           if (element.hasOwnProperty(split[0])) {
-                              return element[split[0]] == split[1];
+                              return element[split[0]] == JSON.parse(split[1]);
                           }
                           return false;
                       });
                   }
                   else {
                       filters.push(function (element) {
-                          return element.hasOwnProperty(expr);
+                          return element[expr] != null;
                       });
                   }
               }
@@ -678,54 +681,6 @@
               return data(this[0], key, value);
           }
       };
-      Elements.prototype.show = function () {
-          for (var i = 0; i < this.length; i++) {
-              if (is.Mesh(this[i])) {
-                  global.scene.addMesh(this[i]);
-                  continue;
-              }
-              if (is.Material(this[i]) || is.MultiMaterial(this[i])) {
-                  global.scene.addMaterial(this[i]);
-                  continue;
-              }
-              if (is.Light(this[i])) {
-                  global.scene.addMaterial(this[i]);
-                  continue;
-              }
-              if (is.Texture(this[i])) {
-                  global.scene.addTexture(this[i]);
-                  continue;
-              }
-              if (is.Camera(this[i])) {
-                  global.scene.addCamera(this[i]);
-                  continue;
-              }
-          }
-      };
-      Elements.prototype.hide = function () {
-          for (var i = 0; i < this.length; i++) {
-              if (is.Mesh(this[i])) {
-                  global.scene.removeMesh(this[i]);
-                  continue;
-              }
-              if (is.Material(this[i]) || is.MultiMaterial(this[i])) {
-                  global.scene.removeMaterial(this[i]);
-                  continue;
-              }
-              if (is.Light(this[i])) {
-                  global.scene.removeMaterial(this[i]);
-                  continue;
-              }
-              if (is.Texture(this[i])) {
-                  global.scene.removeTexture(this[i]);
-                  continue;
-              }
-              if (is.Camera(this[i])) {
-                  global.scene.removeCamera(this[i]);
-                  continue;
-              }
-          }
-      };
       /**
        * Iterate over elements and executing a function for each element.
        * @param callback A function to execute for each element.
@@ -739,6 +694,9 @@
               }
           }
           return this;
+      };
+      Elements.prototype.forEach = function (callback) {
+          return this.each(callback);
       };
       /**
        * Pass each element in the current matched set through a function, producing a new jQuery object containing the return values.
@@ -922,19 +880,6 @@
           });
       };
       // TODO
-      Elements.prototype.patch = function (item) {
-      };
-      //TODO
-      /**
-       ready(callback : Function) {
-            if(this.isReady) {
-                callback.call(this, this);
-            }
-            else {
-    
-            }
-        }**/
-      // TODO
       Elements.prototype.remove = function (element) {
           /**
            let index = this.toArray().indexOf(element);
@@ -948,12 +893,6 @@
                       return;
                   }
               }**/
-      };
-      //TODO
-      Elements.prototype.fadeIn = function () {
-      };
-      // TODO
-      Elements.prototype.fadeOut = function () {
       };
       return Elements;
   }());
@@ -1082,29 +1021,39 @@
   }
 
   function select(arg) {
+      var elements;
       if (is.String(arg)) {
           if (arg.toLowerCase() === "scene") {
               return new Elements(global.scene);
           }
-          var elements_1 = find(arg, global.scene);
+          elements = find(arg, global.scene);
           // elements could be in a library not attached to the scene
           for (var lib in libraries) {
               var selection = libraries[lib].select(arg);
               selection.each(function (item) {
                   // item could be in multiple libraries
-                  if (!elements_1.contains(item)) {
-                      elements_1.add(item);
+                  if (!elements.contains(item)) {
+                      elements.add(item);
                   }
               });
           }
-          if (global.TRACE === true && elements_1.length == 0) {
+          if (global.TRACE === true && elements.length == 0) {
               console.warn('BABYLON.Runtime::no object(s) found for selector "' + arg + '"');
           }
-          return elements_1;
       }
       else {
-          return new Elements(arg);
+          elements = new Elements(arg);
       }
+      var _loop_1 = function (plugin) {
+          Elements.prototype[plugin] = function (options) {
+              return global.fn[plugin].call(elements, options);
+          };
+      };
+      // plugins
+      for (var plugin in global.fn) {
+          _loop_1(plugin);
+      }
+      return elements;
   }
 
   // vim:ts=4:sts=4:sw=4:
@@ -3214,13 +3163,13 @@
           else {
               // patch([...])
               if (is.Array(args[0])) {
-                  return patchChain(args[0]);
+                  return Q(patchChain(args[0]));
               }
               else {
                   // patch({"*:mesh" : { isVisible : false }})
                   if (is.PlainObject(args[0])) {
                       var selector = Object.getOwnPropertyNames(args[0])[0];
-                      return patch(selector, args[0][selector]);
+                      return Q(patch(selector, args[0][selector]));
                   }
               }
           }
@@ -3234,9 +3183,9 @@
               switch (args[0]) {
                   case "scene":
                       if (is.Function(args[1])) {
-                          var result = execute(args[1]);
-                          if (is.Scene(result)) {
-                              global.scene = result;
+                          var result_1 = execute(args[1]);
+                          if (is.Scene(result_1)) {
+                              global.scene = result_1;
                           }
                           if (!isStarted) {
                               start();
@@ -3260,16 +3209,25 @@
                       return Q(execute(args[1]));
                   default:
                       var elements = select(args[0]).toArray();
-                      return patchElements(elements, args[1]).then(function () {
+                      var result = patchElements(elements, args[1]);
+                      if (is.Promise(result)) {
+                          return result.then(function () {
+                              if (global.TRACE) {
+                                  console.groupEnd();
+                              }
+                          });
+                      }
+                      else {
                           if (global.TRACE) {
                               console.groupEnd();
                           }
-                      });
+                          return Q();
+                      }
               }
           }
           else {
               // patch(mesh1, { isVisible : false })
-              return patchElement(args[0], args[1]);
+              return Q(patchElement(args[0], args[1]));
           }
       }
   }
@@ -3289,13 +3247,20 @@
       var index = 0;
       function patchItem() {
           if (index === patches.length) {
-              return Q();
+              return;
           }
           else {
-              return patch(patches[index]).then(function () {
+              var result = patch(patches[index]);
+              if (is.Promise(result)) {
+                  return result.then(function () {
+                      index += 1;
+                      return patchItem();
+                  });
+              }
+              else {
                   index += 1;
                   return patchItem();
-              });
+              }
           }
       }
       return patchItem();
@@ -3353,13 +3318,20 @@
       var index = 0;
       function patchElementChain() {
           if (index === elements.length) {
-              return Q();
+              return;
           }
           else {
-              return patchElement(elements[index], _patch, context).then(function () {
+              var result = patchElement(elements[index], _patch, context);
+              if (is.Promise(result)) {
+                  return result.then(function () {
+                      index += 1;
+                      return patchElementChain();
+                  });
+              }
+              else {
                   index += 1;
                   return patchElementChain();
-              });
+              }
           }
       }
       return patchElementChain();
@@ -3369,13 +3341,20 @@
       var index = 0;
       function patchPropertyChain() {
           if (index === properties.length) {
-              return Q();
+              return;
           }
           else {
-              return patchProperty(element, properties[index], patch, context).then(function () {
+              var result = patchProperty(element, properties[index], patch, context);
+              if (is.Promise(result)) {
+                  return result.then(function () {
+                      index += 1;
+                      return patchPropertyChain();
+                  });
+              }
+              else {
                   index += 1;
                   return patchPropertyChain();
-              });
+              }
           }
       }
       return patchPropertyChain();
@@ -3389,26 +3368,26 @@
                   if (is.Promise(result)) {
                       return result.then(function (_result) {
                           element[property] = _result;
-                          return Q(element[property]);
+                          return element[property];
                       });
                   }
                   else {
-                      element[property] = result;
+                      return element[property] = result;
                   }
-                  element[property] = result;
               }
-              return Q(source[property]);
+              else {
+                  return source[property];
+              }
           }
           else {
               element[property] = source[property];
-              return Q(source[property]);
+              return element[property];
           }
       }
       else {
           if (is.Function(source[property])) {
               if (is.Function(element[property])) {
-                  element[property] = source[property];
-                  return Q(source[property]);
+                  return element[property] = source[property];
               }
               else {
                   try {
@@ -3422,13 +3401,16 @@
                       if (is.Promise(res)) {
                           return res.then(function (result) {
                               element[property] = result;
+                              return element[property];
                           });
                       }
                       else {
                           if (res) {
-                              element[property] = res;
+                              return element[property] = res;
                           }
-                          return Q(res);
+                          else {
+                              return element[property];
+                          }
                       }
                   }
                   catch (ex) {
@@ -3441,7 +3423,7 @@
               if (is.Promise(source[property])) {
                   return source[property].then(function (_result) {
                       element[property] = _result;
-                      return Q(element[property]);
+                      return element[property];
                   });
               }
               if (!element[property]) {
@@ -3454,15 +3436,16 @@
                       if (is.Promise(result)) {
                           return result.then(function (_result) {
                               element[property] = _result;
-                              return Q(element[property]);
+                              return element[property];
                           });
                       }
                       else {
-                          element[property] = result;
+                          return element[property] = result;
                       }
-                      element[property] = result;
                   }
-                  return Q(source[property]);
+                  else {
+                      return source[property];
+                  }
               }
               else {
                   if (context) {
@@ -3493,6 +3476,9 @@
       }
       patch.getPlugin = getPlugin;
   })(patch || (patch = {}));
+  global.fn["patch"] = function (options) {
+      return patchElements(this.toArray(), options);
+  };
 
   function downloadScene(options) {
       var assets, fileName;
@@ -4090,9 +4076,7 @@
       speedRatio: 1,
       loopMode: false
   };
-  var count = 0;
-  function animate(elements, patch, options) {
-      var _elements = select(elements);
+  function getOptions(options) {
       var _options = {};
       if (is.Number(options)) {
           _options.duration = options;
@@ -4101,6 +4085,12 @@
           _options = options;
       }
       _options = extend({}, defaultOptions, _options);
+      return _options;
+  }
+  var count = 0;
+  function animate(elements, patch, options) {
+      var _elements = select(elements);
+      var _options = getOptions(options);
       var group = new BABYLON.AnimationGroup("_r.animate.AnimationsGroup" + count++);
       _elements.each(function (item) {
           var _animatables = findSomethingToAnimate(item, patch);
@@ -4113,11 +4103,49 @@
                   group.addTargetedAnimation(animation, _element);
               });
           });
-          /**
-          let animations = getAnimationsForElement(item, patch, _options);
-          animations.forEach((animation) => {
-            group.addTargetedAnimation(animation, item);
-          });**/
+      });
+      group.speedRatio = _options.speedRatio;
+      if (_options.complete) {
+          group.onAnimationGroupEndObservable.add(_options.complete);
+      }
+      group.onAnimationEndObservable.add(function (targetedAnimation) {
+          var index = targetedAnimation.target.animations.indexOf(targetedAnimation.animation);
+          targetedAnimation.target.animations = targetedAnimation.target.animations.splice(index, 1);
+      });
+      group.play();
+      return group;
+  }
+  global.fn["animate"] = function (options) {
+      return animate(this.toArray(), options);
+  };
+  global.fn["fadeOut"] = function (options) {
+      var _options = getOptions(options);
+      var group = new BABYLON.AnimationGroup("_r.animate.AnimationsGroup" + count++);
+      this.each(function (item) {
+          var animations = [];
+          if (is.Mesh(item)) {
+              animations = getAnimationsForElement(item, {
+                  visibility: 0
+              }, _options);
+          }
+          if (is.Material(item)) {
+              animations = getAnimationsForElement(item, {
+                  alpha: 0
+              }, _options);
+          }
+          if (is.Texture(item)) {
+              animations = getAnimationsForElement(item, {
+                  level: 0
+              }, _options);
+          }
+          if (is.Light(item)) {
+              animations = getAnimationsForElement(item, {
+                  intensity: 0
+              }, _options);
+          }
+          animations.forEach(function (animation) {
+              group.addTargetedAnimation(animation, item);
+          });
       });
       group.speedRatio = _options.speedRatio;
       if (_options.complete) {
@@ -4125,7 +4153,55 @@
       }
       group.play();
       return group;
-  }
+  };
+  global.fn["fadeIn"] = function (options) {
+      var _options = getOptions(options);
+      var group = new BABYLON.AnimationGroup("_r.animate.AnimationsGroup" + count++);
+      this.each(function (item) {
+          var animations = [];
+          if (is.Mesh(item)) {
+              animations = getAnimationsForElement(item, {
+                  visibility: 1
+              }, _options);
+          }
+          if (is.Material(item)) {
+              animations = getAnimationsForElement(item, {
+                  alpha: 1
+              }, _options);
+          }
+          if (is.Texture(item)) {
+              animations = getAnimationsForElement(item, {
+                  level: 1
+              }, _options);
+          }
+          if (is.Light(item)) {
+              animations = getAnimationsForElement(item, {
+                  intensity: 1
+              }, _options);
+          }
+          animations.forEach(function (animation) {
+              group.addTargetedAnimation(animation, item);
+          });
+      });
+      group.speedRatio = _options.speedRatio;
+      if (_options.complete) {
+          group.onAnimationGroupEndObservable.add(_options.complete);
+      }
+      group.play();
+      return group;
+  };
+  /**
+   * Stop the currently-running animation, remove all queued animations, and complete all animations for the matched elements.
+   */
+  global.fn["finish"] = function () {
+      this.each(function (item) {
+          var animatables = global.scene.getAllAnimatablesByTarget(item);
+          animatables.forEach(function (animatable) {
+              animatable.stop();
+          });
+          item.animations = [];
+      });
+  };
 
   patch.registerPlugin({
       test: function (element, source, property) {
@@ -4221,12 +4297,12 @@
       select: select,
       patch: patch,
       match: match,
-      Selector: Selector,
       is: is,
       color: color,
       animate: animate,
       extend: extend,
-      activeCamera: activateCamera
+      activeCamera: activateCamera,
+      fn: global.fn
   };
 
   return index;

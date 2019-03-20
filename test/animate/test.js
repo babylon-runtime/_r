@@ -25,7 +25,6 @@ before(function() {
 
             //Positioning box
             box2.position.x = 20;
-
             return scene;
         }
     });
@@ -33,7 +32,8 @@ before(function() {
 
 describe('animate', function() {
     this.timeout(5000);
-    it('ok', function (done) {
+
+    it('simple', function (done) {
         _r.animate('Box1', {
             position : {
                 x : 20
@@ -79,6 +79,47 @@ describe('animate', function() {
                 done();
             }
         })
-
     });
+    it('mesh fadeOut', function(done){
+        _r.select("Box1").fadeOut({
+            duration : 1,
+            complete() {
+                expect(_r.select("Box1")[0].visibility == 0).to.be.true;
+                done();
+            }
+        });
+    });
+    it('material fadeOut', function(done) {
+        _r.select("texture2").fadeOut({
+            duration : 1,
+            complete() {
+                expect(_r.select("texture2")[0].alpha == 0).to.be.true;
+                done();
+            }
+        })
+    });
+    it("fadeIn", function(done) {
+        _r.select("Box1, texture2").fadeIn({
+            duration : 1,
+            complete() {
+                expect(_r.select("Box1")[0].visibility == 1).to.be.true;
+                expect(_r.select("texture2")[0].alpha == 1).to.be.true;
+                done();
+            }
+        })
+    });
+    it("click", function() {
+        _r.select("*:mesh").on("OnPickTrigger", function() {
+            _r.select(this).finish();
+            console.log(_r.select(this)[0]);
+        });
+        _r.animate("Box1", {
+            rotation : {
+                y : 0
+            }
+        }, {
+            duration : 1
+        })
+    })
 });
+

@@ -53,6 +53,11 @@ module.exports = function(grunt) {
                 files : [
                     { src : [ 'test/keyEvents/test.js']}
                 ]
+            },
+            plugins : {
+                files : [
+                    { src : ['test/plugins/test.js']}
+                ]
             }
             /**
              allInPatch : {

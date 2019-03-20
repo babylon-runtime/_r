@@ -49,5 +49,13 @@ describe('Selectors', function() {
         it('_r.select("cornellBox.*:material, *:mesh").length === 11', function() {
             expect(_r.select("cornellBox.*:material, *:mesh").length === 11).to.be.true;
         });
+    });
+    describe("attribute", function() {
+        it("*:mesh[isVisible=true]", function() {
+            expect(_r.select("*:mesh[isVisible=true]").length === 4).to.be.true;
+            _r.select("*:mesh")[0].isVisible = false;
+            expect(_r.select("*:mesh[isVisible=true]").length === 3).to.be.true;
+
+        })
     })
 });

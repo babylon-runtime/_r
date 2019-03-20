@@ -21,13 +21,13 @@ export function patch(...args) : Q.Promise<any> {
     else {
       // patch([...])
       if (is.Array(args[0])) {
-        return patchChain(args[0]);
+        return Q(patchChain(args[0]));
       }
       else {
         // patch({"*:mesh" : { isVisible : false }})
         if (is.PlainObject(args[0])) {
           let selector = Object.getOwnPropertyNames(args[0])[0];
-          return patch(selector, args[0][selector]);
+          return Q(patch(selector, args[0][selector]));
         }
       }
     }
@@ -67,16 +67,25 @@ export function patch(...args) : Q.Promise<any> {
           return Q(execute(args[1]));
         default:
           let elements = select(args[0]).toArray();
-          return patchElements(elements, args[1]).then(() => {
+          let result =  patchElements(elements, args[1]);
+          if (is.Promise(result)) {
+            return result.then(() => {
+              if (global.TRACE) {
+                console.groupEnd();
+              }
+            });
+          }
+          else {
             if (global.TRACE) {
               console.groupEnd();
             }
-          });
+            return Q();
+          }
       }
     }
     else {
       // patch(mesh1, { isVisible : false })
-      return patchElement(args[0], args[1]);
+      return Q(patchElement(args[0], args[1]));
     }
   }
 }
@@ -98,13 +107,20 @@ export function patchChain(patches : Array<any>) : Q.Promise<null> {
   let index = 0;
   function patchItem() : Q.Promise<null> {
       if (index === patches.length) {
-        return Q();
+        return;
       }
       else {
-        return patch(patches[index]).then(() => {
+        let result = patch(patches[index]);
+        if (is.Promise(result)) {
+          return result.then(() => {
+            index += 1;
+            return patchItem();
+          });
+        }
+        else {
           index += 1;
           return patchItem();
-        });
+        }
       }
   }
   return patchItem();
@@ -165,36 +181,50 @@ export function patchElements(elements : Array<any>, _patch : any, context? : Ar
   let index = 0;
   function patchElementChain() : Q.Promise<null> {
     if (index === elements.length) {
-      return Q();
+      return;
     }
     else {
-      return patchElement(elements[index], _patch, context).then(() => {
+      let result = patchElement(elements[index], _patch, context);
+      if (is.Promise(result)) {
+        return result.then(() => {
+          index += 1;
+          return patchElementChain();
+        });
+      }
+      else {
         index += 1;
         return patchElementChain();
-      });
+      }
     }
   }
   return patchElementChain();
 }
 
-export function patchElement(element, patch, context? : Array<any>) : Q.Promise<any> {
+export function patchElement(element, patch, context? : Array<any>) : any {
   let properties = Object.getOwnPropertyNames(patch);
   let index = 0;
-  function patchPropertyChain() : Q.Promise<null> {
+  function patchPropertyChain() : any {
     if (index === properties.length) {
-      return Q();
+      return;
     }
     else {
-      return patchProperty(element, properties[index], patch, context).then(() => {
+      let result = patchProperty(element, properties[index], patch, context);
+      if (is.Promise(result)) {
+        return result.then(() => {
+          index += 1;
+          return patchPropertyChain();
+        });
+      }
+      else {
         index += 1;
         return patchPropertyChain();
-      });
+      }
     }
   }
   return patchPropertyChain();
 }
 
-export function patchProperty(element, property, source, context? : Array<any>): Q.Promise<any> {
+export function patchProperty(element, property, source, context? : Array<any>) : Q.Promise<any> {
   if (is.Primitive(source[property])) {
     let plugin = patch.getPlugin(element, source, property);
     if (plugin) {
@@ -203,26 +233,26 @@ export function patchProperty(element, property, source, context? : Array<any>):
         if (is.Promise(result)) {
           return result.then((_result) => {
             element[property] = _result;
-            return Q(element[property]);
+            return element[property];
           });
         }
         else {
-          element[property] = result;
+          return element[property] = result;
         }
-        element[property] = result;
       }
-      return Q(source[property]);
+      else {
+        return source[property];
+      }
     }
     else {
       element[property] = source[property];
-      return Q(source[property]);
+      return element[property];
     }
   }
   else {
     if (is.Function(source[property])) {
       if (is.Function(element[property])) {
-        element[property] = source[property];
-        return Q(source[property]);
+        return element[property] = source[property];
       }
       else {
         try {
@@ -236,13 +266,16 @@ export function patchProperty(element, property, source, context? : Array<any>):
           if (is.Promise(res)) {
             return res.then(function(result) {
               element[property] = result;
+              return element[property];
             });
           }
           else {
             if (res) {
-              element[property] = res;
+              return element[property] = res;
             }
-            return Q(res);
+            else {
+              return element[property];
+            }
           }
         }
         catch (ex) {
@@ -255,7 +288,7 @@ export function patchProperty(element, property, source, context? : Array<any>):
       if (is.Promise(source[property])) {
         return source[property].then((_result) => {
           element[property] = _result;
-          return Q(element[property]);
+          return element[property];
         });
       }
       if (!element[property]) {
@@ -268,15 +301,17 @@ export function patchProperty(element, property, source, context? : Array<any>):
           if (is.Promise(result)) {
             return result.then((_result) => {
               element[property] = _result;
-              return Q(element[property]);
+              return element[property];
             });
           }
           else {
-            element[property] = result;
+            return element[property] = result;
           }
-          element[property] = result;
         }
-        return Q(source[property]);
+        else {
+          return source[property];
+        }
+
       }
       else {
         if (context) {
@@ -310,3 +345,7 @@ export namespace patch {
     return plugin;
   }
 }
+
+global.fn["patch"] = function(options) {
+  return patchElements(this.toArray(), options);
+};

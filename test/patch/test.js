@@ -1,6 +1,7 @@
 var expect = chai.expect;
 
 before(function(done){
+    this.timeout(10000);
     _r.launch({
         scene :
             function() {
@@ -38,10 +39,33 @@ before(function(done){
 });
 
 describe('Patching', function() {
-    it("#1", function () {
-        expect(_r.scene).to.exist;
-        expect(_r.select("sphere1").length == 1).to.be.true;
-        expect(_r.select("*:mesh").length == 2).to.be.true;
+    it("No promise", function () {
+       var patch = _r.patch("sphere1", {
+           position : {
+               x : 5
+           },
+           visibility : 0.5
+       });
+       expect(patch.then).to.exist;
+       expect(_r.select("sphere1").attr("position").x == 5).to.be.true;
+       expect(_r.select("sphere1").attr("visibility") == 0.5).to.be.true;
     });
+    it("Promise", function(done) {
+        _r.select("ground1")[0].material = new BABYLON.StandardMaterial("material.ground1", _r.scene);
+        _r.patch({
+            "material.ground1" : {
+                diffuseTexture : function() {
+                    var defer = Q.defer();
+                    var texture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/grass.jpg", _r.scene, null, null, null, function() {
+                        defer.resolve(texture);
+                    });
+                    return defer.promise;
+                }
+            }
+        }).done(function() {
+            expect(_r.select("material.ground1")[0].diffuseTexture.isReady() == true).to.be.true;
+            done();
+        })
+    })
 });
 

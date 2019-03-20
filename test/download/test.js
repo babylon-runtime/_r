@@ -1,6 +1,7 @@
 var expect = chai.expect;
 
 before(function(done) {
+    this.timeout(10000);
     _r.launch({
         scene : function() {
             // This creates a basic Babylon Scene object (non-mesh)

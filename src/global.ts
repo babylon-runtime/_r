@@ -4,6 +4,7 @@ import { BABYLON } from "./BABYLON.js";
 let _scene, _engine, _canvas;
 
 export class global {
+  static fn = {};
   static get canvas() {
     if (!_canvas) {
       if (BABYLON.Engine.LastCreatedEngine) {
