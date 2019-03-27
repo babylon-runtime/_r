@@ -1,4 +1,5 @@
 import { is } from "./is.js";
+import { global } from "./global.js";
 
 let cache = [];
 let expando = '_r' + Date.now();
@@ -26,3 +27,14 @@ export function data(element : any, key?: string, value?: any) {
         return cache[element[expando]];
     }
 }
+
+global.fn["data"] = function(key? : string, value? : any) {
+    if (key != null && value != null) {
+        for (let i = 0; i < this.length; i++) {
+            data(this[i], key, value);
+        }
+    }
+    else {
+        return data(this[0], key, value);
+    }
+};

@@ -1,9 +1,9 @@
-import { BABYLON } from "./BABYLON.js";
-import { global } from "./global.js";
-import { data } from "./data.js";
-import { trigger } from "./events.js";
+import { BABYLON } from "../BABYLON.js";
+import { global } from "../global.js";
+import { data } from "../data.js";
+import { trigger } from "./core.js";
 
-export const meshEvents = [
+export const meshes = [
   'OnDoublePickTrigger',
   'OnPickTrigger',
   'OnLeftPickTrigger',
@@ -27,10 +27,10 @@ export function onMesh(mesh: BABYLON.Mesh, event: string, handler: (args: any) =
 
   mesh.actionManager.registerAction(action);
 
-  let events = data(mesh, "_r.events");
+  let events = data(mesh, "_r.e");
   if (!events) {
-    data(mesh, "_r.events", []);
-    events = data(mesh, "_r.events");
+    data(mesh, "_r.e", []);
+    events = data(mesh, "_r.e");
   }
   if (!events[event]) {
     events[event] = [];
@@ -47,7 +47,7 @@ export function oneMesh(mesh: BABYLON.Mesh, event: string, handler: (args: any) 
 }
 
 export function offMesh(mesh: BABYLON.Mesh, event: string, handler?: (args: any) => void) {
-  let events = data(mesh, '_r.events');
+  let events = data(mesh, '_r.e');
   if (events[event]) {
     if (handler) {
       events[event] = events[event].filter(function(_event) {

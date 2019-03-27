@@ -70,17 +70,4 @@ export class global {
   }
 
   static TRACE = false;
-
-  /**
-   static patch(_patch : any[]) {
-        let _this = this;
-        let promises = [];
-        _patch.forEach(function(item) {
-            let selector = Object.getOwnPropertyNames(item)[0];
-            _this.select(selector).each(function(element) {
-                promises.push(applyPatch(element, item[selector]));
-            });
-        });
-        return promises.reduce(Q.when, Q());
-    }**/
 }

@@ -1,11 +1,11 @@
-import { data } from "./data.js";
-import { is } from "./is.js";
+import { data } from "../data.js";
+import { is } from "../is.js";
 
 export function on(element: any, event: string, handler: (...args: any[]) => void, repeat = true) {
-  if (!data(element, '_r.events')) {
-    data(element, '_r.events', {});
+  if (!data(element, '_r.e')) {
+    data(element, '_r.e', {});
   }
-  let events = data(element, '_r.events');
+  let events = data(element, '_r.e');
   if (!events[event]) {
     events[event] = [];
   }
@@ -20,7 +20,7 @@ export function one(element: any, event: string, handler: (...args: any[]) => vo
 }
 
 export function trigger(element: any, event: string, extraParameters?: any) {
-  let events = data(element, '_r.events');
+  let events = data(element, '_r.e');
   if (!events) {
     return;
   }
@@ -41,7 +41,7 @@ export function trigger(element: any, event: string, extraParameters?: any) {
 }
 
 export function off(element: any, event: string, handler?: (...args: any[]) => void) {
-  let events = data(element, '_r.events');
+  let events = data(element, '_r.e');
   if (events[event]) {
     if (handler) {
       events[event] = events[event].filter(function(_handler) {

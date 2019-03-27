@@ -39,6 +39,7 @@ before(function(done) {
 
 describe('one, on, trigger, off', function() {
     it('on keydown', function() {
+
         var count = 0;
         var handler = function(e) {
             count++;
@@ -63,4 +64,5 @@ describe('one, on, trigger, off', function() {
         _r.canvas.dispatchEvent(new KeyboardEvent('keydown', {code:"NumpadAdd"}));
         expect(count == 1).to.be.true;
     });
+
 })

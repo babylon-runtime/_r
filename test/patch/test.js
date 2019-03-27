@@ -39,6 +39,14 @@ before(function(done){
 });
 
 describe('Patching', function() {
+    it("Patch current scene", function() {
+        _r.patch({
+            "scene" : {
+                "clearColor" : "yellow"
+            }
+        });
+        expect(_r.scene.clearColor.r == 1 && _r.scene.clearColor.g == 1 && _r.scene.clearColor.b == 0).to.be.true;
+    })
     it("No promise", function () {
        var patch = _r.patch("sphere1", {
            position : {
@@ -51,6 +59,7 @@ describe('Patching', function() {
        expect(_r.select("sphere1").attr("visibility") == 0.5).to.be.true;
     });
     it("Promise", function(done) {
+        this.timeout(5000);
         _r.select("ground1")[0].material = new BABYLON.StandardMaterial("material.ground1", _r.scene);
         _r.patch({
             "material.ground1" : {
@@ -66,6 +75,7 @@ describe('Patching', function() {
             expect(_r.select("material.ground1")[0].diffuseTexture.isReady() == true).to.be.true;
             done();
         })
-    })
+    });
+
 });
 

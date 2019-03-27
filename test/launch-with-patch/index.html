@@ -11,6 +11,14 @@
 <script src="../../node_modules/mocha/mocha.js"></script>
 <script>mocha.setup('bdd')</script>
 
+<script nomodule src="../../node_modules/babylonjs/babylon.js"></script>
+<script nomodule src="../../dist/_r.min.js"></script>
+<script nomodule src="test.js"></script>
+<script nomodule>
+    mocha.checkLeaks();
+    mocha.run();
+</script>
+
 <script type="module">
     import {default as _r} from "../../src/index.js";
     window._r = _r;
@@ -19,5 +27,7 @@
     mocha.checkLeaks();
     mocha.run();
 </script>
+
+
 </body>
 </html>

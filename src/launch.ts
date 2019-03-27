@@ -1,5 +1,5 @@
 import { is } from "./is.js";
-import { extend }  from "./extend.js";
+import { extend }  from "./util/extend.js";
 import { global } from "./global.js";
 import { BABYLON } from './BABYLON.js';
 import { activateCamera } from "./activateCamera.js";
@@ -13,7 +13,7 @@ let isReady = true;
 let callbacks = [];
 
 export interface IRuntimeLoading {
-  container?: string | HTMLCanvasElement;
+  canvas?: string | HTMLCanvasElement;
   assets?: string;
   scene: Function | string;
   activeCamera?: Function | string | any;
@@ -26,7 +26,7 @@ export interface IRuntimeLoading {
 }
 
 let options : IRuntimeLoading = {
-  container : null,
+  canvas : null,
   assets : null,
   scene : null,
   activeCamera : null,
@@ -41,8 +41,8 @@ export function launch(obj: IRuntimeLoading | string) : Q.Promise<BABYLON.Scene>
   isReady = false;
   options = extend(options, obj);
   // CANVAS
-  if (options.container) {
-    global.canvas = options.container;
+  if (options.canvas) {
+    global.canvas = options.canvas;
   }
   // KTX
   if (options.ktx) {
@@ -66,14 +66,15 @@ export function launch(obj: IRuntimeLoading | string) : Q.Promise<BABYLON.Scene>
   if (options.loadingScreen) {
     global.engine.loadingScreen = options.loadingScreen;
   }
-  // RESIZE
-  window.addEventListener('resize', function() {
-    global.engine.resize();
-  });
+
   return _createScene().then(() => {
     return _patch().then(() => {
       _checkActiveCamera();
       _beforeFirstRender();
+      // RESIZE
+      window.addEventListener('resize', function() {
+        global.engine.resize();
+      });
       start();
       isReady = true;
       callbacks.forEach(function(callback) {

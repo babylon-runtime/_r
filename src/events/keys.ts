@@ -1,13 +1,14 @@
-import { BABYLON } from "./BABYLON.js";
-import { global } from "./global.js";
-import { data } from "./data.js";
-import { trigger } from "./events.js";
+import { BABYLON } from "../BABYLON.js";
+import { global } from "../global.js";
+import { data } from "../data.js";
+import { trigger } from "./core.js";
 
-export const keyEvents = [
+export const keys = [
   'OnKeyDownTrigger',
   'OnKeyUpTrigger'
 ];
 
+// see https://api.jquery.com/category/events/keyboard-events/
 export function onKeyEvent(event : string,  handler: (args: any) => void, repeat = true) {
   if (!global.scene.actionManager) {
     global.scene.actionManager = new BABYLON.ActionManager(global.scene);
@@ -16,10 +17,10 @@ export function onKeyEvent(event : string,  handler: (args: any) => void, repeat
     trigger(global.scene, event, evt);
   });
   global.scene.actionManager.registerAction(action);
-  let events = data(global.scene, "_r.events");
+  let events = data(global.scene, "_r.e");
   if (!events) {
-    data(global.scene, "_r.events", []);
-    events =  data(global.scene, "_r.events");
+    data(global.scene, "_r.e", []);
+    events =  data(global.scene, "_r.e");
   }
   if (!events[event]) {
     events[event] = [];
@@ -36,7 +37,7 @@ export function oneKeyEvent(event : string, handler: (args: any) => void) {
 }
 
 export function offKeyEvent(event : string, handler?: (args: any) => void) {
-  let events = data(global.scene, '_r.events');
+  let events = data(global.scene, '_r.e');
   if (events[event]) {
     if (handler) {
       events[event] = events[event].filter(function(_event) {
@@ -53,6 +54,7 @@ export function offKeyEvent(event : string, handler?: (args: any) => void) {
       });
     }
     else {
+
       events[event] = [];
     }
   }

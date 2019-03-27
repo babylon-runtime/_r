@@ -1,7 +1,7 @@
-import { BABYLON } from './BABYLON.js';
-import { is } from './is.js';
+import { BABYLON } from '../BABYLON.js';
+import { is } from '../is.js';
 
-export function color(expr: any): BABYLON.Color3 | BABYLON.Color4 {
+export function color(expr: any): BABYLON.Color3 {
   if (expr instanceof BABYLON.Color3 || expr instanceof BABYLON.Color4) {
     return expr;
   }
@@ -84,4 +84,9 @@ export function color(expr: any): BABYLON.Color3 | BABYLON.Color4 {
       }
     }
   }
+}
+
+export function color4(expr: any) : BABYLON.Color4 {
+  let _color = color(expr);
+  return new BABYLON.Color4(_color.r, _color.g, _color.b, 1);
 }

@@ -1,7 +1,7 @@
 var expect = chai.expect;
 
 before(function(done) {
-    this.timeout(10000)
+    this.timeout(5000)
     _r.patch("scene.patch").then(function() {
         // console.log("done call", _r.scene.activeCamera.name);
         done();

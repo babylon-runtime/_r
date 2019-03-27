@@ -1,8 +1,8 @@
 import { BABYLON } from './BABYLON.js';
 import { is } from "./is.js";
 import { select } from "./select.js";
-import { extend } from "./extend.js";
-import { color } from "./color.js";
+import { extend } from "./util/extend.js";
+import { color } from "./util/color.js";
 import { patch } from "./patch.js";
 import { global } from "./global.js";
 

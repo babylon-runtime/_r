@@ -30,8 +30,8 @@ export function select(arg) {
   }
   // plugins
   for (let plugin in global.fn) {
-    Elements.prototype[plugin] = (options) => {
-      return global.fn[plugin].call(elements, options);
+    Elements.prototype[plugin] = (...args) => {
+      return global.fn[plugin].call(elements, ...args);
     };
   }
   return elements;

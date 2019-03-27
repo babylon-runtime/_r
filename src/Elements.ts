@@ -1,9 +1,6 @@
 import { BABYLON } from "./BABYLON.js";
 import { global } from "./global.js";
 import { is } from "./is.js";
-import { on, one, off, trigger } from "./events.js";
-import { data } from "./data.js";
-import { onMesh, oneMesh, offMesh, meshEvents } from "./meshEvents.js";
 import { Selector } from "./Selector.js";
 
 export class Elements {
@@ -45,80 +42,6 @@ export class Elements {
 
   contains(element : any) : boolean {
     return this.toArray().indexOf(element) !== -1;
-  }
-
-  /**
-   * Attach an event handler function for one or more events to the selected elements.
-   * @param events One or more space-separated event types
-   * @param handler A handler function previously attached for the event(s)
-   * @returns {Elements}
-   */
-  on(events : string, handler : (args : any) => void) {
-    this.each(function(item) {
-      if (is.Mesh(item) && meshEvents.indexOf(events) !== -1) {
-        onMesh(item, events, handler);
-      }
-      else {
-        on(item, events, handler);
-      }
-    });
-  }
-
-  /**
-   * Attach a handler to an event for the elements. The handler is executed at most once per element per event type.
-   * @param events One or more space-separated event types
-   * @param handler A handler function previously attached for the event(s)
-   * @returns {Elements}
-   */
-  one(events : string, handler : (args : any) => void) {
-    this.each(function(item) {
-      if (is.Mesh(item) && meshEvents.indexOf(events) !== -1) {
-        oneMesh(item, events, handler);
-      }
-      else {
-        one(item, events, handler);
-      }
-    });
-  }
-
-  /**
-   * Remove an event handler that were attached with .on()
-   * @param events
-   * @param handler A handler function previously attached for the event(s) or null to remove all handler attached for the event(s)
-   * @returns {Elements}
-   */
-  off(events : string, handler? : (args : any) => void) {
-    this.each(function(item) {
-      if (is.Mesh(item) && meshEvents.indexOf(events) !== -1) {
-        offMesh(item, events, handler);
-      }
-      else {
-        off(item, events, handler);
-      }
-    });
-  }
-
-  /**
-   * Execute all handlers and behaviors attached to the matched elements for the given event type.
-   * @param events One or more space-separated event types
-   * @param extraParameters Additional parameters to pass along to the event handler.
-   * @returns {Elements}
-   */
-  trigger(events : string, extraParameters? : any) {
-    this.each(function(item) {
-      trigger(item, events, extraParameters);
-    });
-  }
-
-  data(key? : string, value? : any) {
-    if (key != null && value != null) {
-      for (let i = 0; i < this.length; i++) {
-        data(this[i], key, value);
-      }
-    }
-    else {
-      return data(this[0], key, value);
-    }
   }
 
   /**
@@ -296,6 +219,7 @@ export class Elements {
         global.scene.addLight(element);
       }
     });
+    return this;
   }
 
   removeFromScene() {
@@ -325,6 +249,7 @@ export class Elements {
         return false;
       }
     });
+    return this;
   }
   // TODO
   remove(element : any) {

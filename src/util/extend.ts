@@ -1,4 +1,4 @@
-import { is } from "./is.js";
+import { is } from "../is.js";
 
 /**
  * Merge the contents of two or more objects together into the first object.
@@ -14,7 +14,7 @@ export function extend(...args: any[]): any {
    * inspired by https://j11y.io/jquery/#v=1.11.2&fn=jQuery.extend
    * (https://github.com/jquery/jquery/blob/master/src/core.js)
    */
-  var options, name, src, copy, isArray, clone,
+  let options, name, src, copy, isArray, clone,
     target = args[0],
     i = 1,
     length = args.length,

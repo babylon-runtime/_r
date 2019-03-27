@@ -5,7 +5,6 @@ module.exports = function(grunt) {
     grunt.initConfig({
         karma: {
             options : {
-                basePath: './',
                 frameworks: ['mocha', 'chai'],
                 reporters: ['progress'],
                 port: 9876,
@@ -15,6 +14,17 @@ module.exports = function(grunt) {
                     'node_modules/babylonjs/babylon.js', 'dist/_r.min.js'
                 ]
             },
+            /**
+             allInPatch : {
+                 proxies : {
+                     'test/all-in-patch/' : '/base/'
+                 },
+                files : [
+                    {
+                        src : [  'test/all-in-patch/test.js']
+                    },
+                ]
+            },**/
             cornellBox : {
                 files : [
                     { src : [ 'test/patch/test.js'] }]
@@ -58,18 +68,13 @@ module.exports = function(grunt) {
                 files : [
                     { src : ['test/plugins/test.js']}
                 ]
-            }
-            /**
-             allInPatch : {
-                proxies : {
-                    'scene.js' : 'test/all-in-patch/scene.js'
-                },
+            },
+            queryString : {
                 files : [
-                    {
-                        src : [  'test/all-in-patch/test.js']
-                    },
+                    { src : ['test/queryString/test.js']}
                 ]
-            }**/
+            }
+
         }
     });
     // Default task(s).

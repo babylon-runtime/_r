@@ -240,6 +240,161 @@
       return global;
   }());
 
+  var cache = [];
+  var expando = '_r' + Date.now();
+  /**
+   * Attach any data to any js object (inspired by {@link https://api.jquery.com/data/ |jQuery.data()}).
+   * @param element
+   * @param key
+   * @param value
+   */
+  function data(element, key, value) {
+      if (!element.hasOwnProperty(expando)) {
+          element[expando] = cache.length;
+          cache[element[expando]] = {};
+      }
+      if (key != null) {
+          if (value != null) {
+              cache[element[expando]][key] = value;
+          }
+          else {
+              return cache[element[expando]][key];
+          }
+      }
+      else {
+          return cache[element[expando]];
+      }
+  }
+  global.fn["data"] = function (key, value) {
+      if (key != null && value != null) {
+          for (var i = 0; i < this.length; i++) {
+              data(this[i], key, value);
+          }
+      }
+      else {
+          return data(this[0], key, value);
+      }
+  };
+
+  function on(element, event, handler, repeat) {
+      if (repeat === void 0) { repeat = true; }
+      if (!data(element, '_r.e')) {
+          data(element, '_r.e', {});
+      }
+      var events = data(element, '_r.e');
+      if (!events[event]) {
+          events[event] = [];
+      }
+      events[event].push({
+          handler: handler,
+          repeat: repeat
+      });
+  }
+  function one(element, event, handler) {
+      on(element, event, handler, false);
+  }
+  function trigger(element, event, extraParameters) {
+      var events = data(element, '_r.e');
+      if (!events) {
+          return;
+      }
+      var handlers = events[event];
+      if (is.Array(handlers)) {
+          handlers.forEach(function (callback) {
+              try {
+                  callback.handler.call(element, extraParameters);
+                  if (!callback.repeat) {
+                      off(element, event, callback.handler);
+                  }
+              }
+              catch (ex) {
+                  console.error("_r.trigger exception", ex);
+              }
+          });
+      }
+  }
+  function off(element, event, handler) {
+      var events = data(element, '_r.e');
+      if (events[event]) {
+          if (handler) {
+              events[event] = events[event].filter(function (_handler) {
+                  if (_handler.handler.toString() == handler.toString()) {
+                      events[event].splice(events[event].indexOf(_handler), 1);
+                  }
+              });
+          }
+          else {
+              events[event] = [];
+          }
+      }
+  }
+
+  function getQueryStringParameter(name, url) {
+      if (!url) {
+          url = window.location.href;
+      }
+      name = name.replace(/[\[\]]/g, '\\$&');
+      var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'), results = regex.exec(url);
+      if (!results) {
+          return null;
+      }
+      if (!results[2]) {
+          return '';
+      }
+      return decodeURIComponent(results[2].replace(/\+/g, ' '));
+  }
+  function updateUrlParameter(uri, key, value) {
+      // remove the hash part before operating on the uri
+      var i = uri.indexOf('#');
+      var hash = i === -1 ? '' : uri.substr(i);
+      uri = i === -1 ? uri : uri.substr(0, i);
+      var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+      var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+      if (!value) {
+          // remove key-value pair if value is empty
+          uri = uri.replace(new RegExp("([?&]?)" + key + "=[^&]*", "i"), '');
+          if (uri.slice(-1) === '?') {
+              uri = uri.slice(0, -1);
+          }
+          // replace first occurrence of & by ? if no ? is present
+          if (uri.indexOf('?') === -1) {
+              uri = uri.replace(/&/, '?');
+          }
+      }
+      else if (uri.match(re)) {
+          uri = uri.replace(re, '$1' + key + "=" + value + '$2');
+      }
+      else {
+          uri = uri + separator + key + "=" + value;
+      }
+      return uri + hash;
+  }
+  var queryString = {
+      get: function (name) {
+          return getQueryStringParameter(name);
+      },
+      set: function (name, value) {
+          if (history.pushState) {
+              var newurl = updateUrlParameter(window.location.href, name, value);
+              window.history.pushState({ path: newurl }, '', newurl);
+          }
+          this.trigger(name, value);
+      },
+      on: function (event, handler, repeat) {
+          if (repeat === void 0) { repeat = true; }
+          on(this, event, handler, repeat);
+      },
+      off: function (event, handler) {
+          off(this, event, handler);
+      },
+      one: function (event, handler) {
+          one(this, event, handler);
+      },
+      trigger: function (event, extraParameters) {
+          trigger(this, event, extraParameters);
+      },
+  };
+
   /**
    * Merge the contents of two or more objects together into the first object.
    *
@@ -315,147 +470,6 @@
           console.groupCollapsed("[_r] - activate camera " + global.scene.activeCamera.name);
           console.log(global.scene.activeCamera);
           console.groupEnd();
-      }
-  }
-
-  var cache = [];
-  var expando = '_r' + Date.now();
-  /**
-   * Attach any data to any js object (inspired by {@link https://api.jquery.com/data/ |jQuery.data()}).
-   * @param element
-   * @param key
-   * @param value
-   */
-  function data(element, key, value) {
-      if (!element.hasOwnProperty(expando)) {
-          element[expando] = cache.length;
-          cache[element[expando]] = {};
-      }
-      if (key != null) {
-          if (value != null) {
-              cache[element[expando]][key] = value;
-          }
-          else {
-              return cache[element[expando]][key];
-          }
-      }
-      else {
-          return cache[element[expando]];
-      }
-  }
-
-  function on(element, event, handler, repeat) {
-      if (repeat === void 0) { repeat = true; }
-      if (!data(element, '_r.events')) {
-          data(element, '_r.events', {});
-      }
-      var events = data(element, '_r.events');
-      if (!events[event]) {
-          events[event] = [];
-      }
-      events[event].push({
-          handler: handler,
-          repeat: repeat
-      });
-  }
-  function one(element, event, handler) {
-      on(element, event, handler, false);
-  }
-  function trigger(element, event, extraParameters) {
-      var events = data(element, '_r.events');
-      if (!events) {
-          return;
-      }
-      var handlers = events[event];
-      if (is.Array(handlers)) {
-          handlers.forEach(function (callback) {
-              try {
-                  callback.handler.call(element, extraParameters);
-                  if (!callback.repeat) {
-                      off(element, event, callback.handler);
-                  }
-              }
-              catch (ex) {
-                  console.error("_r.trigger exception", ex);
-              }
-          });
-      }
-  }
-  function off(element, event, handler) {
-      var events = data(element, '_r.events');
-      if (events[event]) {
-          if (handler) {
-              events[event] = events[event].filter(function (_handler) {
-                  if (_handler.handler.toString() == handler.toString()) {
-                      events[event].splice(events[event].indexOf(_handler), 1);
-                  }
-              });
-          }
-          else {
-              events[event] = [];
-          }
-      }
-  }
-
-  var meshEvents = [
-      'OnDoublePickTrigger',
-      'OnPickTrigger',
-      'OnLeftPickTrigger',
-      'OnRightPickTrigger',
-      'OnCenterPickTrigger',
-      'OnPickDownTrigger',
-      'OnPickUpTrigger',
-      'OnPickOutTrigger',
-      'OnLongPressTrigger',
-      'OnPointerOverTrigger',
-      'OnPointerOutTrigger'
-  ];
-  function onMesh(mesh, event, handler, repeat) {
-      if (repeat === void 0) { repeat = true; }
-      if (!mesh.actionManager) {
-          mesh.actionManager = new BABYLON.ActionManager(global.scene);
-      }
-      var action = new BABYLON.ExecuteCodeAction(BABYLON.ActionManager[event], function (evt) {
-          trigger(mesh, event, evt);
-      });
-      mesh.actionManager.registerAction(action);
-      var events = data(mesh, "_r.events");
-      if (!events) {
-          data(mesh, "_r.events", []);
-          events = data(mesh, "_r.events");
-      }
-      if (!events[event]) {
-          events[event] = [];
-      }
-      events[event].push({
-          handler: handler,
-          repeat: repeat,
-          action: action
-      });
-  }
-  function oneMesh(mesh, event, handler) {
-      onMesh(mesh, event, handler, false);
-  }
-  function offMesh(mesh, event, handler) {
-      var events = data(mesh, '_r.events');
-      if (events[event]) {
-          if (handler) {
-              events[event] = events[event].filter(function (_event) {
-                  if (_event.handler.toString() == handler.toString()) {
-                      if (_event.action) {
-                          var index = mesh.actionManager.actions.indexOf(_event.action);
-                          mesh.actionManager.actions.splice(index, 1);
-                      }
-                      if (_event.listener) {
-                          mesh.removeEventListener(_event, _event.listener);
-                      }
-                  }
-                  return _event.handler.toString() !== handler.toString();
-              });
-          }
-          else {
-              events[event] = [];
-          }
       }
   }
 
@@ -663,75 +677,6 @@
           return this.toArray().indexOf(element) !== -1;
       };
       /**
-       * Attach an event handler function for one or more events to the selected elements.
-       * @param events One or more space-separated event types
-       * @param handler A handler function previously attached for the event(s)
-       * @returns {Elements}
-       */
-      Elements.prototype.on = function (events, handler) {
-          this.each(function (item) {
-              if (is.Mesh(item) && meshEvents.indexOf(events) !== -1) {
-                  onMesh(item, events, handler);
-              }
-              else {
-                  on(item, events, handler);
-              }
-          });
-      };
-      /**
-       * Attach a handler to an event for the elements. The handler is executed at most once per element per event type.
-       * @param events One or more space-separated event types
-       * @param handler A handler function previously attached for the event(s)
-       * @returns {Elements}
-       */
-      Elements.prototype.one = function (events, handler) {
-          this.each(function (item) {
-              if (is.Mesh(item) && meshEvents.indexOf(events) !== -1) {
-                  oneMesh(item, events, handler);
-              }
-              else {
-                  one(item, events, handler);
-              }
-          });
-      };
-      /**
-       * Remove an event handler that were attached with .on()
-       * @param events
-       * @param handler A handler function previously attached for the event(s) or null to remove all handler attached for the event(s)
-       * @returns {Elements}
-       */
-      Elements.prototype.off = function (events, handler) {
-          this.each(function (item) {
-              if (is.Mesh(item) && meshEvents.indexOf(events) !== -1) {
-                  offMesh(item, events, handler);
-              }
-              else {
-                  off(item, events, handler);
-              }
-          });
-      };
-      /**
-       * Execute all handlers and behaviors attached to the matched elements for the given event type.
-       * @param events One or more space-separated event types
-       * @param extraParameters Additional parameters to pass along to the event handler.
-       * @returns {Elements}
-       */
-      Elements.prototype.trigger = function (events, extraParameters) {
-          this.each(function (item) {
-              trigger(item, events, extraParameters);
-          });
-      };
-      Elements.prototype.data = function (key, value) {
-          if (key != null && value != null) {
-              for (var i = 0; i < this.length; i++) {
-                  data(this[i], key, value);
-              }
-          }
-          else {
-              return data(this[0], key, value);
-          }
-      };
-      /**
        * Iterate over elements and executing a function for each element.
        * @param callback A function to execute for each element.
        * @returns {_r.Elements}
@@ -901,6 +846,7 @@
                   global.scene.addLight(element);
               }
           });
+          return this;
       };
       Elements.prototype.removeFromScene = function () {
           this.each(function (element) {
@@ -929,6 +875,7 @@
                   return false;
               }
           });
+          return this;
       };
       // TODO
       Elements.prototype.remove = function (element) {
@@ -1096,8 +1043,13 @@
           elements = new Elements(arg);
       }
       var _loop_1 = function (plugin) {
-          Elements.prototype[plugin] = function (options) {
-              return global.fn[plugin].call(elements, options);
+          Elements.prototype[plugin] = function () {
+              var args = [];
+              for (var _i = 0; _i < arguments.length; _i++) {
+                  args[_i] = arguments[_i];
+              }
+              var _a;
+              return (_a = global.fn[plugin]).call.apply(_a, [elements].concat(args));
           };
       };
       // plugins
@@ -3247,11 +3199,17 @@
                           return Q(global.scene);
                       }
                       else {
-                          return patchElement(global.scene, args[1]).then(function () {
-                              if (global.TRACE) {
-                                  console.groupEnd();
-                              }
-                          });
+                          var result_2 = patchElement(global.scene, args[1]);
+                          if (is.Promise(result_2)) {
+                              return result_2.then(function () {
+                                  if (global.TRACE) {
+                                      console.groupEnd();
+                                  }
+                              });
+                          }
+                          else {
+                              return result_2;
+                          }
                       }
                   case "exec":
                       if (global.TRACE) {
@@ -3616,7 +3574,7 @@
   var isReady = true;
   var callbacks = [];
   var options = {
-      container: null,
+      canvas: null,
       assets: null,
       scene: null,
       activeCamera: null,
@@ -3630,8 +3588,8 @@
       isReady = false;
       options = extend(options, obj);
       // CANVAS
-      if (options.container) {
-          global.canvas = options.container;
+      if (options.canvas) {
+          global.canvas = options.canvas;
       }
       // KTX
       if (options.ktx) {
@@ -3782,7 +3740,7 @@
       }
   }
 
-  var keyEvents = [
+  var keys = [
       'OnKeyDownTrigger',
       'OnKeyUpTrigger'
   ];
@@ -3795,10 +3753,10 @@
           trigger(global.scene, event, evt);
       });
       global.scene.actionManager.registerAction(action);
-      var events = data(global.scene, "_r.events");
+      var events = data(global.scene, "_r.e");
       if (!events) {
-          data(global.scene, "_r.events", []);
-          events = data(global.scene, "_r.events");
+          data(global.scene, "_r.e", []);
+          events = data(global.scene, "_r.e");
       }
       if (!events[event]) {
           events[event] = [];
@@ -3813,7 +3771,7 @@
       onKeyEvent(event, handler, false);
   }
   function offKeyEvent(event, handler) {
-      var events = data(global.scene, '_r.events');
+      var events = data(global.scene, '_r.e');
       if (events[event]) {
           if (handler) {
               events[event] = events[event].filter(function (_event) {
@@ -3834,6 +3792,156 @@
           }
       }
   }
+
+  var meshes = [
+      'OnDoublePickTrigger',
+      'OnPickTrigger',
+      'OnLeftPickTrigger',
+      'OnRightPickTrigger',
+      'OnCenterPickTrigger',
+      'OnPickDownTrigger',
+      'OnPickUpTrigger',
+      'OnPickOutTrigger',
+      'OnLongPressTrigger',
+      'OnPointerOverTrigger',
+      'OnPointerOutTrigger'
+  ];
+  function onMesh(mesh, event, handler, repeat) {
+      if (repeat === void 0) { repeat = true; }
+      if (!mesh.actionManager) {
+          mesh.actionManager = new BABYLON.ActionManager(global.scene);
+      }
+      var action = new BABYLON.ExecuteCodeAction(BABYLON.ActionManager[event], function (evt) {
+          trigger(mesh, event, evt);
+      });
+      mesh.actionManager.registerAction(action);
+      var events = data(mesh, "_r.e");
+      if (!events) {
+          data(mesh, "_r.e", []);
+          events = data(mesh, "_r.e");
+      }
+      if (!events[event]) {
+          events[event] = [];
+      }
+      events[event].push({
+          handler: handler,
+          repeat: repeat,
+          action: action
+      });
+  }
+  function oneMesh(mesh, event, handler) {
+      onMesh(mesh, event, handler, false);
+  }
+  function offMesh(mesh, event, handler) {
+      var events = data(mesh, '_r.e');
+      if (events[event]) {
+          if (handler) {
+              events[event] = events[event].filter(function (_event) {
+                  if (_event.handler.toString() == handler.toString()) {
+                      if (_event.action) {
+                          var index = mesh.actionManager.actions.indexOf(_event.action);
+                          mesh.actionManager.actions.splice(index, 1);
+                      }
+                      if (_event.listener) {
+                          mesh.removeEventListener(_event, _event.listener);
+                      }
+                  }
+                  return _event.handler.toString() !== handler.toString();
+              });
+          }
+          else {
+              events[event] = [];
+          }
+      }
+  }
+
+  function on$1(event, handler, repeat) {
+      if (repeat === void 0) { repeat = true; }
+      if (keys.indexOf(event) != -1) {
+          onKeyEvent(event, handler, repeat);
+      }
+      else {
+          on(this, event, handler, repeat);
+      }
+  }
+  function off$1(event, handler) {
+      if (keys.indexOf(event) != -1) {
+          offKeyEvent(event, handler);
+      }
+      else {
+          off(this, event, handler);
+      }
+  }
+  function one$1(event, handler) {
+      if (keys.indexOf(event) != -1) {
+          oneKeyEvent(event, handler);
+      }
+      else {
+          one(this, event, handler);
+      }
+  }
+  function trigger$1(event, extraParameters) {
+      trigger(this, event, extraParameters);
+  }
+  /**
+   * Attach an event handler function for one or more e to the selected elements.
+   * @param events One or more space-separated event types
+   * @param handler A handler function previously attached for the event(s)
+   * @returns {Elements}
+   */
+  global.fn["on"] = function (events, handler) {
+      this.each(function (item) {
+          if (is.Mesh(item) && meshes.indexOf(events) !== -1) {
+              onMesh(item, events, handler);
+          }
+          else {
+              on(item, events, handler);
+          }
+      });
+  };
+  /**
+   * Attach a handler to an event for the elements. The handler is executed at most once per element per event type.
+   * @param events One or more space-separated event types
+   * @param handler A handler function previously attached for the event(s)
+   * @returns {Elements}
+   */
+  global.fn["one"] = function (events, handler) {
+      this.each(function (item) {
+          if (is.Mesh(item) && meshes.indexOf(events) !== -1) {
+              oneMesh(item, events, handler);
+          }
+          else {
+              one(item, events, handler);
+          }
+      });
+  };
+  /**
+   * Remove an event handler that were attached with .on()
+   * @param events
+   * @param handler A handler function previously attached for the event(s) or null to remove all handler attached for the event(s)
+   * @returns {Elements}
+   */
+  global.fn["off"] = function (events, handler) {
+      this.each(function (item) {
+          if (is.Mesh(item) && meshes.indexOf(events) !== -1) {
+              offMesh(item, events, handler);
+          }
+          else {
+              off(item, events, handler);
+          }
+      });
+  };
+  /**
+   * Execute all handlers and behaviors attached to the matched elements for the given event type.
+   * @param events One or more space-separated event types
+   * @param extraParameters Additional parameters to pass along to the event handler.
+   * @returns {Elements}
+   */
+  global.fn["trigger"] = function (events, extraParameters) {
+      this.each(function (item) {
+          trigger(item, events, extraParameters);
+      });
+  };
 
   function color(expr) {
       if (expr instanceof BABYLON.Color3 || expr instanceof BABYLON.Color4) {
@@ -4333,43 +4441,19 @@
       createLibrary: createLibrary,
       library: library,
       data: data,
-      on: function (event, handler, repeat) {
-          if (repeat === void 0) { repeat = true; }
-          if (keyEvents.indexOf(event) != -1) {
-              onKeyEvent(event, handler, repeat);
-          }
-          else {
-              on(this, event, handler, repeat);
-          }
-      },
-      off: function (event, handler) {
-          if (keyEvents.indexOf(event) != -1) {
-              offKeyEvent(event, handler);
-          }
-          else {
-              off(this, event, handler);
-          }
-      },
-      one: function (event, handler) {
-          if (keyEvents.indexOf(event) != -1) {
-              oneKeyEvent(event, handler);
-          }
-          else {
-              one(this, event, handler);
-          }
-      },
-      trigger: function (event, extraParameters) {
-          trigger(this, event, extraParameters);
-      },
+      on: on$1,
+      off: off$1,
+      one: one$1,
+      trigger: trigger$1,
       select: select,
       patch: patch,
       match: match,
       is: is,
       color: color,
       animate: animate,
-      extend: extend,
       activeCamera: activateCamera,
-      fn: global.fn
+      fn: global.fn,
+      queryString: queryString
   };
 
   return index;

@@ -46,6 +46,9 @@ export function patch(...args) : Q.Promise<any> {
               global.scene = result;
             }
             if (!isStarted) {
+              window.addEventListener('resize', function() {
+                global.engine.resize();
+              });
               start();
             }
             if (global.TRACE) {
@@ -54,11 +57,17 @@ export function patch(...args) : Q.Promise<any> {
             return Q(global.scene);
           }
           else {
-            return patchElement(global.scene, args[1]).then(() => {
-              if (global.TRACE) {
-                console.groupEnd();
-              }
-            });
+            let result = patchElement(global.scene, args[1]);
+            if (is.Promise(result)) {
+              return result.then(() => {
+                if (global.TRACE) {
+                  console.groupEnd();
+                }
+              });
+            }
+            else {
+              return result;
+            }
           }
         case "exec":
           if (global.TRACE) {

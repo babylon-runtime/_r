@@ -1,3 +1,4 @@
+import { queryString } from "./util/queryString.js";
 import { global } from "./global.js";
 import { is } from "./is.js";
 import { launch, ready } from "./launch.js";
@@ -6,17 +7,14 @@ import { downloadScene, downloadTexture, downloadCubeTexture } from "./download.
 import { createLibrary, library } from "./library.js";
 import { select } from "./select.js";
 import { data } from "./data.js";
-import { on, off, one, trigger } from "./events.js";
-import { keyEvents, onKeyEvent, oneKeyEvent, offKeyEvent } from "./keyEvents.js";
+import { on, off, one, trigger } from "./events/index.js";
 import { patch } from "./patch.js";
 import { match } from "./Elements.js";
-import { Selector } from "./Selector.js";
-import { color } from './color.js';
+import { color, color4 } from './util/color.js';
 import { animate } from "./animate.js";
-import { extend } from "./extend.js";
 import { activateCamera } from "./activateCamera.js";
+import { show, hide } from "./show.hide/index.js";
 import "./patch.plugins/index.js";
-import { patchElements } from "./patch.js";
 
 export default {
     get canvas() {
@@ -53,40 +51,20 @@ export default {
     createLibrary : createLibrary,
     library : library,
     data : data,
-    on : function(event: string, handler: (...args: any[]) => void, repeat = true) {
-        if (keyEvents.indexOf(event) != -1) {
-           onKeyEvent(event, handler, repeat);
-        }
-        else {
-            on(this, event, handler, repeat);
-        }
-    },
-    off : function(event: string, handler?: (...args: any[]) => void) {
-        if (keyEvents.indexOf(event) != -1) {
-            offKeyEvent(event, handler);
-        }
-        else {
-            off(this, event, handler);
-        }
-    },
-    one : function(event: string, handler: (...args: any[]) => void) {
-        if (keyEvents.indexOf(event) != -1) {
-            oneKeyEvent(event, handler);
-        }
-        else {
-            one(this, event, handler);
-        }
-    },
-    trigger : function(event: string, extraParameters?: any) {
-        trigger(this, event, extraParameters);
-    },
+    on : on,
+    off : off,
+    one : one,
+    trigger : trigger,
     select : select,
     patch : patch,
     match : match,
     is : is,
     color : color,
+    color4 : color4,
     animate : animate,
-    extend : extend,
     activeCamera : activateCamera,
-    fn : global.fn
+    fn : global.fn,
+    queryString : queryString,
+    show : show,
+    hide : hide
 };
