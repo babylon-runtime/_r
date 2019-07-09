@@ -33,6 +33,17 @@ before(function() {
 describe('animate', function() {
     this.timeout(5000);
     it('simple', function (done) {
+        _r.select("Box1, Box2").animate({
+            rotation : {
+                y : 10
+            }
+        }, {
+            duration : 1,
+            complete : function() {
+                expect(_r.select("Box2")[0].rotation.y === 10).to.be.true;
+            }
+        });
+
         _r.animate('Box1', {
             position : {
                 x : 20
@@ -51,17 +62,6 @@ describe('animate', function() {
                 expect(_r.scene.clearColor.r === yellow.r).to.be.true;
                 expect(_r.scene.clearColor.g === yellow.g).to.be.true;
                 expect(_r.scene.clearColor.b === yellow.b).to.be.true;
-            }
-        });
-
-        _r.animate("Box1, Box2", {
-            rotation : {
-                y : 10
-            }
-        },{
-            duration : 1,
-            complete : function() {
-                expect(_r.select("Box2")[0].rotation.y === 10).to.be.true;
             }
         });
         _r.animate('Box1', {

@@ -17,7 +17,11 @@ export function on(element, event, handler, repeat) {
 export function one(element, event, handler) {
     on(element, event, handler, false);
 }
-export function trigger(element, event, extraParameters) {
+export function trigger(element, event) {
+    var extraParameters = [];
+    for (var _i = 2; _i < arguments.length; _i++) {
+        extraParameters[_i - 2] = arguments[_i];
+    }
     var events = data(element, '_r.e');
     if (!events) {
         return;
@@ -25,8 +29,9 @@ export function trigger(element, event, extraParameters) {
     var handlers = events[event];
     if (is.Array(handlers)) {
         handlers.forEach(function (callback) {
+            var _a;
             try {
-                callback.handler.call(element, extraParameters);
+                (_a = callback.handler).call.apply(_a, [element].concat(extraParameters));
                 if (!callback.repeat) {
                     off(element, event, callback.handler);
                 }

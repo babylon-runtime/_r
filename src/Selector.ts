@@ -26,7 +26,10 @@ export class Selector {
     if (item.indexOf(":multimaterial") !== -1) {
       type = "multimaterial";
     }
-    [":mesh", ":material", ":multimaterial", ":camera", ":light", ":texture"].forEach(function(type) {
+    if (item.indexOf(':transformNode') !== -1) {
+      type = "transformNode";
+    }
+    [":mesh", ":material", ":multimaterial", ":camera", ":light", ":texture", ":transformNode"].forEach(function(type) {
       item = item.replace(type, '');
     });
 
@@ -159,6 +162,9 @@ export class Selector {
     }
     if (this.type == "camera") {
       return is.Camera(element);
+    }
+    if (this.type == "transformNode") {
+      return is.TransformNode(element);
     }
   }
 }

@@ -1,5 +1,4 @@
 import { patch } from "../patch.js";
-import { BABYLON } from "../BABYLON.js";
 
 patch.registerPlugin({
   test(element, source, property) : boolean {

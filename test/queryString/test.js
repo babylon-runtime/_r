@@ -59,6 +59,48 @@ describe('Query String', function() {
         });
         _r.queryString.set("hello", "runtime");
         expect(hello === "runtime").to.be.true;
+        window.addEventListener("hashchange", function(e) {
+            console.log(e);
+        })
     })
+});
+
+describe('Router', function() {
+    it("on & set", function() {
+        let route, route1;
+        let countOn1 = 0;
+        _r.router.on(function(hash) {
+            countOn1 += 1;
+            console.log("on1", _r.router.get(), countOn1)
+            route = hash;
+        });
+        _r.router.on("/route1/route2", function() {
+            console.log("on2", _r.router.get())
+            route1 = _r.router.get();
+        });
+
+        _r.router.on("/route3", function() {
+            console.log("on3")
+        })
+        console.log("** set /route1/route2/ **");
+        _r.router.set("/route1/route2");
+        expect(route1).to.be.equal("/route1/route2");
+        expect(route).to.be.equal("/route1/route2");
+        console.log("** set /route3 **");
+        _r.router.set("/route3");
+        expect(route1).to.be.equal("/route1/route2");
+        expect(route).to.be.equal("/route3");
+        console.log("countOn1", countOn1)
+    });
+    // TODO
+    /**
+    it("Parameterized URLs", function() {
+        let parameter;
+        _r.router.on("/route4/:route", function(params) {
+            parameter = params.route;
+        });
+        _r.router.set("/route4/test1");
+        expect(parameter).to.be.equal("test1");
+    })**/
 });
 

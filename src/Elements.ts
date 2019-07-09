@@ -1,4 +1,3 @@
-import { BABYLON } from "./BABYLON.js";
 import { global } from "./global.js";
 import { is } from "./is.js";
 import { Selector } from "./Selector.js";
@@ -135,7 +134,6 @@ export class Elements {
    */
   log(property?: string) {
     this.each(function(item) {
-      console.log('yo', item);
       if (property) {
         console.log(item[property]);
       }
@@ -285,6 +283,7 @@ export function find(params : string, container : BABYLON.Scene | Elements | BAB
     item = item.trim();
     let selector = new Selector(item);
     if (is.Scene(container) || is.AssetContainer(container)) {
+      container = <BABYLON.AssetContainer> container;
       switch (selector.type) {
         case "material" :
           container.materials.forEach(function(material) {
@@ -330,6 +329,13 @@ export function find(params : string, container : BABYLON.Scene | Elements | BAB
             }
           });
           break;
+        case "transformNode":
+          container.transformNodes.forEach(function(camera) {
+            if (selector.matchFilters(camera)) {
+              elements.add(camera);
+            }
+          });
+          break;
         case "all":
           container.materials.forEach(function(material) {
             if (selector.matchFilters(material)) {
@@ -356,9 +362,15 @@ export function find(params : string, container : BABYLON.Scene | Elements | BAB
               elements.add(camera);
             }
           });
+          container.transformNodes.forEach(function(camera) {
+            if (selector.matchFilters(camera)) {
+              elements.add(camera);
+            }
+          });
       }
     }
     else {
+      container = <Elements> container;
       container.each(function(element) {
         if (selector.matchType(element) && selector.matchFilters(element)) {
           elements.add(element);

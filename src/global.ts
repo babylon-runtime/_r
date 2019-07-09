@@ -1,6 +1,4 @@
 import { is } from "./is.js";
-import { BABYLON } from "./BABYLON.js";
-
 let _scene, _engine, _canvas;
 
 export class global {

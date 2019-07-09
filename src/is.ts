@@ -1,5 +1,3 @@
-import { BABYLON } from "./BABYLON.js";
-
 export module is {
   export function Function(functionToCheck): boolean {
     var getType = {};
@@ -32,6 +30,10 @@ export module is {
 
   export function Scene(x: any) {
     return x instanceof BABYLON.Scene;
+  }
+
+  export function TransformNode(x : any) {
+    return x instanceof BABYLON.TransformNode;
   }
 
   export function Array(x: any): boolean {

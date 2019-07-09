@@ -12,15 +12,18 @@ export function select(arg) {
     elements = find(arg, global.scene);
     // elements could be in a library not attached to the scene
 
-    for (let lib in libraries) {
-      let selection = libraries[lib].select(arg);
-      selection.each(function(item) {
-        // item could be in multiple libraries
-        if (!elements.contains(item)) {
-          elements.add(item);
-        }
-      });
-    }
+    Object.getOwnPropertyNames(libraries).forEach(function(lib) {
+      // TODO : wtf ?
+      if (lib !== "length") {
+        let selection = libraries[lib].select(arg);
+        selection.each(function(item) {
+          // item could be in multiple libraries
+          if (!elements.contains(item)) {
+            elements.add(item);
+          }
+        });
+      }
+    });
     if (global.TRACE === true && elements.length == 0) {
       console.warn('BABYLON.Runtime::no object(s) found for selector "' + arg + '"');
     }

@@ -1,13 +1,9 @@
 import { is } from "./is.js";
 import { extend }  from "./util/extend.js";
 import { global } from "./global.js";
-import { BABYLON } from './BABYLON.js';
 import { activateCamera } from "./activateCamera.js";
 import { downloadScene } from "./download.js";
-import { patch, patchChain } from "./patch.js";
-import "../node_modules/q/q.js";
-
-declare var Q;
+import { patch } from "./patch.js";
 
 let isReady = true;
 let callbacks = [];
@@ -21,8 +17,8 @@ export interface IRuntimeLoading {
   beforeFirstRender?: Function;
   ktx?: boolean | Array<string>;
   enableOfflineSupport?: boolean;
-  progressLoading: Function;
-  loadingScreen: any;
+  progress?: Function;
+  loadingScreen?: any;
 }
 
 let options : IRuntimeLoading = {
@@ -33,11 +29,11 @@ let options : IRuntimeLoading = {
   patch : null,
   ktx : false,
   enableOfflineSupport : false,
-  progressLoading: null,
+  progress: null,
   loadingScreen: null,
 };
 
-export function launch(obj: IRuntimeLoading | string) : Q.Promise<BABYLON.Scene> {
+export function launch(obj: IRuntimeLoading | string) : Promise<BABYLON.Scene> {
   isReady = false;
   options = extend(options, obj);
   // CANVAS
@@ -66,88 +62,93 @@ export function launch(obj: IRuntimeLoading | string) : Q.Promise<BABYLON.Scene>
   if (options.loadingScreen) {
     global.engine.loadingScreen = options.loadingScreen;
   }
-
-  return _createScene().then(() => {
-    return _patch().then(() => {
-      _checkActiveCamera();
-      _beforeFirstRender();
-      // RESIZE
-      window.addEventListener('resize', function() {
-        global.engine.resize();
+  return new Promise((resolve, reject) => {
+    _createScene().then(() => {
+      _patch().then(() => {
+        _checkActiveCamera();
+        _beforeFirstRender();
+        // RESIZE
+        window.addEventListener('resize', function() {
+          global.engine.resize();
+        });
+        start();
+        isReady = true;
+        callbacks.forEach(function(callback) {
+          try {
+            callback.call(global.scene);
+          }
+          catch (ex) {
+            console.error(ex);
+          }
+        });
+        callbacks.length = 0;
+        resolve(global.scene);
       });
-      start();
-      isReady = true;
-      callbacks.forEach(function(callback) {
-        try {
-          callback.call(global.scene);
-        }
-        catch (ex) {
-          console.error(ex);
-        }
-      });
-      callbacks.length = 0;
+    }, (err) => {
+      reject(err);
     });
   });
 }
 
-function _createScene() : Q.Promise<null> {
-  let defer = Q.defer();
+function _createScene() : Promise<any> {
   if (options.scene) {
     if (is.String(options.scene)) {
       // scene is a filename
       if (options.assets) {
         return downloadScene({
-          scene : <string> options.scene,
-          assets : options.assets
+          scene: <string>options.scene,
+          assets: options.assets,
+          progress: options.progress
         });
-      }
-      else {
+      } else {
         return downloadScene({
-          scene : <string> options.scene
+          scene: <string>options.scene,
+          progress: options.progress
         });
       }
-    }
-    else {
-      if (is.Function(options.scene)) {
-        try {
-          let result = eval("var canvas=_r.canvas; var engine = _r.engine; var scene=_r.scene; var createScene=" + options.scene + ';createScene()');
-          if (BABYLON.Engine.LastCreatedEngine.scenes.length == 2) {
-            BABYLON.Engine.LastCreatedEngine.scenes[0].dispose();
+    } else {
+      return new Promise((resolve, reject) => {
+        if (is.Function(options.scene)) {
+          try {
+            let result = eval("var canvas=_r.canvas; var engine = _r.engine; var scene=_r.scene; var createScene=" + options.scene + ';createScene()');
+            if (BABYLON.Engine.LastCreatedEngine.scenes.length == 2) {
+              BABYLON.Engine.LastCreatedEngine.scenes[0].dispose();
+            }
+            if (is.Scene(result)) {
+              global.scene = result;
+            }
+            resolve();
+          } catch (ex) {
+            reject(ex);
+            throw ex;
           }
-          if (is.Scene(result)) {
-            global.scene = result;
+        } else {
+          if (is.Scene(options.scene)) {
+            global.scene = options.scene;
+            resolve();
+          } else {
+            reject("invalid scene parameter in _r.launch");
+            throw new Error("invalid scene parameter in _r.launch");
           }
         }
-        catch (ex) {
-          defer.reject(ex);
-          throw ex;
-        }
-      }
-      else {
-        if (is.Scene(options.scene)) {
-          global.scene = options.scene;
-        }
-        else {
-          defer.reject("invalid scene parameter in _r.launch");
-          throw new Error("invalid scene parameter in _r.launch");
-        }
-      }
-      defer.resolve();
+      });
     }
   }
-  else {
-    defer.resolve();
-  }
-  return defer.promise;
 }
 
-function _patch() : Q.Promise<null> {
-  if (options.patch) {
-    return patch(options.patch);
-  }
-  else {
-   return Q();
-  }
+function _patch() : Promise<null> {
+  return new Promise((resolve, reject) => {
+    if (options.patch) {
+      patch(options.patch).then((res) => {
+        resolve(res);
+      }, (err) => {
+        reject(err);
+      });
+    }
+    else {
+      resolve();
+    }
+  });
 }
 
 function _beforeFirstRender()  {

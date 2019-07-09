@@ -1,9 +1,6 @@
 import { global } from "./global.js";
-import { BABYLON } from "./BABYLON.js";
 import { createLibrary } from "./library.js";
 import { patch } from "./patch.js";
-import "../node_modules/q/q.js";
-declare const Q;
 
 export interface IDownloadAsyncOptions {
   loadingScreen? : boolean;
@@ -45,76 +42,86 @@ export function downloadScene(options : IDownloadSceneOptions) {
     fileName = options.scene.split('/').pop();
     assets = options.scene.replace(fileName, '');
   }
-  let promise = BABYLON.SceneLoader.LoadAssetContainerAsync(assets, fileName, global.scene, function(e) {
-    if (options.progress) {
-      options.progress(e);
-    }
-  }).then(function(assetContainer) {
-    // success
-    createLibrary(assets + fileName, assetContainer);
-    if (options.patch) {
-      return patch(options.patch).then(function() {
+  return new Promise((resolve, reject) => {
+    BABYLON.SceneLoader.LoadAssetContainerAsync(assets, fileName, global.scene, function(e) {
+      if (options.progress) {
+        options.progress(e);
+      }
+    }).then(function(assetContainer) {
+      // success
+      createLibrary(assets + fileName, assetContainer);
+      if (options.patch) {
+        try {
+          console.log("patching", options.patch);
+          patch(options.patch).then(function() {
+            if (options.addAllToScene !== false) {
+              assetContainer.addAllToScene();
+            }
+            if (options.ready) {
+              options.ready(assetContainer);
+            }
+            resolve(assetContainer);
+          });
+        }
+        catch (ex) {
+          reject(ex);
+        }
+      }
+      else {
         if (options.addAllToScene !== false) {
           assetContainer.addAllToScene();
         }
         if (options.ready) {
           options.ready(assetContainer);
         }
-      });
-    }
-    else {
-      if (options.addAllToScene !== false) {
-        assetContainer.addAllToScene();
+        resolve(assetContainer);
       }
-      if (options.ready) {
-        options.ready(assetContainer);
+    }, function(reason) {
+      // error
+      if (options.error) {
+        options.error(reason);
+        reject(reason);
       }
-    }
-  }, function(reason) {
-    // error
-    if (options.error) {
-      options.error(reason);
-    }
+    });
   });
-  return promise;
 }
 
 export function downloadTexture(options : IDownloadTextureOptions) {
-  let defer = Q.defer();
-  let assetsManager = new BABYLON.AssetsManager(global.scene);
-  let task = assetsManager.addTextureTask(options.name, options.url, options.noMipmap, options.invertY, options.samplingMode);
-  task.onSuccess = function(task) {
-    defer.resolve(task.texture);
-    if (options.ready) {
-      options.ready(task.texture);
-    }
-  };
-  task.onError = function(reason) {
-    defer.reject(reason);
-    if (options.error) {
-      options.error(reason);
-    }
-  };
-  assetsManager.load();
-  return defer.promise;
+  return new Promise((resolve, reject) => {
+    let assetsManager = new BABYLON.AssetsManager(global.scene);
+    let task = assetsManager.addTextureTask(options.name, options.url, options.noMipmap, options.invertY, options.samplingMode);
+    task.onSuccess = function(task) {
+      resolve(task.texture);
+      if (options.ready) {
+        options.ready(task.texture);
+      }
+    };
+    task.onError = function(reason) {
+      reject(reason);
+      if (options.error) {
+        options.error(reason);
+      }
+    };
+    assetsManager.load();
+  });
 }
 
 export function downloadCubeTexture(options : IDownloadCubeTextureOptions) {
-  let defer = Q.defer();
-  let assetsManager = new BABYLON.AssetsManager(global.scene);
-  let task = assetsManager.addTextureTask(options.name, options.url, options.extensions, options.files);
-  task.onSuccess = function(task) {
-    defer.resolve(task.texture);
-    if (options.ready) {
-      options.ready(task.texture);
-    }
-  };
-  task.onError = function(reason) {
-    defer.reject(reason);
-    if (options.error) {
-      options.error(reason);
-    }
-  };
-  assetsManager.load();
-  return defer.promise;
+  return new Promise((resolve, reject) => {
+    let assetsManager = new BABYLON.AssetsManager(global.scene);
+    let task = assetsManager.addCubeTextureTask(options.name, options.url, options.extensions, options.noMipmap, options.files);
+    task.onSuccess = function(task) {
+      resolve(task.texture);
+      if (options.ready) {
+        options.ready(task.texture);
+      }
+    };
+    task.onError = function(reason) {
+      reject(reason);
+      if (options.error) {
+        options.error(reason);
+      }
+    };
+    assetsManager.load();
+  });
 }

@@ -1,4 +1,3 @@
-import { BABYLON } from "../BABYLON.js";
 import { global } from "../global.js";
 import { data } from "../data.js";
 import { select } from "../select.js";

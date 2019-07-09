@@ -58,8 +58,6 @@
                 x : 40
             },
             material : function(context) {
-                console.log("context from sphere1 ", context);
-                console.log("2. Sphere1")
                 var material = new BABYLON.StandardMaterial("texture1", _r.scene);
                 _r.patch(material,
                     { wireframe : true }

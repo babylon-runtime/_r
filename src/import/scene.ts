@@ -1,10 +1,8 @@
-import { BABYLON } from "../BABYLON.js";
 import { global } from "../global.js";
 import { is } from "../is.js";
 import { extend } from "../util/extend.js";
 import { loadingScreen } from "../util/loadingScreen.js";
 import { patch } from "../patch.js";
-declare const Q;
 export interface ImportSceneOptions {
   loadingScreen? : boolean;
   ready? : Function;
@@ -21,7 +19,7 @@ let DEFAULTS = {
   addAllToScene : true
 };
 
-function importAssetContainerAsync(settings : ImportSceneOptions) : Q.Promise<BABYLON.AssetContainer> {
+function importAssetContainerAsync(settings : ImportSceneOptions) : Promise<BABYLON.AssetContainer> {
   let assets, fileName;
   if (settings.assets) {
     assets = settings.assets;
@@ -31,31 +29,31 @@ function importAssetContainerAsync(settings : ImportSceneOptions) : Q.Promise<BA
     fileName = settings.scene.split('/').pop();
     assets = settings.scene.replace(fileName, '');
   }
-  let defer = Q.defer();
-  BABYLON.SceneLoader.LoadAssetContainerAsync(assets, fileName, global.scene, function(e) {
-    if (settings.progress) {
-      settings.progress(e);
-    }
-  }).then(function(assetContainer) {
-    if (settings.patch) {
-      patch(settings.patch).done(() => {
-        defer.resolve(assetContainer);
-      });
-    }
-    else {
-      defer.resolve(assetContainer);
-    }
-  }, function(reason : any) {
-    if (settings.error) {
-      settings.error(reason);
-    }
-    defer.reject(reason);
-  });
-  return defer.promise;
+ return new Promise((resolve, reject) => {
+   BABYLON.SceneLoader.LoadAssetContainerAsync(assets, fileName, global.scene, function(e) {
+     if (settings.progress) {
+       settings.progress(e);
+     }
+   }).then(function(assetContainer) {
+     if (settings.patch) {
+       patch(settings.patch).done(() => {
+         resolve(assetContainer);
+       });
+     }
+     else {
+       resolve(assetContainer);
+     }
+   }, function(reason : any) {
+     if (settings.error) {
+       settings.error(reason);
+     }
+     reject(reason);
+   });
+ });
 }
 
 // see http://api.jquery.com/jquery.ajax/
-export function importScene(scene : String | ImportSceneOptions, settings? : ImportSceneOptions) : Q.Promise<BABYLON.AssetContainer> {
+export function importScene(scene : String | ImportSceneOptions, settings? : ImportSceneOptions) : Promise<BABYLON.AssetContainer> {
   let options = <ImportSceneOptions> {};
   if (is.String(scene)) {
     options.scene = <string> scene;
@@ -70,22 +68,26 @@ export function importScene(scene : String | ImportSceneOptions, settings? : Imp
   if (options.loadingScreen == true) {
     loadingScreen.show();
   }
-  return importAssetContainerAsync(options).then(function(assetContainer) {
-    if (settings.addAllToScene) {
-      assetContainer.addAllToScene();
-    }
-    if (settings.loadingScreen == true) {
-      loadingScreen.hide();
-    }
-    if (settings.ready) {
-      try {
-        settings.ready(assetContainer);
+  return new Promise((resolve, reject) => {
+    importAssetContainerAsync(options).then(function(assetContainer) {
+      if (settings.addAllToScene) {
+        assetContainer.addAllToScene();
       }
-      catch (e) {
-        console.error("_r -> error in import scene : ready() thrown an exception", e);
-        return Q.reject(e);
+      if (settings.loadingScreen == true) {
+        loadingScreen.hide();
       }
-      return assetContainer;
-    }
+      if (settings.ready) {
+        try {
+          settings.ready(assetContainer);
+        }
+        catch (e) {
+          console.error("_r -> error in import scene : ready() thrown an exception", e);
+          return reject(e);
+        }
+        resolve(assetContainer);
+      }
+    }, function(err) {
+      reject(err);
+    });
   });
 }

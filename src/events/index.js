@@ -28,8 +28,12 @@ export function one(event, handler) {
         e.one(this, event, handler);
     }
 }
-export function trigger(event, extraParameters) {
-    e.trigger(this, event, extraParameters);
+export function trigger(event) {
+    var extraParameters = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        extraParameters[_i - 1] = arguments[_i];
+    }
+    e.trigger.apply(e, [this, event].concat(extraParameters));
 }
 /**
  * Attach an event handler function for one or more e to the selected elements.
@@ -85,9 +89,13 @@ global.fn["off"] = function (events, handler) {
  * @param extraParameters Additional parameters to pass along to the event handler.
  * @returns {Elements}
  */
-global.fn["trigger"] = function (events, extraParameters) {
+global.fn["trigger"] = function (events) {
+    var extraParameters = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        extraParameters[_i - 1] = arguments[_i];
+    }
     this.each(function (item) {
-        e.trigger(item, events, extraParameters);
+        e.trigger.apply(e, [item, events].concat(extraParameters));
     });
 };
 //# sourceMappingURL=index.js.map

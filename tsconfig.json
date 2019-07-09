@@ -2,12 +2,15 @@
   "compilerOptions": {
     "module": "es6",
     "target": "es5",
-    "sourceMap": true
-  },
-  "exclude": [
-    "node_modules/**"
-  ],
-  "lib" : [
-      "ES2015.Promise"
-  ]
+    "sourceMap": true,
+    "types" : [
+      "babylonjs",
+      "q"
+    ],
+    "lib" : [
+      "dom",
+      "es2015",
+      "es2015.promise"
+    ]
+  }
 }

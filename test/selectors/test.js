@@ -81,7 +81,7 @@ describe("deep attribute", function() {
                     url : "https://www.babylonjs-playground.com/textures/grass.jpg"
                 })
             }
-        }).done(function() {
+        }).then(function() {
             var elements = _r.select("*:mesh[material.diffuseTexture.name=https://www.babylonjs-playground.com/textures/grass.jpg]");
             expect(elements.length == 1).to.be.true;
             expect(elements[0].name == "suzanne.000");

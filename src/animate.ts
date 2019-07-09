@@ -1,4 +1,3 @@
-import { BABYLON } from './BABYLON.js';
 import { is } from "./is.js";
 import { select } from "./select.js";
 import { extend } from "./util/extend.js";
@@ -8,6 +7,7 @@ import { global } from "./global.js";
 
 function getEasingFunction(easing: string): BABYLON.EasingFunction {
   let mode;
+  // rtec
   let func;
   if (easing.indexOf("easeInOut") != -1) {
     mode = BABYLON.EasingFunction.EASINGMODE_EASEINOUT;
@@ -179,7 +179,7 @@ function getAnimationsForElement(element : any, patch : any, options : IAnimatio
       if (options.easing) {
         animation.setEasingFunction(getEasingFunction(options.easing));
       }
-      element.animations.push(animation);
+      // element.animations.push(animation);
       animations.push(animation);
     }
   });
@@ -231,8 +231,12 @@ const defaultOptions = {
 
 function getOptions(options? : number | IAnimationOptions) {
   let _options : IAnimationOptions = {};
+  if (!options) {
+    options = 0.4;
+  }
   if (is.Number(options)) {
     _options.duration = <number> options;
+    _options.loop = false;
   }
   else {
     _options = <IAnimationOptions> options;
@@ -285,11 +289,11 @@ export function animate(elements : any, patch : any, options? : number | IAnimat
   return group;
 }
 
-global.fn["animate"] = function(options) {
-  return animate(this.toArray(), options);
+global.fn["animate"] = function(patch : any, options? : number | IAnimationOptions) {
+  return animate(this.toArray(), patch, options);
 };
 
-global.fn["fadeOut"] = function(options) {
+global.fn["fadeOut"] = function(options? : number | IAnimationOptions) {
   let _options  = getOptions(options);
   let group = new BABYLON.AnimationGroup("_r.animate.AnimationsGroup" + count++);
   this.each((item) => {
@@ -326,7 +330,7 @@ global.fn["fadeOut"] = function(options) {
   return group;
 };
 
-global.fn["fadeIn"] = function(options) {
+global.fn["fadeIn"] = function(options?) {
   let _options  = getOptions(options);
   let group = new BABYLON.AnimationGroup("_r.animate.AnimationsGroup" + count++);
   this.each((item) => {

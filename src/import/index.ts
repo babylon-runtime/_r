@@ -45,6 +45,7 @@ function _loadMedia(url : string, settings : any) {
 }
 
 // import is a reserved word
+/**
 export function _import(content : any, settings? : any) : Q.Promise<any> {
   if (is.String(content)) {
     if (isScene(content)) {
@@ -84,6 +85,7 @@ export function _import(content : any, settings? : any) : Q.Promise<any> {
     }
   }
 }
+ **/
 
 export namespace _import {
   export let scene = importScene;

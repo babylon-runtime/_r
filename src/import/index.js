@@ -1,5 +1,4 @@
 import { importScene } from "./scene.js";
-import { is } from "../is.js";
 var texturesExtensions = ["png", "jpg", "jpeg", "gif", "dds", "env", "tga"];
 var videosExtensions = ["mp4", "ogv", "webm"];
 var scenesExtensions = ["babylon", "gltf", "glb", "obj", "stl"];
@@ -35,38 +34,48 @@ function _loadMedia(url, settings) {
     }
 }
 // import is a reserved word
-export function _import(content, settings) {
-    if (is.String(content)) {
-        if (isScene(content)) {
-        }
-        else {
-            if (isTexture(content)) {
-            }
-            else {
-                if (isCube(content)) {
-                }
-            }
-        }
+/**
+export function _import(content : any, settings? : any) : Q.Promise<any> {
+  if (is.String(content)) {
+    if (isScene(content)) {
+
     }
     else {
-        if (content["scene"]) {
+      if (isTexture(content)) {
+
+      }
+      else {
+        if (isCube(content)) {
+
+        }
+      }
+    }
+  }
+  else {
+    if (content["scene"]) {
+
+    }
+    else {
+      if (content["url"]) {
+        if (isScene(content)) {
+
         }
         else {
-            if (content["url"]) {
-                if (isScene(content)) {
-                }
-                else {
-                    if (isTexture(content)) {
-                    }
-                    else {
-                        if (isCube(content)) {
-                        }
-                    }
-                }
+          if (isTexture(content)) {
+
+          }
+          else {
+            if (isCube(content)) {
+
             }
+          }
         }
+      }
     }
+  }
 }
+ **/
+export var _import;
 (function (_import) {
     _import.scene = importScene;
 })(_import || (_import = {}));

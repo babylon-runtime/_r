@@ -1,4 +1,3 @@
-import { BABYLON } from "../BABYLON.js";
 import { global } from "../global.js";
 import { data } from "../data.js";
 import { select } from "../select.js";
@@ -48,7 +47,7 @@ export function showNormals(selector? : string, size = 1, color = "red") {
 }
 
 export function hideNormals(selector? : string) {
-  if(selector) {
+  if (selector) {
     select(selector).each((item) => {
       if (is.Mesh(item)) {
         hideMeshNormals(item);

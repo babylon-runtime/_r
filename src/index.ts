@@ -14,6 +14,8 @@ import { color, color4 } from './util/color.js';
 import { animate } from "./animate.js";
 import { activateCamera } from "./activateCamera.js";
 import { show, hide } from "./show.hide/index.js";
+import { loadingScreen } from "./util/loadingScreen.js";
+import { router } from "./util/router.js";
 import "./patch.plugins/index.js";
 
 export default {
@@ -41,6 +43,7 @@ export default {
     set TRACE(value) {
         global.TRACE = value;
     },
+    activateCamera : activateCamera,
     launch : launch,
     ready : ready,
     start : start,
@@ -65,6 +68,8 @@ export default {
     activeCamera : activateCamera,
     fn : global.fn,
     queryString : queryString,
+    router : router,
     show : show,
-    hide : hide
+    hide : hide,
+    loadingScreen : loadingScreen
 };

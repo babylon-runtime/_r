@@ -1,7 +1,6 @@
-import { BABYLON } from '../BABYLON.js';
 import { is } from '../is.js';
 
-export function color(expr: any): BABYLON.Color3 {
+export function color(expr: any): BABYLON.Color3 | BABYLON.Color4 {
   if (expr instanceof BABYLON.Color3 || expr instanceof BABYLON.Color4) {
     return expr;
   }

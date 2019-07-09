@@ -30,8 +30,8 @@ export function one(event: string, handler: (...args: any[]) => void) {
     e.one(this, event, handler);
   }
 }
-export function trigger(event: string, extraParameters?: any) {
-  e.trigger(this, event, extraParameters);
+export function trigger(event: string, ...extraParameters: any[]) {
+  e.trigger(this, event, ...extraParameters);
 }
 
 /**
@@ -90,8 +90,8 @@ global.fn["off"] = function(events : string, handler? : (args : any) => void) {
  * @param extraParameters Additional parameters to pass along to the event handler.
  * @returns {Elements}
  */
-global.fn["trigger"] = function(events : string, extraParameters? : any) {
+global.fn["trigger"] = function(events : string, ...extraParameters : any[]) {
   this.each(function(item) {
-    e.trigger(item, events, extraParameters);
+    e.trigger(item, events, ...extraParameters);
   });
 };

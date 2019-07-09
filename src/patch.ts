@@ -212,6 +212,9 @@ export function patchElements(elements : Array<any>, _patch : any, context? : Ar
 export function patchElement(element, patch, context? : Array<any>) : any {
   let properties = Object.getOwnPropertyNames(patch);
   let index = 0;
+  if (!context) {
+    context = [ element ];
+  }
   function patchPropertyChain() : any {
     if (index === properties.length) {
       return;

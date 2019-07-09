@@ -1,4 +1,3 @@
-import { BABYLON } from "../BABYLON.js";
 import { global } from "../global.js";
 import { data } from "../data.js";
 import { trigger } from "./core.js";
@@ -48,7 +47,7 @@ export function oneMesh(mesh: BABYLON.Mesh, event: string, handler: (args: any) 
 
 export function offMesh(mesh: BABYLON.Mesh, event: string, handler?: (args: any) => void) {
   let events = data(mesh, '_r.e');
-  if (events[event]) {
+  if (events && events[event]) {
     if (handler) {
       events[event] = events[event].filter(function(_event) {
         if (_event.handler.toString() == handler.toString()) {
@@ -56,9 +55,10 @@ export function offMesh(mesh: BABYLON.Mesh, event: string, handler?: (args: any)
             let index = mesh.actionManager.actions.indexOf(_event.action);
             mesh.actionManager.actions.splice(index, 1);
           }
+          /** ??
           if (_event.listener) {
             mesh.removeEventListener(_event, _event.listener);
-          }
+          }**/
         }
         return _event.handler.toString() !== handler.toString();
       });

@@ -19,7 +19,7 @@ export function one(element: any, event: string, handler: (...args: any[]) => vo
   on(element, event, handler, false);
 }
 
-export function trigger(element: any, event: string, extraParameters?: any) {
+export function trigger(element: any, event: string, ...extraParameters: any[]) {
   let events = data(element, '_r.e');
   if (!events) {
     return;
@@ -28,7 +28,7 @@ export function trigger(element: any, event: string, extraParameters?: any) {
   if (is.Array(handlers)) {
     handlers.forEach(function(callback) {
       try {
-        callback.handler.call(element, extraParameters);
+        callback.handler.call(element, ...extraParameters);
         if (!callback.repeat) {
           off(element, event, callback.handler);
         }

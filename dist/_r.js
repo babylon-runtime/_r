@@ -1,12 +1,10 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('../node_modules/babylonjs/es6.js')) :
-  typeof define === 'function' && define.amd ? define(['../node_modules/babylonjs/es6.js'], factory) :
-  (global = global || self, global._r = factory(global.BABYLON));
-}(this, function (BABYLON) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  typeof define === 'function' && define.amd ? define(factory) :
+  (global = global || self, global._r = factory());
+}(this, function () { 'use strict';
 
-  console.log("babylon runtime v0.0.6")
-
-  // this will let us :
+  console.log("babylon runtime v0.0.7")
 
   var is;
   (function (is) {
@@ -43,6 +41,10 @@
           return x instanceof BABYLON.Scene;
       }
       is.Scene = Scene;
+      function TransformNode(x) {
+          return x instanceof BABYLON.TransformNode;
+      }
+      is.TransformNode = TransformNode;
       function Array(x) {
           return window['Array'].isArray(x);
       }
@@ -293,7 +295,11 @@
   function one(element, event, handler) {
       on(element, event, handler, false);
   }
-  function trigger(element, event, extraParameters) {
+  function trigger(element, event) {
+      var extraParameters = [];
+      for (var _i = 2; _i < arguments.length; _i++) {
+          extraParameters[_i - 2] = arguments[_i];
+      }
       var events = data(element, '_r.e');
       if (!events) {
           return;
@@ -301,8 +307,9 @@
       var handlers = events[event];
       if (is.Array(handlers)) {
           handlers.forEach(function (callback) {
+              var _a;
               try {
-                  callback.handler.call(element, extraParameters);
+                  (_a = callback.handler).call.apply(_a, [element].concat(extraParameters));
                   if (!callback.repeat) {
                       off(element, event, callback.handler);
                   }
@@ -328,6 +335,13 @@
           }
       }
   }
+
+  var e = /*#__PURE__*/Object.freeze({
+    on: on,
+    one: one,
+    trigger: trigger,
+    off: off
+  });
 
   function getQueryStringParameter(name, url) {
       if (!url) {
@@ -497,7 +511,10 @@
           if (item.indexOf(":multimaterial") !== -1) {
               type = "multimaterial";
           }
-          [":mesh", ":material", ":multimaterial", ":camera", ":light", ":texture"].forEach(function (type) {
+          if (item.indexOf(':transformNode') !== -1) {
+              type = "transformNode";
+          }
+          [":mesh", ":material", ":multimaterial", ":camera", ":light", ":texture", ":transformNode"].forEach(function (type) {
               item = item.replace(type, '');
           });
           // [isVisible][alpha!= 0.1]
@@ -631,6 +648,9 @@
           if (this.type == "camera") {
               return is.Camera(element);
           }
+          if (this.type == "transformNode") {
+              return is.TransformNode(element);
+          }
       };
       return Selector;
   }());
@@ -762,7 +782,6 @@
        */
       Elements.prototype.log = function (property) {
           this.each(function (item) {
-              console.log('yo', item);
               if (property) {
                   console.log(item[property]);
               }
@@ -910,6 +929,7 @@
           item = item.trim();
           var selector = new Selector(item);
           if (is.Scene(container) || is.AssetContainer(container)) {
+              container = container;
               switch (selector.type) {
                   case "material":
                       container.materials.forEach(function (material) {
@@ -955,6 +975,13 @@
                           }
                       });
                       break;
+                  case "transformNode":
+                      container.transformNodes.forEach(function (camera) {
+                          if (selector.matchFilters(camera)) {
+                              elements.add(camera);
+                          }
+                      });
+                      break;
                   case "all":
                       container.materials.forEach(function (material) {
                           if (selector.matchFilters(material)) {
@@ -981,9 +1008,15 @@
                               elements.add(camera);
                           }
                       });
+                      container.transformNodes.forEach(function (camera) {
+                          if (selector.matchFilters(camera)) {
+                              elements.add(camera);
+                          }
+                      });
               }
           }
           else {
+              container = container;
               container.each(function (element) {
                   if (selector.matchType(element) && selector.matchFilters(element)) {
                       elements.add(element);
@@ -1026,15 +1059,18 @@
           }
           elements = find(arg, global.scene);
           // elements could be in a library not attached to the scene
-          for (var lib in libraries) {
-              var selection = libraries[lib].select(arg);
-              selection.each(function (item) {
-                  // item could be in multiple libraries
-                  if (!elements.contains(item)) {
-                      elements.add(item);
-                  }
-              });
-          }
+          Object.getOwnPropertyNames(libraries).forEach(function (lib) {
+              // TODO : wtf ?
+              if (lib !== "length") {
+                  var selection = libraries[lib].select(arg);
+                  selection.each(function (item) {
+                      // item could be in multiple libraries
+                      if (!elements.contains(item)) {
+                          elements.add(item);
+                      }
+                  });
+              }
+          });
           if (global.TRACE === true && elements.length == 0) {
               console.warn('BABYLON.Runtime::no object(s) found for selector "' + arg + '"');
           }
@@ -1044,11 +1080,11 @@
       }
       var _loop_1 = function (plugin) {
           Elements.prototype[plugin] = function () {
+              var _a;
               var args = [];
               for (var _i = 0; _i < arguments.length; _i++) {
                   args[_i] = arguments[_i];
               }
-              var _a;
               return (_a = global.fn[plugin]).call.apply(_a, [elements].concat(args));
           };
       };
@@ -3191,6 +3227,9 @@
                               global.scene = result_1;
                           }
                           if (!isStarted) {
+                              window.addEventListener('resize', function () {
+                                  global.engine.resize();
+                              });
                               start();
                           }
                           if (global.TRACE) {
@@ -3348,6 +3387,9 @@
   function patchElement(element, patch, context) {
       var properties = Object.getOwnPropertyNames(patch);
       var index = 0;
+      if (!context) {
+          context = [element];
+      }
       function patchPropertyChain() {
           if (index === properties.length) {
               return;
@@ -3499,76 +3541,86 @@
           fileName = options.scene.split('/').pop();
           assets = options.scene.replace(fileName, '');
       }
-      var promise = BABYLON.SceneLoader.LoadAssetContainerAsync(assets, fileName, global.scene, function (e) {
-          if (options.progress) {
-              options.progress(e);
-          }
-      }).then(function (assetContainer) {
-          // success
-          createLibrary(assets + fileName, assetContainer);
-          if (options.patch) {
-              return patch(options.patch).then(function () {
+      return new Promise(function (resolve, reject) {
+          BABYLON.SceneLoader.LoadAssetContainerAsync(assets, fileName, global.scene, function (e) {
+              if (options.progress) {
+                  options.progress(e);
+              }
+          }).then(function (assetContainer) {
+              // success
+              createLibrary(assets + fileName, assetContainer);
+              if (options.patch) {
+                  try {
+                      console.log("patching", options.patch);
+                      patch(options.patch).then(function () {
+                          if (options.addAllToScene !== false) {
+                              assetContainer.addAllToScene();
+                          }
+                          if (options.ready) {
+                              options.ready(assetContainer);
+                          }
+                          resolve(assetContainer);
+                      });
+                  }
+                  catch (ex) {
+                      reject(ex);
+                  }
+              }
+              else {
                   if (options.addAllToScene !== false) {
                       assetContainer.addAllToScene();
                   }
                   if (options.ready) {
                       options.ready(assetContainer);
                   }
-              });
-          }
-          else {
-              if (options.addAllToScene !== false) {
-                  assetContainer.addAllToScene();
+                  resolve(assetContainer);
               }
-              if (options.ready) {
-                  options.ready(assetContainer);
+          }, function (reason) {
+              // error
+              if (options.error) {
+                  options.error(reason);
+                  reject(reason);
               }
-          }
-      }, function (reason) {
-          // error
-          if (options.error) {
-              options.error(reason);
-          }
+          });
       });
-      return promise;
   }
   function downloadTexture(options) {
-      var defer = Q.defer();
-      var assetsManager = new BABYLON.AssetsManager(global.scene);
-      var task = assetsManager.addTextureTask(options.name, options.url, options.noMipmap, options.invertY, options.samplingMode);
-      task.onSuccess = function (task) {
-          defer.resolve(task.texture);
-          if (options.ready) {
-              options.ready(task.texture);
-          }
-      };
-      task.onError = function (reason) {
-          defer.reject(reason);
-          if (options.error) {
-              options.error(reason);
-          }
-      };
-      assetsManager.load();
-      return defer.promise;
+      return new Promise(function (resolve, reject) {
+          var assetsManager = new BABYLON.AssetsManager(global.scene);
+          var task = assetsManager.addTextureTask(options.name, options.url, options.noMipmap, options.invertY, options.samplingMode);
+          task.onSuccess = function (task) {
+              resolve(task.texture);
+              if (options.ready) {
+                  options.ready(task.texture);
+              }
+          };
+          task.onError = function (reason) {
+              reject(reason);
+              if (options.error) {
+                  options.error(reason);
+              }
+          };
+          assetsManager.load();
+      });
   }
   function downloadCubeTexture(options) {
-      var defer = Q.defer();
-      var assetsManager = new BABYLON.AssetsManager(global.scene);
-      var task = assetsManager.addTextureTask(options.name, options.url, options.extensions, options.files);
-      task.onSuccess = function (task) {
-          defer.resolve(task.texture);
-          if (options.ready) {
-              options.ready(task.texture);
-          }
-      };
-      task.onError = function (reason) {
-          defer.reject(reason);
-          if (options.error) {
-              options.error(reason);
-          }
-      };
-      assetsManager.load();
-      return defer.promise;
+      return new Promise(function (resolve, reject) {
+          var assetsManager = new BABYLON.AssetsManager(global.scene);
+          var task = assetsManager.addCubeTextureTask(options.name, options.url, options.extensions, options.noMipmap, options.files);
+          task.onSuccess = function (task) {
+              resolve(task.texture);
+              if (options.ready) {
+                  options.ready(task.texture);
+              }
+          };
+          task.onError = function (reason) {
+              reject(reason);
+              if (options.error) {
+                  options.error(reason);
+              }
+          };
+          assetsManager.load();
+      });
   }
 
   var isReady = true;
@@ -3581,7 +3633,7 @@
       patch: null,
       ktx: false,
       enableOfflineSupport: false,
-      progressLoading: null,
+      progress: null,
       loadingScreen: null,
   };
   function launch(obj) {
@@ -3613,85 +3665,96 @@
       if (options.loadingScreen) {
           global.engine.loadingScreen = options.loadingScreen;
       }
-      // RESIZE
-      window.addEventListener('resize', function () {
-          global.engine.resize();
-      });
-      return _createScene().then(function () {
-          return _patch().then(function () {
-              _checkActiveCamera();
-              _beforeFirstRender();
-              start$1();
-              isReady = true;
-              callbacks.forEach(function (callback) {
-                  try {
-                      callback.call(global.scene);
-                  }
-                  catch (ex) {
-                      console.error(ex);
-                  }
+      return new Promise(function (resolve, reject) {
+          _createScene().then(function () {
+              _patch().then(function () {
+                  _checkActiveCamera();
+                  _beforeFirstRender();
+                  // RESIZE
+                  window.addEventListener('resize', function () {
+                      global.engine.resize();
+                  });
+                  start$1();
+                  isReady = true;
+                  callbacks.forEach(function (callback) {
+                      try {
+                          callback.call(global.scene);
+                      }
+                      catch (ex) {
+                          console.error(ex);
+                      }
+                  });
+                  callbacks.length = 0;
+                  resolve(global.scene);
               });
-              callbacks.length = 0;
+          }, function (err) {
+              reject(err);
           });
       });
   }
   function _createScene() {
-      var defer = Q.defer();
       if (options.scene) {
           if (is.String(options.scene)) {
               // scene is a filename
               if (options.assets) {
                   return downloadScene({
                       scene: options.scene,
-                      assets: options.assets
+                      assets: options.assets,
+                      progress: options.progress
                   });
               }
               else {
                   return downloadScene({
-                      scene: options.scene
+                      scene: options.scene,
+                      progress: options.progress
                   });
               }
           }
           else {
-              if (is.Function(options.scene)) {
-                  try {
-                      var result = eval("var canvas=_r.canvas; var engine = _r.engine; var scene=_r.scene; var createScene=" + options.scene + ';createScene()');
-                      if (BABYLON.Engine.LastCreatedEngine.scenes.length == 2) {
-                          BABYLON.Engine.LastCreatedEngine.scenes[0].dispose();
+              return new Promise(function (resolve, reject) {
+                  if (is.Function(options.scene)) {
+                      try {
+                          var result = eval("var canvas=_r.canvas; var engine = _r.engine; var scene=_r.scene; var createScene=" + options.scene + ';createScene()');
+                          if (BABYLON.Engine.LastCreatedEngine.scenes.length == 2) {
+                              BABYLON.Engine.LastCreatedEngine.scenes[0].dispose();
+                          }
+                          if (is.Scene(result)) {
+                              global.scene = result;
+                          }
+                          resolve();
                       }
-                      if (is.Scene(result)) {
-                          global.scene = result;
+                      catch (ex) {
+                          reject(ex);
+                          throw ex;
                       }
-                  }
-                  catch (ex) {
-                      defer.reject(ex);
-                      throw ex;
-                  }
-              }
-              else {
-                  if (is.Scene(options.scene)) {
-                      global.scene = options.scene;
                   }
                   else {
-                      defer.reject("invalid scene parameter in _r.launch");
-                      throw new Error("invalid scene parameter in _r.launch");
+                      if (is.Scene(options.scene)) {
+                          global.scene = options.scene;
+                          resolve();
+                      }
+                      else {
+                          reject("invalid scene parameter in _r.launch");
+                          throw new Error("invalid scene parameter in _r.launch");
+                      }
                   }
-              }
-              defer.resolve();
+              });
           }
       }
-      else {
-          defer.resolve();
-      }
-      return defer.promise;
   }
   function _patch() {
-      if (options.patch) {
-          return patch(options.patch);
-      }
-      else {
-          return Q();
-      }
+      return new Promise(function (resolve, reject) {
+          if (options.patch) {
+              patch(options.patch).then(function (res) {
+                  resolve(res);
+              }, function (err) {
+                  reject(err);
+              });
+          }
+          else {
+              resolve();
+          }
+      });
   }
   function _beforeFirstRender() {
       if (options.beforeFirstRender && is.Function(options.beforeFirstRender)) {
@@ -3744,6 +3807,7 @@
       'OnKeyDownTrigger',
       'OnKeyUpTrigger'
   ];
+  // see https://api.jquery.com/category/events/keyboard-events/
   function onKeyEvent(event, handler, repeat) {
       if (repeat === void 0) { repeat = true; }
       if (!global.scene.actionManager) {
@@ -3834,7 +3898,7 @@
   }
   function offMesh(mesh, event, handler) {
       var events = data(mesh, '_r.e');
-      if (events[event]) {
+      if (events && events[event]) {
           if (handler) {
               events[event] = events[event].filter(function (_event) {
                   if (_event.handler.toString() == handler.toString()) {
@@ -3842,9 +3906,10 @@
                           var index = mesh.actionManager.actions.indexOf(_event.action);
                           mesh.actionManager.actions.splice(index, 1);
                       }
+                      /** ??
                       if (_event.listener) {
-                          mesh.removeEventListener(_event, _event.listener);
-                      }
+                        mesh.removeEventListener(_event, _event.listener);
+                      }**/
                   }
                   return _event.handler.toString() !== handler.toString();
               });
@@ -3880,8 +3945,12 @@
           one(this, event, handler);
       }
   }
-  function trigger$1(event, extraParameters) {
-      trigger(this, event, extraParameters);
+  function trigger$1(event) {
+      var extraParameters = [];
+      for (var _i = 1; _i < arguments.length; _i++) {
+          extraParameters[_i - 1] = arguments[_i];
+      }
+      trigger.apply(e, [this, event].concat(extraParameters));
   }
   /**
    * Attach an event handler function for one or more e to the selected elements.
@@ -3937,9 +4006,13 @@
    * @param extraParameters Additional parameters to pass along to the event handler.
    * @returns {Elements}
    */
-  global.fn["trigger"] = function (events, extraParameters) {
+  global.fn["trigger"] = function (events) {
+      var extraParameters = [];
+      for (var _i = 1; _i < arguments.length; _i++) {
+          extraParameters[_i - 1] = arguments[_i];
+      }
       this.each(function (item) {
-          trigger(item, events, extraParameters);
+          trigger.apply(e, [item, events].concat(extraParameters));
       });
   };
 
@@ -4030,9 +4103,14 @@
           }
       }
   }
+  function color4(expr) {
+      var _color = color(expr);
+      return new BABYLON.Color4(_color.r, _color.g, _color.b, 1);
+  }
 
   function getEasingFunction(easing) {
       var mode;
+      // rtec
       var func;
       if (easing.indexOf("easeInOut") != -1) {
           mode = BABYLON.EasingFunction.EASINGMODE_EASEINOUT;
@@ -4203,7 +4281,7 @@
               if (options.easing) {
                   animation.setEasingFunction(getEasingFunction(options.easing));
               }
-              element.animations.push(animation);
+              // element.animations.push(animation);
               animations.push(animation);
           }
       });
@@ -4240,8 +4318,12 @@
   };
   function getOptions(options) {
       var _options = {};
+      if (!options) {
+          options = 0.4;
+      }
       if (is.Number(options)) {
           _options.duration = options;
+          _options.loop = false;
       }
       else {
           _options = options;
@@ -4290,8 +4372,8 @@
       }
       return group;
   }
-  global.fn["animate"] = function (options) {
-      return animate(this.toArray(), options);
+  global.fn["animate"] = function (patch, options) {
+      return animate(this.toArray(), patch, options);
   };
   global.fn["fadeOut"] = function (options) {
       var _options = getOptions(options);
@@ -4378,6 +4460,225 @@
       });
   };
 
+  // from https://doc.babylonjs.com/snippets/normals
+  function showMeshNormals(mesh, size, _color) {
+      hideMeshNormals(mesh);
+      var normals = mesh.getVerticesData(BABYLON.VertexBuffer.NormalKind);
+      var positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+      _color = color(_color);
+      size = size || 1;
+      var lines = [];
+      for (var i = 0; i < normals.length; i += 3) {
+          var v1 = BABYLON.Vector3.FromArray(positions, i);
+          var v2 = v1.add(BABYLON.Vector3.FromArray(normals, i).scaleInPlace(size));
+          lines.push([v1.add(mesh.position), v2.add(mesh.position)]);
+      }
+      var normalLines = BABYLON.MeshBuilder.CreateLineSystem("_r.normals." + mesh.uniqueId, { lines: lines }, global.scene);
+      normalLines.color = _color;
+      data(mesh, '_r.normals', normalLines);
+      return normalLines;
+  }
+  function hideMeshNormals(mesh) {
+      var normalLines = data(mesh, '_r.normals');
+      if (normalLines) {
+          normalLines.dispose();
+      }
+  }
+  function showNormals(selector, size, color) {
+      if (size === void 0) { size = 1; }
+      if (color === void 0) { color = "red"; }
+      if (selector) {
+          select(selector).each(function (item) {
+              if (is.Mesh(item)) {
+                  showMeshNormals(item, size, color);
+              }
+          });
+      }
+      else {
+          global.scene.meshes.forEach(function (mesh) {
+              showMeshNormals(mesh, size, color);
+          });
+      }
+  }
+  function hideNormals(selector) {
+      if (selector) {
+          select(selector).each(function (item) {
+              if (is.Mesh(item)) {
+                  hideMeshNormals(item);
+              }
+          });
+      }
+      else {
+          global.scene.meshes.forEach(function (mesh) {
+              hideMeshNormals(mesh);
+          });
+      }
+  }
+
+  function showMeshWireframe(mesh, epsilon, width, color) {
+      if (mesh.edgesRenderer == undefined) {
+          mesh.enableEdgesRendering(epsilon);
+          mesh.edgesColor = color;
+          mesh.edgesWidth = width;
+      }
+      else {
+          mesh.enableEdgesRendering(epsilon);
+          mesh.edgesColor = color;
+          mesh.edgesWidth = width;
+          mesh.edgesRenderer.isEnabled = true;
+      }
+  }
+  function hideMeshWireframe(mesh) {
+      if (mesh.edgesRenderer) {
+          mesh.edgesRenderer.isEnabled = false;
+      }
+  }
+  function showWireframe(selector, epsilon, width, _color) {
+      if (epsilon === void 0) { epsilon = 1; }
+      if (width === void 0) { width = 1; }
+      if (_color === void 0) { _color = new BABYLON.Color4(130 / 255, 230 / 255, 1, 0.85); }
+      if (selector) {
+          select(selector).each(function (item) {
+              if (is.Mesh(item)) {
+                  showMeshWireframe(item, epsilon, width, color(_color));
+              }
+          });
+      }
+      else {
+          global.scene.meshes.forEach(function (mesh) {
+              showMeshWireframe(mesh, epsilon, width, color(_color));
+          });
+      }
+  }
+  function hideWireframe(selector) {
+      if (selector) {
+          select(selector).each(function (item) {
+              if (is.Mesh(item)) {
+                  hideMeshWireframe(item);
+              }
+          });
+      }
+      else {
+          global.scene.meshes.forEach(function (mesh) {
+              hideMeshWireframe(mesh);
+          });
+      }
+  }
+
+  function show(params, selector) {
+      var split = params.split(',');
+      split.forEach(function (param) {
+          switch (param.trim()) {
+              case "normals":
+                  showNormals(selector);
+                  break;
+              case "wireframe":
+                  showWireframe(selector);
+                  break;
+              default:
+                  console.error(param + " is not supported by _r.show");
+          }
+      });
+  }
+  function hide(params, selector) {
+      var split = params.split(',');
+      split.forEach(function (param) {
+          switch (param.trim()) {
+              case "normals":
+                  hideNormals(selector);
+                  break;
+              case "wireframe":
+                  hideWireframe(selector);
+                  break;
+              default:
+                  console.error(param + " is not supported by _r.hide");
+          }
+      });
+  }
+  (function (show) {
+      show.normals = showNormals;
+      show.wireframe = showWireframe;
+  })(show || (show = {}));
+  (function (hide) {
+      hide.normals = hideNormals;
+      hide.wireframe = hideWireframe;
+  })(hide || (hide = {}));
+
+  var loadingScreen = /** @class */ (function () {
+      function loadingScreen() {
+      }
+      loadingScreen.show = function () {
+          global.engine.displayLoadingUI();
+      };
+      loadingScreen.hide = function () {
+          global.engine.hideLoadingUI();
+      };
+      Object.defineProperty(loadingScreen, "text", {
+          get: function () {
+              return global.engine.text;
+          },
+          set: function (value) {
+              global.engine.text = value;
+          },
+          enumerable: true,
+          configurable: true
+      });
+      Object.defineProperty(loadingScreen, "backgroundColor", {
+          get: function () {
+              return global.engine.loadingUIBackgroundColor;
+          },
+          set: function (value) {
+              global.engine.loadingUIBackgroundColor = value;
+          },
+          enumerable: true,
+          configurable: true
+      });
+      return loadingScreen;
+  }());
+
+  var router = {
+      hashChangedListener: [],
+      set: function (hash) {
+          window.removeEventListener("hashchange", hashChangeListener);
+          window.location.hash = hash;
+          this.trigger(hash);
+          window.addEventListener("hashchange", hashChangeListener);
+      },
+      get: function () {
+          if (window.location.hash.length > 1) {
+              return window.location.hash.substr(1);
+          }
+      },
+      on: function (event, handler, repeat) {
+          if (repeat === void 0) { repeat = true; }
+          if (is.Function(event)) {
+              this.hashChangedListener.push(event);
+          }
+          else {
+              on(this, event, handler, repeat);
+          }
+      },
+      off: function (event, handler) {
+          off(this, event, handler);
+      },
+      one: function (event, handler) {
+          one(this, event, handler);
+      },
+      trigger: function (event, extraParameters) {
+          if (!this.pause) {
+              this.hashChangedListener.forEach(function (listener) {
+                  listener(event);
+              });
+              trigger(this, event, extraParameters);
+          }
+      },
+      pause: false
+  };
+  function hashChangeListener(evt) {
+      router.trigger(router.get());
+  }
+  window.addEventListener("hashchange", hashChangeListener);
+
   patch.registerPlugin({
       test: function (element, source, property) {
           return element[property] instanceof BABYLON.Color3 || element[property] instanceof BABYLON.Color4;
@@ -4431,6 +4732,7 @@
       set TRACE(value) {
           global.TRACE = value;
       },
+      activateCamera: activateCamera,
       launch: launch,
       ready: ready,
       start: start,
@@ -4450,10 +4752,15 @@
       match: match,
       is: is,
       color: color,
+      color4: color4,
       animate: animate,
       activeCamera: activateCamera,
       fn: global.fn,
-      queryString: queryString
+      queryString: queryString,
+      router: router,
+      show: show,
+      hide: hide,
+      loadingScreen: loadingScreen
   };
 
   return index;

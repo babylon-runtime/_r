@@ -36,6 +36,7 @@ before(function(done) {
         patch : [
             {
                 "sphere1": {
+
                     material : function() {
                         new BABYLON.StandardMaterial("material.sphere1", _r.scene)
                     }
@@ -57,8 +58,9 @@ before(function(done) {
 });
 
 describe('Download without add to the scene', function() {
+    this.timeout(5000);
     it('download Scene', function(done) {
-        _r.downloadScene({
+      _r.downloadScene({
             scene : "https://models.babylonjs.com/CornellBox/cornellBox.babylon",
             patch : [
                 {
@@ -69,14 +71,19 @@ describe('Download without add to the scene', function() {
                     }
                 }
             ],
-            addAllToScene : false,
+            addAllToScene : true,
+            error : function(err) {
+                console.error(err)
+            },
             ready : function(assetContainer) {
-                _r.select(assetContainer).addToScene();
+                //_r.select(assetContainer).addToScene();
                 expect(_r.select("suzanne.000")[0].material.diffuseColor.r === 1).to.be.true;
                 expect(_r.select("suzanne.000")[0].material.diffuseColor.g === 1).to.be.true;
                 expect(_r.select("suzanne.000")[0].material.diffuseColor.b === 0).to.be.true;
                 done();
             }
-        })
+        }).then(function() {
+            console.log("yo ?");
+        });
     });
 });

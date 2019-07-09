@@ -1,4 +1,3 @@
-import { BABYLON } from "../BABYLON.js";
 import { global } from "../global.js";
 import { is } from "../is.js";
 import { extend } from "../util/extend.js";
@@ -18,27 +17,27 @@ function importAssetContainerAsync(settings) {
         fileName = settings.scene.split('/').pop();
         assets = settings.scene.replace(fileName, '');
     }
-    var defer = Q.defer();
-    BABYLON.SceneLoader.LoadAssetContainerAsync(assets, fileName, global.scene, function (e) {
-        if (settings.progress) {
-            settings.progress(e);
-        }
-    }).then(function (assetContainer) {
-        if (settings.patch) {
-            patch(settings.patch).done(function () {
-                defer.resolve(assetContainer);
-            });
-        }
-        else {
-            defer.resolve(assetContainer);
-        }
-    }, function (reason) {
-        if (settings.error) {
-            settings.error(reason);
-        }
-        defer.reject(reason);
+    return new Promise(function (resolve, reject) {
+        BABYLON.SceneLoader.LoadAssetContainerAsync(assets, fileName, global.scene, function (e) {
+            if (settings.progress) {
+                settings.progress(e);
+            }
+        }).then(function (assetContainer) {
+            if (settings.patch) {
+                patch(settings.patch).done(function () {
+                    resolve(assetContainer);
+                });
+            }
+            else {
+                resolve(assetContainer);
+            }
+        }, function (reason) {
+            if (settings.error) {
+                settings.error(reason);
+            }
+            reject(reason);
+        });
     });
-    return defer.promise;
 }
 // see http://api.jquery.com/jquery.ajax/
 export function importScene(scene, settings) {
@@ -56,23 +55,27 @@ export function importScene(scene, settings) {
     if (options.loadingScreen == true) {
         loadingScreen.show();
     }
-    return importAssetContainerAsync(options).then(function (assetContainer) {
-        if (settings.addAllToScene) {
-            assetContainer.addAllToScene();
-        }
-        if (settings.loadingScreen == true) {
-            loadingScreen.hide();
-        }
-        if (settings.ready) {
-            try {
-                settings.ready(assetContainer);
+    return new Promise(function (resolve, reject) {
+        importAssetContainerAsync(options).then(function (assetContainer) {
+            if (settings.addAllToScene) {
+                assetContainer.addAllToScene();
             }
-            catch (e) {
-                console.error("_r -> error in import scene : ready() thrown an exception", e);
-                return Q.reject(e);
+            if (settings.loadingScreen == true) {
+                loadingScreen.hide();
             }
-            return assetContainer;
-        }
+            if (settings.ready) {
+                try {
+                    settings.ready(assetContainer);
+                }
+                catch (e) {
+                    console.error("_r -> error in import scene : ready() thrown an exception", e);
+                    return reject(e);
+                }
+                resolve(assetContainer);
+            }
+        }, function (err) {
+            reject(err);
+        });
     });
 }
 //# sourceMappingURL=scene.js.map
