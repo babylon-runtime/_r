@@ -49,7 +49,7 @@ function hideMeshGizmo(mesh: BABYLON.Mesh) {
     let gizmo = select(mesh).data('runtime-gizmo');
     if (gizmo) {
         gizmo.dispose();
-        select(mesh).data('runtime-gizmo', undefined);
+        select(mesh).data('runtime-gizmo', null);
     }
 }
 
