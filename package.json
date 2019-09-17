@@ -10,7 +10,7 @@
     "build": "npm run lint && rollup -c && npm run test",
     "release": "npm run build && release-it --no-requireCleanWorkingDir",
     "lint": "tslint src/**/*.ts{,x}",
-    "test": "grunt",
+    "test": "rollup -c && grunt",
     "typescript": "rollup -c"
   },
   "repository": {
@@ -42,10 +42,11 @@
     "rollup-plugin-typescript2": "^0.17.2",
     "rollup-plugin-uglify": "^6.0.2",
     "tslint": "^5.12.1",
-    "typescript": "3.4.5"
-  },
-  "dependencies": {
+    "typescript": "3.4.5",
     "jsdoc-json": "^2.0.2",
     "tslib": "^1.10.0"
+  },
+  "dependencies": {
+
   }
 }
