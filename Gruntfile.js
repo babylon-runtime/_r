@@ -24,7 +24,7 @@ module.exports = function(grunt) {
                         src : [  'test/all-in-patch/test.js']
                     },
                 ]
-            },
+            },**/
             cornellBox : {
                 files : [
                     { src : [ 'test/patch/test.js'] }]
@@ -68,7 +68,7 @@ module.exports = function(grunt) {
                 files : [
                     { src : ['test/plugins/test.js']}
                 ]
-            },**/
+            },
             queryString : {
                 files : [
                     { src : ['test/queryString/test.js']}
