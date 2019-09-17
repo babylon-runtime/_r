@@ -1,0 +1,26 @@
+# Contributing to_r
+
+## Get the sources
+
+1. Fork [:information_source:](https://help.github.com/en/articles/fork-a-repo) the [babylon-runtime directory](https://github.com/babylon-runtime/_r) to your github account.
+2. Create a local repository 
+    > git clone _**your repository address**_
+3. Keep the local version up to date
+    > cd _r
+                                        
+    > git push origin master            
+                                                                                                                     
+    > git remote add upstream https://github.com/babylon-runtime/_r.git
+4. Install dependencies
+    > npm install
+5. Check if everything is ok
+    > npm run test
+
+## Dev and Debug
+
+## Build & Test
+
+## Pull-Request
+
+
+
