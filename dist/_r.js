@@ -4609,7 +4609,7 @@
       var gizmo = select(mesh).data('runtime-gizmo');
       if (gizmo) {
           gizmo.dispose();
-          select(mesh).data('runtime-gizmo', undefined);
+          select(mesh).data('runtime-gizmo', null);
       }
   }
   function showGizmo(selector, gizmoType, axis, _color) {
