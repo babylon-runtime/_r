@@ -46,7 +46,5 @@
     "jsdoc-json": "^2.0.2",
     "tslib": "^1.10.0"
   },
-  "dependencies": {
-
-  }
+  "dependencies": {}
 }

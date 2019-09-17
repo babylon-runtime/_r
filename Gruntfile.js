@@ -73,6 +73,11 @@ module.exports = function(grunt) {
                 files : [
                     { src : ['test/queryString/test.js']}
                 ]
+            },
+            data : {
+                files : [
+                    { src : ['test/data/test.js']}
+                ]
             }
 
         }
