@@ -256,7 +256,7 @@
           cache[element[expando]] = {};
       }
       if (key != null) {
-          if (value != null) {
+          if (value !== undefined) {
               cache[element[expando]][key] = value;
           }
           else {

@@ -1,0 +1,31 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Data</title>
+    <link href="../../node_modules/mocha/mocha.css" rel="stylesheet" />
+</head>
+<body>
+<div id="mocha"></div>
+
+<script src="../../node_modules/chai/chai.js"></script>
+<script src="../../node_modules/mocha/mocha.js"></script>
+<script>mocha.setup('bdd')</script>
+
+<script src="../../node_modules/babylonjs/babylon.js"></script>
+<script nomodule src="../../dist/_r.min.js"></script>
+<script nomodule src="test.js"></script>
+<script nomodule>
+    mocha.checkLeaks();
+    mocha.run();
+</script>
+
+<script type="module">
+    import {default as _r} from "../../src/index.js";
+    window._r = _r;
+    _r.TRACE = true;
+    import "./test.js";
+    mocha.checkLeaks();
+    mocha.run();
+</script>
+</body>
+</html>
