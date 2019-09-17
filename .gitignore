@@ -1,9 +1,9 @@
 package-lock.json
 ./.rpt2_cache
 .idea
-=======s
-# some file types
 
+# some file types
+src/**/*.js
 *.blend1
 *.blend2
 *.DS_Store
@@ -13,10 +13,8 @@ package-lock.json
 *.ffs_db
 
 # some specific files
-
 Thumbs.db
 scene.log
 
 # some specific folders
-
 node_modules/
