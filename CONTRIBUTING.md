@@ -2,13 +2,11 @@
 
 ## Get the sources
 
-1. Fork [:information_source:](https://help.github.com/en/articles/fork-a-repo) the [babylon-runtime directory](https://github.com/babylon-runtime/_r) to your github account.
+1. [Fork](https://help.github.com/en/articles/fork-a-repo)  the [babylon-runtime directory](https://github.com/babylon-runtime/_r) to your github account 
 2. Create a local repository 
-    > git clone _**your repository address**_
+    > git clone https://github.com/_**YOUR-USERNAME**_/_r
 3. Keep the local version up to date
-    > cd _r
-                                        
-    > git push origin master            
+    > cd _r        
                                                                                                                      
     > git remote add upstream https://github.com/babylon-runtime/_r.git
 4. Install dependencies
