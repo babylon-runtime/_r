@@ -4,7 +4,7 @@
 
 1. [Fork](https://help.github.com/en/articles/fork-a-repo)  the [babylon-runtime directory](https://github.com/babylon-runtime/_r) to your github account 
 2. Create a local repository 
-    > git clone https://github.com/_**YOUR-USERNAME**_/_r
+    > git clone https://github.com/YOUR-USERNAME/_r
 3. Keep the local version up to date
     > cd _r        
                                                                                                                      
