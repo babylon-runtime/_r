@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/babylon-runtime/_r.svg?branch=master)](https://travis-ci.com/babylon-runtime/_r)
+
 # Babylon Runtime
 
 ## Code less, Babylon more
