@@ -7,6 +7,7 @@
     "help": "docs"
   },
   "scripts": {
+    "preinstall": "npm install -g rollup",
     "build": "npm run lint && rollup -c && npm run test",
     "release": "npm run build && release-it --no-requireCleanWorkingDir",
     "lint": "tslint src/**/*.ts{,x}",
