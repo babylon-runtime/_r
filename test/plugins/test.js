@@ -39,6 +39,7 @@ before(function(done){
 });
 
 describe('plugin', function() {
+    this.timeout(10000);
     it("select plugin", function () {
         _r.fn.standardMaterial = function(options) {
             this.each(function(element){

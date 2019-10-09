@@ -9,6 +9,7 @@ let isReady = true;
 let callbacks = [];
 
 export interface IRuntimeLoading {
+  container? : string | HTMLElement;
   canvas?: string | HTMLCanvasElement;
   assets?: string;
   scene: Function | string;
@@ -22,6 +23,7 @@ export interface IRuntimeLoading {
 }
 
 let options : IRuntimeLoading = {
+  container : null,
   canvas : null,
   assets : null,
   scene : null,
@@ -39,6 +41,18 @@ export function launch(obj: IRuntimeLoading | string) : Promise<BABYLON.Scene> {
   // CANVAS
   if (options.canvas) {
     global.canvas = options.canvas;
+  }
+  if (options.container) {
+    if (is.String(options.container)) {
+      let parent = document.getElementById(<string> options.container);
+      parent.appendChild(global.canvas);
+    }
+    else {
+      (<HTMLElement> options.container).appendChild(global.canvas);
+    }
+  }
+  else {
+    document.body.appendChild(global.canvas);
   }
   // KTX
   if (options.ktx) {

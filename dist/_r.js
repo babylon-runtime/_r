@@ -182,7 +182,7 @@
                   _canvas.setAttribute('touch-action', 'none');
                   _canvas.style.width = "100%";
                   _canvas.style.height = "100%";
-                  document.body.appendChild(_canvas);
+                  return _canvas;
               }
               return _canvas;
           },
@@ -3626,6 +3626,7 @@
   var isReady = true;
   var callbacks = [];
   var options = {
+      container: null,
       canvas: null,
       assets: null,
       scene: null,
@@ -3642,6 +3643,18 @@
       // CANVAS
       if (options.canvas) {
           global.canvas = options.canvas;
+      }
+      if (options.container) {
+          if (is.String(options.container)) {
+              var parent_1 = document.getElementById(options.container);
+              parent_1.appendChild(global.canvas);
+          }
+          else {
+              options.container.appendChild(global.canvas);
+          }
+      }
+      else {
+          document.body.appendChild(global.canvas);
       }
       // KTX
       if (options.ktx) {

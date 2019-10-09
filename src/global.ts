@@ -16,7 +16,8 @@ export class global {
       _canvas.setAttribute('touch-action', 'none');
       _canvas.style.width = "100%";
       _canvas.style.height = "100%";
-      document.body.appendChild(_canvas);
+      return _canvas;
+
     }
     return _canvas;
   }
