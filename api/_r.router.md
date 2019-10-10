@@ -1,4 +1,4 @@
-_r.router is a helper for (hashchange)[https://developer.mozilla.org/en-US/docs/Web/API/Window/hashchange_event] events.
+_r.router is a helper for [hashchange](https://developer.mozilla.org/en-US/docs/Web/API/Window/hashchange_event) events.
 
 For example if you have a home url : 
 https://example.com/index.html
@@ -33,7 +33,7 @@ if(_r.router.get() !== "/") {
 
 For example in a ready function after scene is loaded :
 ```js
- _r.launch({
+_r.launch({
     scene : "https://models.babylonjs.com/CornellBox/cornellBox.babylon",
 });
 _r.ready(function() {
