@@ -116,12 +116,7 @@
       }
       is.Size = Size;
       function PatchFile(expr) {
-          if (typeof expr !== 'string') {
-              return false;
-          }
-          var split = expr.split('.');
-          var extension = split[split.length - 1].trim();
-          return extension == 'runtime' || extension == 'patch' || extension == 'js';
+          return FileWithExtension(expr, ["runtime", "patch", "js"]);
       }
       is.PatchFile = PatchFile;
       function Boolean(expr) {
@@ -162,6 +157,34 @@
           return x && typeof x["then"] == 'function';
       }
       is.Promise = Promise;
+      function FileWithExtension(file, ext) {
+          if (typeof file !== 'string') {
+              return false;
+          }
+          var split = file.split('.');
+          if (split.length === 1) {
+              return false;
+          }
+          var extension = split.pop().trim();
+          if (is.Array(ext)) {
+              ext = ext;
+              for (var i = 0; i < ext.length; i++) {
+                  var _ext = ext[i].trim();
+                  if (_ext === extension || _ext === ('.' + extension)) {
+                      return true;
+                  }
+              }
+              return false;
+          }
+          else {
+              return ext === extension || ext === ('.' + extension);
+          }
+      }
+      is.FileWithExtension = FileWithExtension;
+      function ImageFile(file) {
+          return FileWithExtension(file, ["jpg", "jpeg", "png", "gif"]);
+      }
+      is.ImageFile = ImageFile;
   })(is || (is = {}));
 
   var _scene, _engine, _canvas;

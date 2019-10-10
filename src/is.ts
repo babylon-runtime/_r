@@ -107,12 +107,7 @@ export module is {
   }
 
   export function PatchFile(expr: string) {
-    if (typeof expr !== 'string') {
-      return false;
-    }
-    var split = expr.split('.');
-    var extension = split[split.length - 1].trim();
-    return extension == 'runtime' || extension == 'patch' || extension == 'js';
+    return FileWithExtension(expr, ["runtime", "patch", "js"]);
   }
 
   export function Boolean(expr: any): boolean {
@@ -153,5 +148,33 @@ export module is {
 
   export function Promise(x: any) {
     return x && typeof x["then"] == 'function';
+  }
+
+  export function FileWithExtension(file : string, ext : string | string[]) {
+    if (typeof file !== 'string') {
+      return false;
+    }
+    let split = file.split('.');
+    if (split.length === 1) {
+      return false;
+    }
+    let extension = split.pop().trim();
+    if (is.Array(ext)) {
+      ext = <string[]> ext;
+      for (let i = 0; i < ext.length; i++) {
+        let _ext = ext[i].trim();
+        if (_ext === extension || _ext === ('.' + extension)) {
+          return true;
+        }
+      }
+      return false;
+    }
+    else {
+      return ext === extension || ext === ('.' + extension);
+    }
+  }
+
+  export function ImageFile(file : string) {
+    return FileWithExtension(file, ["jpg", "jpeg", "png", "gif"]);
   }
 }

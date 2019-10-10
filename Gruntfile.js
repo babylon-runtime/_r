@@ -78,8 +78,12 @@ module.exports = function(grunt) {
                 files : [
                     { src : ['test/data/test.js']}
                 ]
+            },
+            is : {
+                files : [
+                    { src : ['test/is/test.js']}
+                ]
             }
-
         }
     });
     // Default task(s).
