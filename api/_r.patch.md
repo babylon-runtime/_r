@@ -119,6 +119,30 @@ _r.select("plane").patch({
 });
 ```
 
-## Each property's function have a context in parameters
-For example a dynamic lightmap assigments :
+## Each property's function have parents as context in parameters
 
+In this example if there's 2 spheres in the scene, **sphere1** and **sphere2** 
+```js
+_r.patch([{
+    "sphere*" : {
+        material : function(mesh) {
+            return new BABYLON.StandardMaterial('material.' + mesh.name, _r.scene);
+        }
+    }
+}])
+```
+material's function will be called for each sphere, passing the current sphere in the function arguments (**mesh** in this example)
+
+Each ancestor is available in the function arguments. 
+```js
+_r.patch([{
+    "sphere1" : {
+        material :  {
+            diffuseTexture : function(material, mesh) {
+                return new BABYLON.Texture(mesh.name + '.' + material.name + '.png');
+            }   
+        }
+    }
+}])
+```
+The diffuseTexture function has 2 arguments, the first one for the parent (the material), and the second for the parent of the material (the mesh);
