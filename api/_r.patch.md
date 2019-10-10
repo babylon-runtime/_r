@@ -133,7 +133,7 @@ _r.patch([{
 ```
 material's function will be called for each sphere, passing the current sphere in the function arguments (**mesh** in this example)
 
-Each ancestor is available in the function arguments. 
+### Each ancestor is available in the function arguments. 
 ```js
 _r.patch([{
     "sphere1" : {
