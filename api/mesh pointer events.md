@@ -31,10 +31,7 @@ function handler(e) {
 }
 _r.select("*:mesh").on("OnPickTrigger", handler);
 ```
-Stop listening with **handler** :
+Stop listening with this **handler** function :
 ```js
-function handler(e) {
-    console.log(this.name + ' has be picked');
-}
 _r.select("*:mesh").off("OnPickTrigger", handler);
 ```
