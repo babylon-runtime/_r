@@ -70,4 +70,55 @@ _r.patch([
 
 ## Asynchronous operations in patches
 If you want to wait for an async. operation before executing the rest of the patch you can return a Promise :
+```js
+_r.select("plane").patch({
+    material : {
+        diffuseTexture : function() {
+            return new Promise(function(resolve, reject) {
+                var texture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/grass.jpg", _r.scene);
+                texture.onLoadObservable.add(function() {
+                    resolve(texture);
+                })
+            })
+        },
+        backFaceCulling: false   
+    }
+})
+```
+...And property backFaceCulling will be set to false after the texture is loaded.
+
+Note that in this case you could use _r.downloadTexture / _r.downloadCubeTexture since it returns Promise
+```js
+_r.select("plane").patch({
+    material : {
+        diffuseTexture : function() {
+            return _r.downloadTexture("https://www.babylonjs-playground.com/textures/grass.jpg"); 
+        },
+        backFaceCulling: false   
+    }
+})
+```
+or more directly
+```js
+_r.select("plane").patch({
+    material : {
+        diffuseTexture : _r.downloadTexture("https://www.babylonjs-playground.com/textures/grass.jpg"),
+        backFaceCulling: false   
+    }
+})
+```
+## Waiting for an asynchronous patch to complete
+```js
+_r.select("plane").patch({
+    material : {
+        diffuseTexture : _r.downloadTexture("https://www.babylonjs-playground.com/textures/grass.jpg"),
+        backFaceCulling: false   
+    }
+}).then(function() {
+    console.log("patch completed, texture is downloaded")
+});
+```
+
+## Each property's function have a context in parameters
+For example a dynamic lightmap assigments :
 
