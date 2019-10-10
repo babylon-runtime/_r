@@ -15,5 +15,5 @@ _r.launch(options)
         * ktx: boolean or Array<string>;
         * enableOfflineSupport: boolean;
         * progress: Function;
-        * loadingScreen: [custom loading screen](https://doc.babylonjs.com/how_to/creating_a_custom_loading_screen;
+        * loadingScreen: [custom loading screen](https://doc.babylonjs.com/how_to/creating_a_custom_loading_screen);
 
