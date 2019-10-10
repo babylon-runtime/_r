@@ -8,7 +8,7 @@ _r.select("*material").patch({
     }       
 })
 ```
-# All childs from a property that is an Array or a MultiMaterial
+# * property for all childs from a property that is an Array or a MultiMaterial
 
 ```js
 _r.patch([
