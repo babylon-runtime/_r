@@ -17,6 +17,8 @@ import { show, hide } from "./show.hide/index.js";
 import { loadingScreen } from "./util/loadingScreen.js";
 import { router } from "./util/router.js";
 import "./patch.plugins/index.js";
+import { extend } from "./util/extend.js";
+import { merge } from "./util/merge.js";
 
 export default {
     get canvas() {
@@ -71,5 +73,7 @@ export default {
     router : router,
     show : show,
     hide : hide,
-    loadingScreen : loadingScreen
+    loadingScreen : loadingScreen,
+    extend : extend,
+    merge : merge
 };
