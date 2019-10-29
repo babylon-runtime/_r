@@ -40,7 +40,23 @@ export function launch(obj: IRuntimeLoading | string) : Promise<BABYLON.Scene> {
   options = extend(options, obj);
   // CANVAS
   if (options.canvas) {
-    global.canvas = options.canvas;
+    if (is.String(options.canvas)) {
+      let element = document.getElementById(<string> options.canvas);
+      if (is.DOM.canvas(element)) {
+        global.canvas = element;
+      }
+      else {
+        console.error("_r.launch - " + options.canvas + "is not a valid HTMLCanvasElement");
+      }
+    }
+    else {
+      if (is.DOM.canvas(options.canvas)) {
+        global.canvas = options.canvas;
+      }
+      else {
+        console.error("_r.launch - canvas parameter should be a string or a HTMLCanvasElement");
+      }
+    }
   }
   if (options.container) {
     if (is.String(options.container)) {
@@ -76,6 +92,9 @@ export function launch(obj: IRuntimeLoading | string) : Promise<BABYLON.Scene> {
   if (options.loadingScreen) {
     global.engine.loadingScreen = options.loadingScreen;
   }
+  else {
+    console.log("no loading screen", global.engine.loadingScreen);
+  }
   return new Promise((resolve, reject) => {
     _createScene().then(() => {
       _patch().then(() => {
@@ -85,6 +104,7 @@ export function launch(obj: IRuntimeLoading | string) : Promise<BABYLON.Scene> {
         window.addEventListener('resize', function() {
           global.engine.resize();
         });
+        global.engine.resize();
         start();
         isReady = true;
         callbacks.forEach(function(callback) {
