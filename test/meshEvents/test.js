@@ -40,28 +40,18 @@ before(function(done){
 
 describe('plugin', function() {
     it("OnPickTrigger", function () {
-        _r.select("*:mesh").on("OnPickDownTrigger", function(e) {
-            console.log("OnPickDownTrigger", e);
+        var handler1 = 0;
+        _r.select("sphere1").on("OnPickDownTrigger", function(e) {
+            handler1 += 1;
         });
-        _r.select("*:mesh").on("OnPickUpTrigger", function(e) {
-            console.log("OnPickUpTrigger", e);
+        var handler2 = 0;
+        _r.select("sphere1").on("OnPickDownTrigger", function(e) {
+            handler2 += 1;
         });
-        _r.select("*:mesh").on("OnPickTrigger", function(e) {
-            console.log("OnPickTrigger", e);
-        });
-        _r.select("*:mesh").on("OnLeftPickTrigger", function(e) {
-            console.log("OnLeftPickTrigger", e);
-        });
-        _r.select("*:mesh").on("OnRightPickTrigger", function(e) {
-            console.log("OnRightPickTrigger", e);
-        });
-        _r.select("*:mesh").on("OnDoublePickTrigger", function(e) {
-            console.log("OnDoublePickTrigger", e);
-        });
-        _r.select("*:mesh").on("OnLongPressTrigger", function(e) {
-            console.log("OnLongPressTrigger", e);
-        });
-       expect(true).to.be.true;
+        _r.canvas.focus();
+        _r.canvas.dispatchEvent(new PointerEvent('pointerdown', { clientX : 947, clientY: 209 }));
+        expect(handler1 === 1).to.be.true;
+        expect(handler2 === 1).to.be.true;
     });
 });
 
