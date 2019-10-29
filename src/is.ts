@@ -135,6 +135,12 @@ export module is {
         expr && typeof expr === "object" && expr !== null && expr.nodeType === 1 && typeof expr.nodeName === "string"
     );
   }
+  DOM.canvas = function(expr : any) {
+    return expr instanceof HTMLCanvasElement;
+  };
+  DOM.div = function(expr : any) {
+    return expr instanceof HTMLDivElement;
+  };
 
   /**
    * Test for any Primitive
