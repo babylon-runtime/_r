@@ -92,9 +92,6 @@ export function launch(obj: IRuntimeLoading | string) : Promise<BABYLON.Scene> {
   if (options.loadingScreen) {
     global.engine.loadingScreen = options.loadingScreen;
   }
-  else {
-    console.log("no loading screen", global.engine.loadingScreen);
-  }
   return new Promise((resolve, reject) => {
     _createScene().then(() => {
       _patch().then(() => {
