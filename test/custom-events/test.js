@@ -148,3 +148,19 @@ describe("extra params", function() {
     });
 
 });
+
+describe("misc. ", function() {
+    it("multiple on, trigger once", function() {
+        var handler1 = 0;
+        _r.select('bloc.000').on("event2", function() {
+            handler1 += 1;
+        });
+        var handler2 = 0;
+        _r.select('bloc.000').on("event2", function() {
+            handler2 += 1;
+        });
+        _r.select("bloc.000").trigger("event2");
+        expect(handler1 === 1).to.be.true;
+        expect(handler2 === 1).to.be.true;
+    });
+})

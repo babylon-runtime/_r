@@ -143,6 +143,12 @@
               expr && typeof expr === "object" && expr !== null && expr.nodeType === 1 && typeof expr.nodeName === "string");
       }
       is.DOM = DOM;
+      DOM.canvas = function (expr) {
+          return expr instanceof HTMLCanvasElement;
+      };
+      DOM.div = function (expr) {
+          return expr instanceof HTMLDivElement;
+      };
       /**
        * Test for any Primitive
        * @param x
@@ -632,6 +638,7 @@
           });
           item = item.replace(regExpAttribute, '');
           // Here item only contains name selector i.e mesh.00*
+          item = item.replace(/\./g, "\\.");
           var exp = item.replace(/\*/g, '.*');
           var regExp = new RegExp('^' + exp + '$');
           filters.push(function (element) {
@@ -3665,7 +3672,23 @@
       options = extend(options, obj);
       // CANVAS
       if (options.canvas) {
-          global.canvas = options.canvas;
+          if (is.String(options.canvas)) {
+              var element = document.getElementById(options.canvas);
+              if (is.DOM.canvas(element)) {
+                  global.canvas = element;
+              }
+              else {
+                  console.error("_r.launch - " + options.canvas + "is not a valid HTMLCanvasElement");
+              }
+          }
+          else {
+              if (is.DOM.canvas(options.canvas)) {
+                  global.canvas = options.canvas;
+              }
+              else {
+                  console.error("_r.launch - canvas parameter should be a string or a HTMLCanvasElement");
+              }
+          }
       }
       if (options.container) {
           if (is.String(options.container)) {
@@ -3701,6 +3724,9 @@
       if (options.loadingScreen) {
           global.engine.loadingScreen = options.loadingScreen;
       }
+      else {
+          console.log("no loading screen", global.engine.loadingScreen);
+      }
       return new Promise(function (resolve, reject) {
           _createScene().then(function () {
               _patch().then(function () {
@@ -3710,6 +3736,7 @@
                   window.addEventListener('resize', function () {
                       global.engine.resize();
                   });
+                  global.engine.resize();
                   start$1();
                   isReady = true;
                   callbacks.forEach(function (callback) {
@@ -3914,7 +3941,9 @@
       var action = new BABYLON.ExecuteCodeAction(BABYLON.ActionManager[event], function (evt) {
           trigger(mesh, event, evt);
       });
-      mesh.actionManager.registerAction(action);
+      if (!mesh.actionManager.hasSpecificTrigger(BABYLON.ActionManager[event])) {
+          mesh.actionManager.registerAction(action);
+      }
       var events = data(mesh, "_r.e");
       if (!events) {
           data(mesh, "_r.e", []);
@@ -4831,6 +4860,17 @@
       }
   });
 
+  function merge(target, source, excluded) {
+      var others = {};
+      Object.getOwnPropertyNames(source).forEach(function (property) {
+          if (!excluded || excluded.indexOf(property) == -1) {
+              others[property] = source[property];
+          }
+      });
+      target = extend(target, others);
+      return target;
+  }
+
   var index = {
       get canvas() {
           return global.canvas;
@@ -4884,7 +4924,9 @@
       router: router,
       show: show,
       hide: hide,
-      loadingScreen: loadingScreen
+      loadingScreen: loadingScreen,
+      extend: extend,
+      merge: merge
   };
 
   return index;

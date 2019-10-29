@@ -6,7 +6,7 @@ A lightweight, *write less, do more*, [BabylonJS](https://www.babylonjs.com/) li
 
 <img src="https://raw.githubusercontent.com/babylon-runtime/_r.assets/master/_runtime-logo/exports/_runtime-logo_circleWhite_512.png" alt="babylon runtime logo" width="250" >
 
-
+Demo, API & Examples : [https://babylon-runtime.github.io/](https://babylon-runtime.github.io/)
 
 ## What is _r ?
 
@@ -30,10 +30,10 @@ _r.select("mesh1, mesh2").patch({
 ### Event Handling
 ```js
 _r.select("mesh1").on("OnPickTrigger", function() {
-    console.log(this.name + ' has be picked');
-}
+    console.log(this.name + ' has been picked');
+});
 ```
-### Animation$
+### Animations
 ```js
 _r.animate("camera1", {
     position : { x : 0, y : 0, z : 0 },
@@ -41,4 +41,4 @@ _r.animate("camera1", {
     fov : 0.1
 }, 2); // in seconds
 ```
-Demo & Examples : [https://babylon-runtime.github.io/](https://babylon-runtime.github.io/)
+ ##
