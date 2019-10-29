@@ -46,5 +46,15 @@ describe('_r.is', function() {
         expect(_r.is.FileWithExtension("test.jpg", "png")).to.be.false;
         expect(_r.is.FileWithExtension("test", "test")).to.be.false;
     });
+    it("dom", function() {
+        let div = document.createElement('div');
+        let canvas = document.createElement('canvas');
+        expect(_r.is.DOM.canvas(canvas)).to.be.true;
+        expect(_r.is.DOM.div(canvas)).to.be.false;
+        expect(_r.is.DOM.div(div)).to.be.true;
+        expect(_r.is.DOM.canvas(div)).to.be.false;
+
+
+    })
 });
 
