@@ -122,6 +122,7 @@ export class Selector {
     });
     item = item.replace(regExpAttribute, '');
     // Here item only contains name selector i.e mesh.00*
+    item = item.replace(/\./g, "\\.");
     let exp = item.replace(/\*/g, '.*');
     let regExp = new RegExp('^' + exp + '$');
     filters.push(function(element) {
