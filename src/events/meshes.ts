@@ -23,9 +23,9 @@ export function onMesh(mesh: BABYLON.Mesh, event: string, handler: (args: any) =
   let action = new BABYLON.ExecuteCodeAction(BABYLON.ActionManager[event], function(evt) {
     trigger(mesh, event, evt);
   });
-
-  mesh.actionManager.registerAction(action);
-
+  if (!mesh.actionManager.hasSpecificTrigger(BABYLON.ActionManager[event])) {
+    mesh.actionManager.registerAction(action);
+  }
   let events = data(mesh, "_r.e");
   if (!events) {
     data(mesh, "_r.e", []);
