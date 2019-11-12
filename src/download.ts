@@ -1,6 +1,7 @@
 import { global } from "./global.js";
 import { createLibrary } from "./library.js";
-import { patch } from "./patch.js";
+import { patch } from "./patch/patch.js";
+import { select } from "./select.js";
 
 export interface IDownloadAsyncOptions {
   loadingScreen? : boolean;
@@ -52,8 +53,7 @@ export function downloadScene(options : IDownloadSceneOptions) {
       createLibrary(assets + fileName, assetContainer);
       if (options.patch) {
         try {
-          console.log("patching", options.patch);
-          patch(options.patch).then(function() {
+          select(assetContainer).globalPatch(options.patch).then(function() {
             if (options.addAllToScene !== false) {
               assetContainer.addAllToScene();
             }

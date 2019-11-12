@@ -69,7 +69,7 @@ describe('plugin', function() {
             },
             resolve(element, source, property) {
                 element.material = new BABYLON.PBRMaterial("", _r.scene);
-                return _r.select(element.material).patch(source[property]);
+                _r.select(element.material).patch(source[property]);
             }
         });
         _r.select("sphere1, ground1").patch({
@@ -99,25 +99,25 @@ describe('plugin', function() {
                 return property === "pbr2";
             },
             resolve(element, source, property) {
-                var defer = Q.defer();
-                setTimeout(function() {
-                    element.material = new BABYLON.PBRMaterial("", _r.scene);
-                    _r.select(element.material).patch(source[property]).done(function() {
-                        defer.resolve()
-                    });
-                }, 1);
-                return defer.promise;
+                return new Promise(function(resolve) {
+                    setTimeout(function() {
+                        element.material = new BABYLON.PBRMaterial("", _r.scene);
+                        _r.select(element.material).patch(source[property]).then(function() {
+                            resolve()
+                        });
+                    }, 1);
+                })
             }
         });
         _r.select("sphere1").patch({
             pbr2 : {
                 microSurface : 0.96,
                 reflectionTexture : function() {
-                  var defer = Q.defer();
-                  var texture = new BABYLON.CubeTexture("https://www.babylonjs-playground.com/textures/environment.dds", _r.scene, null, false, null, function(){
-                      return defer.resolve(texture);
-                  }, null, null, true, null, true);
-                  return defer.promise;
+                  return new Promise(function(resolve) {
+                      var texture = new BABYLON.CubeTexture("https://www.babylonjs-playground.com/textures/environment.dds", _r.scene, null, false, null, function(){
+                          return resolve(texture);
+                      }, null, null, true, null, true);
+                  })
                 },
                 albedoColor : {
                     r : 0.01,
@@ -130,7 +130,7 @@ describe('plugin', function() {
                     b : 0.085
                 }
             }
-        }).done(function() {
+        }).then(function() {
             var material = _r.select("sphere1")[0].material;
             expect(material.albedoColor.r == 0.01).to.be.true;
             expect(material.reflectivityColor.r == 0.085).to.be.true;

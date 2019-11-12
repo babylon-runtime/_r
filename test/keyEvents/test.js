@@ -51,6 +51,7 @@ describe('one, on, trigger, off', function() {
        _r.canvas.focus();
        _r.canvas.dispatchEvent(new KeyboardEvent('keydown', {code:"NumpadAdd"}));
        _r.canvas.dispatchEvent(new KeyboardEvent('keydown', {code:"NumpadAdd"}));
+       console.log(count);
         expect(count == 1).to.be.true;
     });
     it('one keydown', function() {

@@ -1,7 +1,8 @@
+import { registerPlugin } from "../patchPlugin.js";
 import { patch, patchElements, patchElement } from "../patch.js";
-import { is } from "../is.js";
+import { is } from "../../is.js";
 
-patch.registerPlugin({
+registerPlugin({
   test(element, source, property) : boolean {
     return property.trim() === "*";
   },

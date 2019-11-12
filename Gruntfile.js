@@ -15,6 +15,12 @@ module.exports = function(grunt) {
                 ]
             },
             /**
+            meshEvents : {
+                files : [
+                    { src : ['test/meshEvents/test.js']}
+                ]
+            },
+
              allInPatch : {
                  proxies : {
                      'test/all-in-patch/' : '/base/'
@@ -59,6 +65,7 @@ module.exports = function(grunt) {
                     { src : [ 'test/download/test.js']}
                 ]
             },
+            /**
             keyEvents : {
                 files : [
                     { src : [ 'test/keyEvents/test.js']}
@@ -68,7 +75,7 @@ module.exports = function(grunt) {
                 files : [
                     { src : ['test/plugins/test.js']}
                 ]
-            },
+            },**/
             queryString : {
                 files : [
                     { src : ['test/queryString/test.js']}
@@ -82,6 +89,11 @@ module.exports = function(grunt) {
             is : {
                 files : [
                     { src : ['test/is/test.js']}
+                ]
+            },
+            patch : {
+                files : [
+                    { src : ['test/patch/test.js']}
                 ]
             }
         }

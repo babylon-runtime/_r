@@ -2,7 +2,7 @@ import { is } from "./is.js";
 import { select } from "./select.js";
 import { extend } from "./util/extend.js";
 import { color } from "./util/color.js";
-import { patch } from "./patch.js";
+import { patch } from "./patch/patch.js";
 import { global } from "./global.js";
 
 function getEasingFunction(easing: string): BABYLON.EasingFunction {
@@ -133,14 +133,14 @@ function getKeys(element, property, newValue, options) {
   switch (getAnimationType(element, property)) {
     case BABYLON.Animation.ANIMATIONTYPE_COLOR3:
       final = initial.clone();
-      patch(final, color(newValue));
+      select(final).patch(color(newValue));
       break;
     case BABYLON.Animation.ANIMATIONTYPE_FLOAT:
       final = newValue;
       break;
     case BABYLON.Animation.ANIMATIONTYPE_MATRIX:
       final = initial.clone();
-      patch(final, newValue);
+      select(final).patch(newValue);
       break;
     default:
       final = initial.clone();

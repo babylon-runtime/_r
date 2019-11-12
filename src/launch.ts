@@ -3,7 +3,7 @@ import { extend }  from "./util/extend.js";
 import { global } from "./global.js";
 import { activateCamera } from "./activateCamera.js";
 import { downloadScene } from "./download.js";
-import { patch } from "./patch.js";
+import { patch } from "./patch/patch.js";
 
 let isReady = true;
 let callbacks = [];

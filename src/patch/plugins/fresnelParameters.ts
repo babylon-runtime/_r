@@ -1,6 +1,6 @@
-import { patch } from "../patch.js";
+import { registerPlugin } from "../patchPlugin.js";
 
-patch.registerPlugin({
+registerPlugin({
   test(element, source, property) : boolean {
     return ["diffuseFresnelParameters", "opacityFresnelParameters", "emissiveFresnelParameters", "refractionFresnelParameters", "reflectionFresnelParameters"].indexOf(property) !== -1
       && !element.target[property];

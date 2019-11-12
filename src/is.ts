@@ -141,7 +141,9 @@ export module is {
   DOM.div = function(expr : any) {
     return expr instanceof HTMLDivElement;
   };
-
+  DOM.image = function(expr : any) {
+    return expr instanceof HTMLImageElement;
+  };
   /**
    * Test for any Primitive
    * @param x

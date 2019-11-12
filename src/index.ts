@@ -8,7 +8,7 @@ import { createLibrary, library } from "./library.js";
 import { select } from "./select.js";
 import { data } from "./data.js";
 import { on, off, one, trigger } from "./events/index.js";
-import { patch } from "./patch.js";
+import { patch } from "./patch/patch.js";
 import { match } from "./Elements.js";
 import { color, color4 } from './util/color.js';
 import { animate } from "./animate.js";
@@ -16,9 +16,9 @@ import { activateCamera } from "./activateCamera.js";
 import { show, hide } from "./show.hide/index.js";
 import { loadingScreen } from "./util/loadingScreen.js";
 import { router } from "./util/router.js";
-import "./patch.plugins/index.js";
 import { extend } from "./util/extend.js";
 import { merge } from "./util/merge.js";
+import { load } from "./load.js";
 
 export default {
     get canvas() {
@@ -75,5 +75,6 @@ export default {
     hide : hide,
     loadingScreen : loadingScreen,
     extend : extend,
-    merge : merge
+    merge : merge,
+    load : load
 };

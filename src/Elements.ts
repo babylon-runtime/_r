@@ -371,7 +371,7 @@ export function find(params : string, container : BABYLON.Scene | Elements | BAB
     }
     else {
       container = <Elements> container;
-      container.each(function(element) {
+      container.forEach(function(element) {
         if (selector.matchType(element) && selector.matchFilters(element)) {
           elements.add(element);
         }

@@ -44,7 +44,9 @@ before(function(done) {
             },
             {
                 "material.sphere1" : {
-                    diffuseTexture : _r.downloadTexture({ url : "https://www.babylonjs-playground.com/textures/grass.jpg" })
+                    diffuseTexture : function() {
+                        return _r.downloadTexture({ url : "https://www.babylonjs-playground.com/textures/grass.jpg" })
+                    }
                 }
             },
             {
@@ -66,7 +68,10 @@ describe('Download without add to the scene', function() {
                 {
                     "suzanne.000" : {
                         material : {
-                            diffuseColor : "yellow"
+                            diffuseColor : function() {
+                                console.log("yo ?")
+                                return _r.color("yellow");
+                            }
                         }
                     }
                 }
@@ -76,6 +81,7 @@ describe('Download without add to the scene', function() {
                 console.error(err)
             },
             ready : function(assetContainer) {
+                console.log("ready!")
                 //_r.select(assetContainer).addToScene();
                 expect(_r.select("suzanne.000")[0].material.diffuseColor.r === 1).to.be.true;
                 expect(_r.select("suzanne.000")[0].material.diffuseColor.g === 1).to.be.true;

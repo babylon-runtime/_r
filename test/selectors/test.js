@@ -73,19 +73,22 @@ describe("multiple attributes", function() {
     })
 });
 describe("deep attribute", function() {
+    this.timeout(10000);
     it("*:mesh[material.diffuseTexture.name=https://www.babylonjs-playground.com/textures/grass.jpg]", function(done) {
         _r.select("suzanne.000").patch({
             isVisible : true,
             material : {
-                diffuseTexture :_r.downloadTexture({
-                    url : "https://www.babylonjs-playground.com/textures/grass.jpg"
-                })
+                diffuseTexture : function() {
+                    return _r.downloadTexture({
+                        url : "https://www.babylonjs-playground.com/textures/grass.jpg"
+                    })
+                }
             }
         }).then(function() {
             var elements = _r.select("*:mesh[material.diffuseTexture.name=https://www.babylonjs-playground.com/textures/grass.jpg]");
             expect(elements.length == 1).to.be.true;
             expect(elements[0].name == "suzanne.000");
             done();
-        })
+        });
     })
 })
