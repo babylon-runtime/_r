@@ -5,3 +5,5 @@ import './execute.js';
 import './scene.js';
 import './data.js';
 import './events.js';
+import './nodeByName.js';
+import './patchParallel.js';

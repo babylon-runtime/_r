@@ -81,8 +81,24 @@ load.texture = function(image : string, patch? : any) {
   });
 };
 
-load.cubeTexture = function() {
-  console.error("load.cubeTexture = TODO");
+let cubeCounter = 0;
+load.cubeTexture = function(url : string, patch? : any) {
+  return new Promise((resolve, reject) => {
+    let assetsManager = new BABYLON.AssetsManager(global.scene);
+    let task = assetsManager.addCubeTextureTask('cubeTexture' + cubeCounter++, url);
+    task.onSuccess = function(task) {
+      if (patch) {
+        return select(task.texture).patch(patch);
+      }
+      else {
+        return task.texture;
+      }
+    };
+    task.onError = function(reason) {
+      reject(reason);
+    };
+    assetsManager.load();
+  });
 };
 
 load.patch = function(file : string) {

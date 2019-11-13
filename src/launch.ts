@@ -168,18 +168,14 @@ function _createScene() : Promise<any> {
 }
 
 function _patch() : Promise<null> {
-  return new Promise((resolve, reject) => {
-    if (options.patch) {
-      patch(options.patch).then((res) => {
-        resolve(res);
-      }, (err) => {
-        reject(err);
-      });
-    }
-    else {
+  if (options.patch) {
+    return patch(options.patch);
+  }
+  else {
+    return new Promise((resolve) => {
       resolve();
-    }
-  });
+    });
+  }
 }
 
 function _beforeFirstRender()  {

@@ -1233,6 +1233,140 @@
       return plugin;
   }
 
+  var assetsManager;
+  var counter = 0;
+  var tasks = [];
+  function load(resource) {
+      if (is.Array(resource)) {
+          var _resources = resource;
+          var promises_1 = [];
+          _resources.forEach(function (_resource) {
+              addTask(_resource);
+              promises_1.push(tasks[_resource]);
+          });
+          return Promise.all(promises_1);
+      }
+      else {
+          addTask(resource);
+          return tasks[resource];
+      }
+  }
+  function addTask(resource) {
+      if (is.ImageFile(resource)) {
+          if (!assetsManager) {
+              assetsManager = new BABYLON.AssetsManager(global.scene);
+          }
+          var task_1 = assetsManager.addImageTask('_r.preload.task' + counter++, resource);
+          tasks[resource] = new Promise(function (resolve, reject) {
+              task_1.onSuccess = function (task) {
+                  resolve(task.image);
+              };
+              task_1.onError = function (task, message, exception) {
+                  console.error(message, exception);
+                  reject(message);
+              };
+          });
+          assetsManager.load();
+      }
+      if (is.FileWithExtension(resource, ['babylon', 'gltf', 'glb'])) {
+          var fileName = resource.split('/').pop();
+          var root = resource.replace(fileName, '');
+          tasks[resource] = BABYLON.SceneLoader.LoadAssetContainerAsync(root, fileName, global.scene); // return a Promise
+      }
+  }
+  load.scene = function (scene, patch) {
+      if (patch) {
+          return load(scene).then(function (assetsContainer) {
+              var elements = select(assetsContainer);
+              if (!is.Array(patch)) {
+                  console.error('_r.load.scene - patch parameter must be an array');
+                  return assetsContainer;
+              }
+              else {
+                  patch.forEach(function (_patch) {
+                      var selector = _patch.getOwnPropertyNames(_patch)[0];
+                      var _elements = elements.select(selector);
+                      console.error("TODO !!");
+                  });
+              }
+          });
+      }
+      else {
+          return load(scene);
+      }
+  };
+  load.texture = function (image, patch) {
+      return load(image).then(function (img) {
+          var texture = new BABYLON.Texture(image, global.scene);
+          if (patch) {
+              return select(texture).patch(patch);
+          }
+          else {
+              return texture;
+          }
+      });
+  };
+  var cubeCounter = 0;
+  load.cubeTexture = function (url, patch) {
+      return new Promise(function (resolve, reject) {
+          var assetsManager = new BABYLON.AssetsManager(global.scene);
+          var task = assetsManager.addCubeTextureTask('cubeTexture' + cubeCounter++, url);
+          task.onSuccess = function (task) {
+              if (patch) {
+                  return select(task.texture).patch(patch);
+              }
+              else {
+                  return task.texture;
+              }
+          };
+          task.onError = function (reason) {
+              reject(reason);
+          };
+          assetsManager.load();
+      });
+  };
+  load.patch = function (file) {
+      return new Promise(function (resolve, reject) {
+          var xhr = new XMLHttpRequest();
+          xhr.open("get", file, true);
+          xhr.onload = function () {
+              var status = xhr.status;
+              if (status == 200) {
+                  var data = void 0;
+                  var isJson = false;
+                  try {
+                      data = JSON.parse(xhr.response);
+                      isJson = true;
+                  }
+                  catch (error) {
+                      isJson = false;
+                  }
+                  if (!isJson) {
+                      try {
+                          data = window["eval"].call(window, xhr.response);
+                      }
+                      catch (error) {
+                          var __patch = void 0;
+                          eval('var __patch = ' + xhr.response);
+                          data = __patch;
+                      }
+                  }
+                  if (data) {
+                      resolve(data);
+                  }
+                  else {
+                      console.warn('BABYLON.Runtime::no data found in ' + file);
+                      resolve([{}]);
+                  }
+              }
+              else {
+                  reject(status);
+              }
+          };
+          xhr.send();
+      });
+  };
+
   function recursive(elements, func, promisify) {
       if (promisify === void 0) { promisify = true; }
       var index = 0;
@@ -1275,25 +1409,32 @@
       }
   }
   function globalPatchItem(patch, elements) {
-      var selectors = Object.getOwnPropertyNames(patch);
-      var res = recursive(selectors, function (selector) {
-          if (elements) {
-              var plugin = getPlugin(elements, patch, selector);
-              if (plugin) {
-                  return plugin.resolve(elements, patch, selector);
+      if (is.PatchFile(patch)) {
+          return load.patch(patch).then(function (data) {
+              return globalPatch(data);
+          });
+      }
+      else {
+          var selectors = Object.getOwnPropertyNames(patch);
+          var res = recursive(selectors, function (selector) {
+              if (elements) {
+                  var plugin = getPlugin(elements, patch, selector);
+                  if (plugin) {
+                      return plugin.resolve(elements, patch, selector);
+                  }
               }
-          }
-          else {
-              var plugin = getPlugin(global.scene, patch, selector);
-              if (plugin) {
-                  return plugin.resolve(global.scene, patch, selector);
+              else {
+                  var plugin = getPlugin(global.scene, patch, selector);
+                  if (plugin) {
+                      return plugin.resolve(global.scene, patch, selector);
+                  }
               }
-          }
-          var _elements = find(selector, elements);
-          var test = patchElements(_elements.toArray(), patch[selector]);
-          return test; // patchElements(_elements, patch[selector]);
-      }, false);
-      return res;
+              var _elements = find(selector, elements);
+              var test = patchElements(_elements.toArray(), patch[selector]);
+              return test; // patchElements(_elements, patch[selector]);
+          }, false);
+          return res;
+      }
   }
   function globalPatch(patch, elements) {
       if (!elements) {
@@ -1503,10 +1644,10 @@
           try {
               var func = source[property];
               if (element) {
-                  func.apply(element, context);
+                  return func.apply(element, context);
               }
               else {
-                  func.apply(global.scene, context);
+                  return func.apply(global.scene, context);
               }
           }
           catch (ex) {
@@ -1605,129 +1746,54 @@
       }
   });
 
-  var assetsManager;
-  var counter = 0;
-  var tasks = [];
-  function load(resource) {
-      if (is.Array(resource)) {
-          var _resources = resource;
-          var promises_1 = [];
-          _resources.forEach(function (_resource) {
-              addTask(_resource);
-              promises_1.push(tasks[_resource]);
-          });
-          return Promise.all(promises_1);
-      }
-      else {
-          addTask(resource);
-          return tasks[resource];
-      }
-  }
-  function addTask(resource) {
-      if (is.ImageFile(resource)) {
-          if (!assetsManager) {
-              assetsManager = new BABYLON.AssetsManager(global.scene);
+  registerPlugin({
+      test: function (element, source, property) {
+          return false;
+          //return source[property] && is.String(source[property]) && (is.Material(element) || is.Texture(element));
+      },
+      resolve: function (element, source, property, context) {
+          /**
+          if (is.Material(element)) {
+            let elements = select(source[property] + ':material');
+            if (elements.length != 0) {
+              element = elements[0];
+            }
           }
-          var task_1 = assetsManager.addImageTask('_r.preload.task' + counter++, resource);
-          tasks[resource] = new Promise(function (resolve, reject) {
-              task_1.onSuccess = function (task) {
-                  resolve(task.image);
-              };
-              task_1.onError = function (task, message, exception) {
-                  console.error(message, exception);
-                  reject(message);
-              };
-          });
-          assetsManager.load();
+          if (is.Texture(element)) {
+            let elements = select(source[property] + ':texture');
+            if (elements.length != 0) {
+              element = elements[0];
+            }
+          }**/
       }
-      if (is.FileWithExtension(resource, ['babylon', 'gltf', 'glb'])) {
-          var fileName = resource.split('/').pop();
-          var root = resource.replace(fileName, '');
-          tasks[resource] = BABYLON.SceneLoader.LoadAssetContainerAsync(root, fileName, global.scene); // return a Promise
-      }
-  }
-  load.scene = function (scene, patch) {
-      if (patch) {
-          return load(scene).then(function (assetsContainer) {
-              var elements = select(assetsContainer);
-              if (!is.Array(patch)) {
-                  console.error('_r.load.scene - patch parameter must be an array');
-                  return assetsContainer;
-              }
-              else {
-                  patch.forEach(function (_patch) {
-                      var selector = _patch.getOwnPropertyNames(_patch)[0];
-                      var _elements = elements.select(selector);
-                      console.error("TODO !!");
-                  });
-              }
-          });
-      }
-      else {
-          return load(scene);
-      }
-  };
-  load.texture = function (image, patch) {
-      return load(image).then(function (img) {
-          var texture = new BABYLON.Texture(image, global.scene);
-          if (patch) {
-              return select(texture).patch(patch);
+  });
+
+  registerPlugin({
+      test: function (element, source, property) {
+          return property === "patchParallel";
+      },
+      resolve: function (element, source, property, context) {
+          var promises = [];
+          if (element) {
+              source[property].forEach(function (_patch) {
+                  promises.push(select(element).patch(_patch));
+              });
           }
           else {
-              return texture;
+              source[property].forEach(function (_patch) {
+                  promises.push(patch(_patch));
+              });
           }
-      });
-  };
-  load.cubeTexture = function () {
-      console.error("load.cubeTexture = TODO");
-  };
-  load.patch = function (file) {
-      return new Promise(function (resolve, reject) {
-          var xhr = new XMLHttpRequest();
-          xhr.open("get", file, true);
-          xhr.onload = function () {
-              var status = xhr.status;
-              if (status == 200) {
-                  var data = void 0;
-                  var isJson = false;
-                  try {
-                      data = JSON.parse(xhr.response);
-                      isJson = true;
-                  }
-                  catch (error) {
-                      isJson = false;
-                  }
-                  if (!isJson) {
-                      try {
-                          data = window["eval"].call(window, xhr.response);
-                      }
-                      catch (error) {
-                          var __patch = void 0;
-                          eval('var __patch = ' + xhr.response);
-                          data = __patch;
-                      }
-                  }
-                  if (data) {
-                      resolve(data);
-                  }
-                  else {
-                      console.warn('BABYLON.Runtime::no data found in ' + file);
-                      resolve([{}]);
-                  }
-              }
-              else {
-                  reject(status);
-              }
-          };
-          xhr.send();
-      });
-  };
+          return Promise.all(promises);
+      }
+  });
 
-  function patch(patch) {
+  function patch(patch, promisify) {
+      if (promisify === void 0) { promisify = true; }
       if (is.PatchFile(patch)) {
           return load.patch(patch).then(function (data) {
               var res = globalPatch(patch);
-              if (!is.Promise(res)) {
+              if (promisify && !is.Promise(res)) {
                   return new Promise(function (resolve) {
                       resolve(res);
                   });
@@ -1742,7 +1808,7 @@
               patch = [patch];
           }
           var res_1 = globalPatch(patch);
-          if (!is.Promise(res_1)) {
+          if (promisify && !is.Promise(res_1)) {
               return new Promise(function (resolve) {
                   resolve(res_1);
               });
@@ -1753,9 +1819,10 @@
       }
   }
   patch.registerPlugin = registerPlugin;
-  global.fn["patch"] = function (options) {
+  global.fn["patch"] = function (options, promisify) {
+      if (promisify === void 0) { promisify = true; }
       var res = patchElements(this.toArray(), options);
-      if (!is.Promise(res)) {
+      if (promisify && !is.Promise(res)) {
           return new Promise(function (resolve) {
               resolve(res);
           });
@@ -1764,9 +1831,10 @@
           return res;
       }
   };
-  global.fn["globalPatch"] = function (options) {
+  global.fn["globalPatch"] = function (options, promisify) {
+      if (promisify === void 0) { promisify = true; }
       var res = globalPatch(options, this.toArray());
-      if (!is.Promise(res)) {
+      if (promisify && !is.Promise(res)) {
           return new Promise(function (resolve) {
               resolve(res);
           });
@@ -1926,18 +1994,14 @@
       }
   }
   function _patch() {
-      return new Promise(function (resolve, reject) {
-          if (options.patch) {
-              patch(options.patch).then(function (res) {
-                  resolve(res);
-              }, function (err) {
-                  reject(err);
-              });
-          }
-          else {
+      if (options.patch) {
+          return patch(options.patch);
+      }
+      else {
+          return new Promise(function (resolve) {
               resolve();
-          }
-      });
+          });
+      }
   }
   function _beforeFirstRender() {
       if (options.beforeFirstRender && is.Function(options.beforeFirstRender)) {
@@ -2880,6 +2944,27 @@
       target = extend(target, others);
       return target;
   }
+
+  global.fn['freeze'] = function () {
+      this.forEach(function (item) {
+          if (is.Mesh(item)) {
+              item.freezeWorldMatrix();
+          }
+          if (is.Material(item)) {
+              item.freeze();
+          }
+      });
+  };
+  global.fn['unfreeze'] = function () {
+      this.forEach(function (item) {
+          if (is.Mesh(item)) {
+              item.unfreezeWorldMatrix();
+          }
+          if (is.Material(item)) {
+              item.unfreeze();
+          }
+      });
+  };
 
   var index = {
       get canvas() {

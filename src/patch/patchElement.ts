@@ -2,6 +2,7 @@ import * as plugins from './patchPlugin.js';
 import { is } from '../is.js';
 import { Elements, find } from "../Elements.js";
 import { global } from "../global.js";
+import { load } from "../load.js";
 
 export function recursive(elements, func, promisify = true) : any {
   let index = 0;
@@ -45,26 +46,33 @@ export function recursive(elements, func, promisify = true) : any {
 }
 
 function globalPatchItem(patch : any, elements? : any) {
-  let selectors = Object.getOwnPropertyNames(patch);
-  let res = recursive(selectors, (selector) => {
-    if (elements) {
-      let plugin = plugins.getPlugin(elements, patch, selector);
-      if (plugin) {
-        return plugin.resolve(elements, patch, selector);
+  if (is.PatchFile(patch)) {
+    return load.patch(patch).then((data) => {
+      return globalPatch(data);
+    });
+  }
+  else {
+    let selectors = Object.getOwnPropertyNames(patch);
+    let res = recursive(selectors, (selector) => {
+      if (elements) {
+        let plugin = plugins.getPlugin(elements, patch, selector);
+        if (plugin) {
+          return plugin.resolve(elements, patch, selector);
+        }
       }
-    }
-    else {
-      let plugin = plugins.getPlugin(global.scene, patch, selector);
-      if (plugin) {
-        return plugin.resolve(global.scene, patch, selector);
+      else {
+        let plugin = plugins.getPlugin(global.scene, patch, selector);
+        if (plugin) {
+          return plugin.resolve(global.scene, patch, selector);
+        }
       }
-    }
 
-    let _elements = find(selector, elements);
-    let test = patchElements(_elements.toArray(), patch[selector]);
-    return test; // patchElements(_elements, patch[selector]);
-  }, false);
-  return res;
+      let _elements = find(selector, elements);
+      let test = patchElements(_elements.toArray(), patch[selector]);
+      return test; // patchElements(_elements, patch[selector]);
+    }, false);
+    return res;
+  }
 }
 
 export function globalPatch(patch : any, elements? : any) {

@@ -19,6 +19,7 @@ import { router } from "./util/router.js";
 import { extend } from "./util/extend.js";
 import { merge } from "./util/merge.js";
 import { load } from "./load.js";
+import './util/freeze.js';
 
 export default {
     get canvas() {

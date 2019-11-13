@@ -17,7 +17,6 @@ export class global {
       _canvas.style.width = "100%";
       _canvas.style.height = "100%";
       return _canvas;
-
     }
     return _canvas;
   }

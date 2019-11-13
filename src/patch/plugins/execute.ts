@@ -10,10 +10,10 @@ registerPlugin({
     try {
       let func = source[property];
       if (element) {
-        func.apply(element, context);
+        return func.apply(element, context);
       }
       else {
-        func.apply(global.scene, context);
+        return func.apply(global.scene, context);
       }
     }
     catch (ex) {

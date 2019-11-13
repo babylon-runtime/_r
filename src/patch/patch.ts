@@ -7,11 +7,11 @@ import { registerPlugin } from "./patchPlugin.js";
 import "./plugins/index.js";
 import { load } from "../load.js";
 
-export function patch(patch : any) : Promise<any> {
+export function patch(patch : any, promisify = true) : Promise<any> {
   if (is.PatchFile(patch)) {
     return load.patch(patch).then((data) => {
       let res = globalPatch(patch);
-      if (!is.Promise(res)) {
+      if (promisify && !is.Promise(res)) {
         return new Promise((resolve) => {
           resolve(res);
         });
@@ -26,7 +26,7 @@ export function patch(patch : any) : Promise<any> {
       patch = [patch];
     }
     let res = globalPatch(patch);
-    if (!is.Promise(res)) {
+    if (promisify && !is.Promise(res)) {
       return new Promise((resolve) => {
         resolve(res);
       });
@@ -36,13 +36,14 @@ export function patch(patch : any) : Promise<any> {
     }
   }
 }
+
 patch.registerPlugin = registerPlugin;
 
 export { patchElement, patchElements };
 
-global.fn["patch"] = function(options) {
+global.fn["patch"] = function(options, promisify = true) {
   let res = patchElements(this.toArray(), options);
-  if (!is.Promise(res)) {
+  if (promisify && !is.Promise(res)) {
     return new Promise((resolve) => {
       resolve(res);
     });
@@ -52,9 +53,9 @@ global.fn["patch"] = function(options) {
   }
 };
 
-global.fn["globalPatch"] = function(options) {
+global.fn["globalPatch"] = function(options, promisify = true) {
   let res = globalPatch(options, this.toArray());
-  if (!is.Promise(res)) {
+  if (promisify && !is.Promise(res)) {
     return new Promise((resolve) => {
       resolve(res);
     });

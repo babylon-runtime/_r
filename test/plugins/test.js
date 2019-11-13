@@ -69,21 +69,23 @@ describe('plugin', function() {
             },
             resolve(element, source, property) {
                 element.material = new BABYLON.PBRMaterial("", _r.scene);
-                _r.select(element.material).patch(source[property]);
+                 return _r.select(element.material).patch(source[property], false);
             }
         });
-        _r.select("sphere1, ground1").patch({
-            pbr : {
-                microSurface : 0.96,
-                albedoColor : {
-                    r : 0.206,
-                    g : 0.94,
-                    b : 1
-                },
-                reflectivityColor : {
-                    r : 0.003,
-                    g : 0.003,
-                    b : 0.003
+        _r.patch({
+            "sphere1, ground1" : {
+                pbr : {
+                    microSurface : 0.96,
+                    albedoColor : {
+                        r : 0.206,
+                        g : 0.94,
+                        b : 1
+                    },
+                    reflectivityColor : {
+                        r : 0.003,
+                        g : 0.003,
+                        b : 0.003
+                    }
                 }
             }
         });
@@ -105,7 +107,7 @@ describe('plugin', function() {
                         _r.select(element.material).patch(source[property]).then(function() {
                             resolve()
                         });
-                    }, 1);
+                    }, 1000);
                 })
             }
         });
