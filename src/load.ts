@@ -68,7 +68,6 @@ load.scene = function(scene : string, patch? : any) {
 
 load.texture = function(image : string, patch? : any) {
   return load(image).then((img) => {
-    console.log("texture loaded", image);
     let texture = new BABYLON.Texture(image, global.scene);
     if (patch) {
       return select(texture).patch(patch);
