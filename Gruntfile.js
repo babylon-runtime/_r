@@ -95,6 +95,11 @@ module.exports = function(grunt) {
                 files : [
                     { src : ['test/patch/test.js']}
                 ]
+            },
+            patchParallel : {
+                files : [
+                    { src : ['test/patchParallel/test.js']}
+                ]
             }
         }
     });

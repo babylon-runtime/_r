@@ -1233,7 +1233,6 @@
       return plugin;
   }
 
-  var assetsManager;
   var counter = 0;
   var tasks = [];
   function load(resource) {
@@ -1253,9 +1252,7 @@
   }
   function addTask(resource) {
       if (is.ImageFile(resource)) {
-          if (!assetsManager) {
-              assetsManager = new BABYLON.AssetsManager(global.scene);
-          }
+          var assetsManager = new BABYLON.AssetsManager(global.scene);
           var task_1 = assetsManager.addImageTask('_r.preload.task' + counter++, resource);
           tasks[resource] = new Promise(function (resolve, reject) {
               task_1.onSuccess = function (task) {
@@ -1297,6 +1294,7 @@
   };
   load.texture = function (image, patch) {
       return load(image).then(function (img) {
+          console.log("texture loaded", image);
           var texture = new BABYLON.Texture(image, global.scene);
           if (patch) {
               return select(texture).patch(patch);
@@ -1304,6 +1302,8 @@
           else {
               return texture;
           }
+      }, function (err) {
+          console.error(err);
       });
   };
   var cubeCounter = 0;
@@ -1776,6 +1776,7 @@
           var promises = [];
           if (element) {
               source[property].forEach(function (_patch) {
+                  console.log("push", _patch);
                   promises.push(select(element).patch(_patch));
               });
           }
@@ -1784,6 +1785,7 @@
                   promises.push(patch(_patch));
               });
           }
+          console.log("call to patchParallel", promises);
           return Promise.all(promises);
       }
   });
