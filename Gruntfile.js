@@ -31,6 +31,12 @@ module.exports = function(grunt) {
                     },
                 ]
             },**/
+            /**
+             keyEvents : {
+                files : [
+                    { src : [ 'test/keyEvents/test.js']}
+                ]
+            },**/
             cornellBox : {
                 files : [
                     { src : [ 'test/patch/test.js'] }]
@@ -65,17 +71,11 @@ module.exports = function(grunt) {
                     { src : [ 'test/download/test.js']}
                 ]
             },
-            /**
-            keyEvents : {
-                files : [
-                    { src : [ 'test/keyEvents/test.js']}
-                ]
-            },
             plugins : {
                 files : [
                     { src : ['test/plugins/test.js']}
                 ]
-            },**/
+            },
             queryString : {
                 files : [
                     { src : ['test/queryString/test.js']}

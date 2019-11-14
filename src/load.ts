@@ -2,7 +2,6 @@ import { is } from "./is.js";
 import { global } from "./global.js";
 import { select } from "./select.js";
 
-let assetsManager;
 let counter = 0;
 let tasks = [];
 
@@ -24,9 +23,7 @@ export function load(resource : string | Array<string>) : Promise<any> {
 
 function addTask(resource : string) {
   if (is.ImageFile(<string> resource)) {
-    if (!assetsManager) {
-      assetsManager = new BABYLON.AssetsManager(global.scene);
-    }
+    let assetsManager = new BABYLON.AssetsManager(global.scene);
     let task = assetsManager.addImageTask('_r.preload.task' + counter++, resource);
     tasks[resource] = new Promise((resolve, reject) => {
       task.onSuccess = function(task) {
@@ -71,6 +68,7 @@ load.scene = function(scene : string, patch? : any) {
 
 load.texture = function(image : string, patch? : any) {
   return load(image).then((img) => {
+    console.log("texture loaded", image);
     let texture = new BABYLON.Texture(image, global.scene);
     if (patch) {
       return select(texture).patch(patch);
@@ -78,6 +76,8 @@ load.texture = function(image : string, patch? : any) {
     else {
       return texture;
     }
+  }, (err) => {
+    console.error(err);
   });
 };
 
