@@ -4,7 +4,7 @@
   (global = global || self, global._r = factory());
 }(this, function () { 'use strict';
 
-  console.log("babylon runtime v0.1.0-beta")
+  console.log("babylon runtime v0.1.0-beta-2")
 
   var is;
   (function (is) {
@@ -510,13 +510,13 @@
       if (global.scene.activeCamera) {
           global.scene.activeCamera.detachControl();
       }
-      global.scene.setActiveCameraByName(camera);
-      global.scene.activeCamera.attachControl(global.canvas);
-      if (global.TRACE) {
-          console.groupCollapsed("[_r] - activate camera " + global.scene.activeCamera.name);
-          console.log(global.scene.activeCamera);
-          console.groupEnd();
+      if (is.String(camera)) {
+          global.scene.setActiveCameraByName(camera);
       }
+      else {
+          global.scene.activeCamera = camera;
+      }
+      global.scene.activeCamera.attachControl(global.canvas);
   }
 
   var Selector = /** @class */ (function () {
@@ -1294,7 +1294,6 @@
   };
   load.texture = function (image, patch) {
       return load(image).then(function (img) {
-          console.log("texture loaded", image);
           var texture = new BABYLON.Texture(image, global.scene);
           if (patch) {
               return select(texture).patch(patch);
