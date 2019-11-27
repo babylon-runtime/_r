@@ -1144,27 +1144,37 @@
 
   var counter = 0;
   function load(resource, patch) {
-      if (is.ImageFile(resource)) {
-          return load.image(resource, patch);
+      if (is.Array(resource)) {
+          var promises_1 = [];
+          resource = resource;
+          resource.forEach(function (item) {
+              promises_1.push(load(item));
+          });
+          return Promise.all(promises_1);
       }
-      if (is.FileWithExtension(resource, ['babylon', 'gltf', 'glb'])) {
-          return load.assets(resource, patch);
-      }
-      if (is.FileWithExtension(resource, ['json'])) {
-          return load.JSON(resource);
-      }
-      if (is.FileWithExtension(resource, ['js'])) {
-          return load.script(resource);
-      }
-      /**
-      if (is.FileWithExtension(resource, ['css'])) {
-        return load.css(resource);
-      }**/
-      if (is.FileWithExtension(resource, ['patch'])) {
-          return load.patch(resource);
-      }
-      if (is.FileWithExtension(resource, ['txt'])) {
-          return load.ajax(resource);
+      else {
+          resource = resource;
+          if (is.ImageFile(resource)) {
+              return load.image(resource, patch);
+          }
+          if (is.FileWithExtension(resource, ['babylon', 'gltf', 'glb'])) {
+              return load.assets(resource, patch);
+          }
+          if (is.FileWithExtension(resource, ['json'])) {
+              return load.JSON(resource);
+          }
+          if (is.FileWithExtension(resource, ['js'])) {
+              return load.script(resource);
+          }
+          if (is.FileWithExtension(resource, ['css'])) {
+              return load.css(resource);
+          }
+          if (is.FileWithExtension(resource, ['patch'])) {
+              return load.patch(resource);
+          }
+          if (is.FileWithExtension(resource, ['txt'])) {
+              return load.ajax(resource);
+          }
       }
   }
   load.image = function (image, patch) {
@@ -1333,13 +1343,39 @@
               resolved = true;
           };
           // Fire the loading
-          document.head.appendChild(script);
+          document.body.appendChild(script);
       });
   };
-  /**
-  load.css = function(css : string) : Promise<null> {
-
-  };**/
+  load.css = function (file) {
+      return new Promise(function (resolve, reject) {
+          // Adding the script tag to the head as suggested before
+          var link = document.createElement('link');
+          link.type = 'text/css';
+          link.href = file;
+          link.rel = 'stylesheet';
+          // Then bind the event to the callback function.
+          // There are several events for cross browser compatibility.
+          var resolved = false;
+          link['onreadystatechange'] = function () {
+              if (this.readyState === 'complete') {
+                  if (resolved) {
+                      return;
+                  }
+                  resolve();
+                  resolved = true;
+              }
+          };
+          link.onload = function () {
+              if (resolved) {
+                  return;
+              }
+              resolve();
+              resolved = true;
+          };
+          // Fire the loading
+          document.head.appendChild(link);
+      });
+  };
 
   function recursive(elements, func, promisify) {
       if (promisify === void 0) { promisify = true; }

@@ -61,7 +61,32 @@ describe('Download without add to the scene', function() {
             _r.load("https://models.babylonjs.com/CornellBox/cornellBox.babylon").then(function (assets) {
                 expect(_r.is.AssetContainer(assets)).to.be.true;
                 done();
-            })
+            });
+        });
+    });
+    it('array of resources', function(done) {
+        _r.load(["https://www.babylonjs-playground.com/textures/grass.jpg", "https://models.babylonjs.com/CornellBox/cornellBox.babylon"]).then(function(result) {
+            expect(_r.is.DOM.image(result[0])).to.be.true;
+            expect(_r.is.AssetContainer(result[1])).to.be.true;
+            done();
+        })
+    });
+    it('load css', function(done){
+        _r.load('style.css').then(function() {
+            expect(getComputedStyle(document.body).getPropertyValue('background-color') === 'rgb(128, 128, 128)').to.be.true;
+            done();
+        });
+    });
+    it('load json', function(done) {
+        _r.load("data.json").then(function(data) {
+            expect(data.hello === "world").to.be.true;
+            done();
+        })
+    });
+    it('load js', function(done) {
+        _r.load("app.js").then(function() {
+            expect(_r.select("ground1").attr('material')).to.be.instanceOf(BABYLON.StandardMaterial);
+            done();
         });
     });
 });

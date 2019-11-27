@@ -4,28 +4,38 @@ import { select } from "./select.js";
 
 let counter = 0;
 
-export function load(resource : string, patch? : any) : Promise<any> {
-  if (is.ImageFile(<string> resource)) {
-    return load.image(resource, patch);
+export function load(resource : string | Array<string>, patch? : any) : Promise<any> {
+  if (is.Array(resource)) {
+    let promises = [];
+    resource = resource as Array<string>;
+    resource.forEach((item) => {
+      promises.push(load(item));
+    });
+    return Promise.all(promises);
   }
-  if (is.FileWithExtension(resource, ['babylon', 'gltf', 'glb'])) {
-    return load.assets(resource, patch);
-  }
-  if (is.FileWithExtension(resource, ['json'])) {
-    return load.JSON(resource);
-  }
-  if (is.FileWithExtension(resource, ['js'])) {
-    return load.script(resource);
-  }
-  /**
-  if (is.FileWithExtension(resource, ['css'])) {
-    return load.css(resource);
-  }**/
-  if (is.FileWithExtension(resource, ['patch'])) {
-    return load.patch(resource);
-  }
-  if (is.FileWithExtension(resource, ['txt'])) {
-    return load.ajax(resource);
+  else {
+    resource = resource as string;
+    if (is.ImageFile(resource)) {
+      return load.image(resource, patch);
+    }
+    if (is.FileWithExtension(resource, ['babylon', 'gltf', 'glb'])) {
+      return load.assets(resource, patch);
+    }
+    if (is.FileWithExtension(resource, ['json'])) {
+      return load.JSON(resource);
+    }
+    if (is.FileWithExtension(resource, ['js'])) {
+      return load.script(resource);
+    }
+     if (is.FileWithExtension(resource, ['css'])) {
+      return load.css(resource);
+    }
+    if (is.FileWithExtension(resource, ['patch'])) {
+      return load.patch(resource);
+    }
+    if (is.FileWithExtension(resource, ['txt'])) {
+      return load.ajax(resource);
+    }
   }
 }
 
@@ -203,11 +213,38 @@ load.script = function(file : string) : Promise<null> {
       resolved = true;
     };
     // Fire the loading
-    document.head.appendChild(script);
+    document.body.appendChild(script);
   });
 };
 
-/**
-load.css = function(css : string) : Promise<null> {
+load.css = function(file : string) : Promise<null> {
+  return new Promise((resolve, reject) => {
+    // Adding the script tag to the head as suggested before
+    let link = document.createElement('link');
+    link.type = 'text/css';
+    link.href = file;
+    link.rel = 'stylesheet';
 
-};**/
+    // Then bind the event to the callback function.
+    // There are several events for cross browser compatibility.
+    let resolved = false;
+    link['onreadystatechange'] = function() {
+      if (this.readyState === 'complete') {
+        if (resolved) {
+          return;
+        }
+        resolve();
+        resolved = true;
+      }
+    };
+    link.onload = function() {
+      if (resolved) {
+        return;
+      }
+      resolve();
+      resolved = true;
+    };
+    // Fire the loading
+    document.head.appendChild(link);
+  });
+};

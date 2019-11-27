@@ -1,0 +1,1 @@
+_r.select("ground1").attr('material', new BABYLON.StandardMaterial("ground1.material", _r.scene));

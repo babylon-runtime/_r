@@ -86,7 +86,15 @@ module.exports = function(grunt) {
                 ]
             },
             load : {
+                proxies : {
+                    '/' : '/base/test/load/'
+                },
                 files : [
+                    {
+                        src : [ 'test/load/*.json', 'test/load/*.css', 'test/load/app.js' ],
+                        included : false,
+                        served : true
+                    },
                     { src : ['test/load/test.js']}
                 ]
             },

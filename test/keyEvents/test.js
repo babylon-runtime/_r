@@ -4,7 +4,7 @@ before(function(done) {
     _r.launch({
         scene : function() {
             // This creates a basic Babylon Scene object (non-mesh)
-            var scene = new BABYLON.Scene(engine);
+            var scene = new BABYLON.Scene(_r.engine);
 
             // This creates and positions a free camera (non-mesh)
             var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
@@ -42,6 +42,7 @@ describe('one, on, trigger, off', function() {
 
         var count = 0;
         var handler = function(e) {
+            console.log("call to handler")
             count++;
             if(e.sourceEvent.code === "NumpadAdd") {
                 _r.off("OnKeyDownTrigger", handler);
