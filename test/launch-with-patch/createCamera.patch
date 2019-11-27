@@ -2,7 +2,7 @@
 [
     {
         "exec" : function() {
-            new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1.6, 0), scene);
+            new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1.6, 0), _r.scene);
         }
     }
 ]

@@ -70,7 +70,21 @@ module.exports = function(grunt) {
                     { src : [ 'test/keyEvents/test.js']}
                 ]
             },**/
-            /** LAUNCH WITH PATCH **/
+            launchWithPatch : {
+                proxies : {
+                    '/' : '/base/test/launch-with-patch/'
+                },
+                files : [
+                    {
+                        src : [ 'test/launch-with-patch/*.patch' ],
+                        included : false,
+                        served : true
+                    },
+                    {
+                        src : [  'test/launch-with-patch/test.js']
+                    },
+                ]
+            },
             load : {
                 files : [
                     { src : ['test/load/test.js']}

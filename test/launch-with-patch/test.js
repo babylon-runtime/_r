@@ -5,12 +5,11 @@ describe('Launch with patch', function() {
         _r.launch({
             scene : function() {
                 // No activeCamera
-                var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+                var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), _r.scene);
                 light.intensity = 0.7;
-                var sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
+                var sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, _r.scene);
                 // sphere.position.y = 1;
-                var ground = BABYLON.Mesh.CreateGround("ground1", 6, 6, 2, scene);
-                return scene;
+                var ground = BABYLON.Mesh.CreateGround("ground1", 6, 6, 2, _r.scene);
             },
             patch : [
                 "activeCamera.patch",
