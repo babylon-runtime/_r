@@ -95,7 +95,7 @@ module.exports = function(grunt) {
                         included : false,
                         served : true
                     },
-                    { src : ['test/load/test.js']}
+                    { src : [ 'test/load/test.js' ]}
                 ]
             },
             /** LOADING SCREEN **/

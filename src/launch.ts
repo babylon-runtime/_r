@@ -22,6 +22,7 @@ export interface IRuntimeLoading {
   enableOfflineSupport?: boolean;
   progress?: Function;
   loadingScreen?: any;
+  load : string | Array<string>;
 }
 
 let options : IRuntimeLoading = {
@@ -35,6 +36,7 @@ let options : IRuntimeLoading = {
   enableOfflineSupport : false,
   progress: null,
   loadingScreen: null,
+  load : null
 };
 
 export function launch(obj: IRuntimeLoading | string) : Promise<BABYLON.Scene> {
@@ -72,7 +74,7 @@ export function launch(obj: IRuntimeLoading | string) : Promise<BABYLON.Scene> {
   else {
     document.body.appendChild(global.canvas);
   }
-  loadingScreen.isVisible = true;
+
   // KTX
   if (options.ktx) {
     if (is.Array(options.ktx)) {
@@ -95,29 +97,32 @@ export function launch(obj: IRuntimeLoading | string) : Promise<BABYLON.Scene> {
   if (options.loadingScreen) {
     global.engine.loadingScreen = options.loadingScreen;
   }
+  loadingScreen.isVisible = true;
   return new Promise((resolve, reject) => {
     _createScene().then(() => {
-      _patch().then(() => {
-        _checkActiveCamera();
-        _beforeFirstRender();
-        // RESIZE
-        window.addEventListener('resize', function() {
+      _load().then(() => {
+        _patch().then(() => {
+          _checkActiveCamera();
+          _beforeFirstRender();
+          // RESIZE
+          window.addEventListener('resize', function() {
+            global.engine.resize();
+          });
           global.engine.resize();
+          start();
+          isReady = true;
+          loadingScreen.isVisible = false;
+          callbacks.forEach(function(callback) {
+            try {
+              callback.call(global.scene);
+            }
+            catch (ex) {
+              console.error(ex);
+            }
+          });
+          callbacks.length = 0;
+          resolve(global.scene);
         });
-        global.engine.resize();
-        start();
-        isReady = true;
-        loadingScreen.isVisible = false;
-        callbacks.forEach(function(callback) {
-          try {
-            callback.call(global.scene);
-          }
-          catch (ex) {
-            console.error(ex);
-          }
-        });
-        callbacks.length = 0;
-        resolve(global.scene);
       });
     }, (err) => {
       reject(err);
@@ -191,6 +196,16 @@ function _patch() : Promise<null> {
     return patch(options.patch);
   }
   else {
+    return new Promise((resolve) => {
+      resolve();
+    });
+  }
+}
+
+function _load() : Promise<null> {
+  if (options.load) {
+    return load(options.load);
+  } else {
     return new Promise((resolve) => {
       resolve();
     });

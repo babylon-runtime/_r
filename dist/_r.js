@@ -2097,6 +2097,7 @@
       enableOfflineSupport: false,
       progress: null,
       loadingScreen: null,
+      load: null
   };
   function launch(obj) {
       isReady = false;
@@ -2133,7 +2134,6 @@
       else {
           document.body.appendChild(global.canvas);
       }
-      loadingScreen.isVisible = true;
       // KTX
       if (options.ktx) {
           if (is.Array(options.ktx)) {
@@ -2156,29 +2156,32 @@
       if (options.loadingScreen) {
           global.engine.loadingScreen = options.loadingScreen;
       }
+      loadingScreen.isVisible = true;
       return new Promise(function (resolve, reject) {
           _createScene().then(function () {
-              _patch().then(function () {
-                  _checkActiveCamera();
-                  _beforeFirstRender();
-                  // RESIZE
-                  window.addEventListener('resize', function () {
+              _load().then(function () {
+                  _patch().then(function () {
+                      _checkActiveCamera();
+                      _beforeFirstRender();
+                      // RESIZE
+                      window.addEventListener('resize', function () {
+                          global.engine.resize();
+                      });
                       global.engine.resize();
+                      start();
+                      isReady = true;
+                      loadingScreen.isVisible = false;
+                      callbacks.forEach(function (callback) {
+                          try {
+                              callback.call(global.scene);
+                          }
+                          catch (ex) {
+                              console.error(ex);
+                          }
+                      });
+                      callbacks.length = 0;
+                      resolve(global.scene);
                   });
-                  global.engine.resize();
-                  start();
-                  isReady = true;
-                  loadingScreen.isVisible = false;
-                  callbacks.forEach(function (callback) {
-                      try {
-                          callback.call(global.scene);
-                      }
-                      catch (ex) {
-                          console.error(ex);
-                      }
-                  });
-                  callbacks.length = 0;
-                  resolve(global.scene);
               });
           }, function (err) {
               reject(err);
@@ -2253,6 +2256,16 @@
   function _patch() {
       if (options.patch) {
           return patch(options.patch);
+      }
+      else {
+          return new Promise(function (resolve) {
+              resolve();
+          });
+      }
+  }
+  function _load() {
+      if (options.load) {
+          return load(options.load);
       }
       else {
           return new Promise(function (resolve) {
