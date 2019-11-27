@@ -4,8 +4,10 @@ import { global } from "./global.js";
 import { activateCamera } from "./activateCamera.js";
 import { downloadScene } from "./download.js";
 import { patch } from "./patch/patch.js";
+import { load } from "./load.js";
+import { loadingScreen }  from "./util/loadingScreen.js";
 
-let isReady = true;
+let isReady = false;
 let callbacks = [];
 
 export interface IRuntimeLoading {
@@ -70,6 +72,7 @@ export function launch(obj: IRuntimeLoading | string) : Promise<BABYLON.Scene> {
   else {
     document.body.appendChild(global.canvas);
   }
+  loadingScreen.isVisible = true;
   // KTX
   if (options.ktx) {
     if (is.Array(options.ktx)) {
@@ -104,6 +107,7 @@ export function launch(obj: IRuntimeLoading | string) : Promise<BABYLON.Scene> {
         global.engine.resize();
         start();
         isReady = true;
+        loadingScreen.isVisible = false;
         callbacks.forEach(function(callback) {
           try {
             callback.call(global.scene);
@@ -126,16 +130,31 @@ function _createScene() : Promise<any> {
     if (is.String(options.scene)) {
       // scene is a filename
       if (options.assets) {
+        return load.assets(options.assets + <string>options.scene, null, (evt : BABYLON.SceneLoaderProgressEvent) => {
+          if (options.progress) {
+            options.progress(evt);
+          }
+        }).then((assetsContainer) => {
+          assetsContainer.addAllToScene();
+        });
+        /**
         return downloadScene({
           scene: <string>options.scene,
           assets: options.assets,
           progress: options.progress
-        });
+        });**/
       } else {
-        return downloadScene({
+        return load.assets(<string>options.scene, null, (evt : BABYLON.SceneLoaderProgressEvent) => {
+          if (options.progress) {
+            options.progress(evt);
+          }
+        }).then((assetsContainer) => {
+          assetsContainer.addAllToScene();
+        });
+        /**return downloadScene({
           scene: <string>options.scene,
           progress: options.progress
-        });
+        });**/
       }
     } else {
       return new Promise((resolve, reject) => {

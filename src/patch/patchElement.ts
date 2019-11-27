@@ -66,10 +66,15 @@ function globalPatchItem(patch : any, elements? : any) {
           return plugin.resolve(global.scene, patch, selector);
         }
       }
-
-      let _elements = find(selector, elements);
-      let test = patchElements(_elements.toArray(), patch[selector]);
-      return test; // patchElements(_elements, patch[selector]);
+      //console.log("call to find", selector, elements);
+      let _elements;
+      if (elements) {
+        _elements = find(selector, elements);
+      }
+      else {
+        _elements = find(selector, global.scene);
+      }
+      return patchElements(_elements.toArray(), patch[selector]);
     }, false);
     return res;
   }
@@ -77,7 +82,7 @@ function globalPatchItem(patch : any, elements? : any) {
 
 export function globalPatch(patch : any, elements? : any) {
   if (!elements) {
-    elements = global.scene;
+    //elements = global.scene;
   }
   if (!is.Array(patch)) {
     patch = [patch];

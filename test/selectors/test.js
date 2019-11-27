@@ -39,11 +39,7 @@ describe("Select inside Select", function() {
         expect(_r.select("scene").select("*bloc*:material").length === 1).to.be.true;
     });
 });
-describe("Select inside Library", function() {
-    it('_r.library("https://models.babylonjs.com/CornellBox/cornellBox.babylon").select("*:mesh").length === 4', function() {
-        expect(_r.library("https://models.babylonjs.com/CornellBox/cornellBox.babylon").select("*:mesh").length === 4).to.be.true;
-    });
-});
+
 describe("comma separated", function() {
     it('_r.select("cornellBox.*:material, *:mesh").length === 11', function() {
         expect(_r.select("cornellBox.*:material, *:mesh").length === 11).to.be.true;

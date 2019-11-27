@@ -14,18 +14,18 @@ registerPlugin({
         Object.getOwnPropertyNames(source[property]).forEach(function(event) {
           let handler = source[property][event];
           if (is.Function(handler)) {
-            select(element).on(event, handler);
+            return select(element).on(event, handler);
           }
           else {
             select(element).on(event, function() {
-              select(element).patch(source[property][event]);
+              return select(element).patch(source[property][event]);
             });
           }
         });
         break;
       case "off" :
         if (is.String(source[property])) {
-          select(element).off(source[property]);
+          return select(element).off(source[property]);
         }
         else {
           Object.getOwnPropertyNames(source[property]).forEach(function(event) {
@@ -35,11 +35,11 @@ registerPlugin({
         break;
       case "trigger" :
         if (is.String(source[property])) {
-            select(element).trigger(source[property]);
+            return select(element).trigger(source[property]);
         }
         else {
           Object.getOwnPropertyNames(source[property]).forEach(function(event) {
-            select(element).trigger(event, source[property][event]);
+            return select(element).trigger(event, source[property][event]);
           });
         }
         break;
@@ -47,11 +47,11 @@ registerPlugin({
         Object.getOwnPropertyNames(source[property]).forEach(function(event) {
           let handler = source[property][event];
           if (is.Function(handler)) {
-            select(element).on(event, handler);
+            return select(element).one(event, handler);
           }
           else {
-            select(element).on(event, function() {
-              select(element).patch(source[property][event]);
+            select(element).one(event, function() {
+              return select(element).patch(source[property][event]);
             });
           }
         });

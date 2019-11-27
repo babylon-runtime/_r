@@ -37,7 +37,6 @@ describe('plane', function() {
             "Sphere4" : {
                 material : {
                     diffuseTexture : function(_mesh, _material) {
-                        console.log(_mesh, _material);
                         mesh = _mesh;
                         material = _material;
                     }

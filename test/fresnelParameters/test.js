@@ -5,14 +5,14 @@ before(function(done) {
     _r.patch([
         {
             "scene" : function() {
-                _r.activeCamera(new BABYLON.ArcRotateCamera("Camera", 0, 0, 10, BABYLON.Vector3.Zero(), scene));
+                _r.activeCamera(new BABYLON.ArcRotateCamera("Camera", 0, 0, 10, BABYLON.Vector3.Zero(), _r.scene));
 
                 [1, 2, 3, 4, 5].forEach(function(i) {
-                    BABYLON.Mesh.CreateSphere("Sphere"+i, 32, 3, scene);
+                    BABYLON.Mesh.CreateSphere("Sphere"+i, 32, 3, _r.scene);
                 });
-                new BABYLON.PointLight("Omni0", new BABYLON.Vector3(-17.6, 18.8, -49.9), scene);
-                var skybox = BABYLON.Mesh.CreateBox("skyBox", 100.0, scene);
-                var skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMaterial", scene);
+                new BABYLON.PointLight("Omni0", new BABYLON.Vector3(-17.6, 18.8, -49.9), _r.scene);
+                var skybox = BABYLON.Mesh.CreateBox("skyBox", 100.0, _r.scene);
+                var skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMaterial", _r.scene);
                 skybox.material = skyboxMaterial;
             }
         },

@@ -14,51 +14,19 @@ module.exports = function(grunt) {
                     'node_modules/babylonjs/babylon.js', 'dist/_r.min.js'
                 ]
             },
-            /**
-            meshEvents : {
+            allInPatch : {
+                proxies : {
+                    '/' : '/base/test/all-in-patch/'
+                },
                 files : [
-                    { src : ['test/meshEvents/test.js']}
-                ]
-            },
-
-             allInPatch : {
-                 proxies : {
-                     'test/all-in-patch/' : '/base/'
-                 },
-                files : [
+                    {
+                      src : [ 'test/all-in-patch/scene.patch' ],
+                      included : false,
+                      served : true
+                    },
                     {
                         src : [  'test/all-in-patch/test.js']
                     },
-                ]
-            },**/
-            /**
-             keyEvents : {
-                files : [
-                    { src : [ 'test/keyEvents/test.js']}
-                ]
-            },**/
-            cornellBox : {
-                files : [
-                    { src : [ 'test/patch/test.js'] }]
-            },
-            selectors : {
-                files : [
-                    { src : [  'test/selectors/test.js'] },
-                ]
-            },
-            playground : {
-                files : [
-                    { src : [  'test/playground-paste/test.js'] },
-                ]
-            },
-            nolaunch : {
-                files : [
-                    { src : [  'test/no-launch/test.js'] },
-                ]
-            },
-            customEvents : {
-                files : [
-                    { src : [  'test/custom-events/test.js'] },
                 ]
             },
             animate : {
@@ -66,9 +34,74 @@ module.exports = function(grunt) {
                     { src : [ 'test/animate/test.js'] }
                 ]
             },
+            customEvents : {
+                files : [
+                    { src : [  'test/custom-events/test.js'] },
+                ]
+            },
+            data : {
+                files : [
+                    { src : ['test/data/test.js']}
+                ]
+            },
             download : {
                 files : [
                     { src : [ 'test/download/test.js']}
+                ]
+            },
+            fresnelParameters : {
+                files : [
+                    { src : [ 'test/fresnelParameters/test.js']}
+                ]
+            },
+            gizmo : {
+                files : [
+                    { src : [ 'test/gizmo/test.js']}
+                ]
+            },
+            is : {
+                files : [
+                    { src : ['test/is/test.js']}
+                ]
+            },
+            /**
+             keyEvents : {
+                files : [
+                    { src : [ 'test/keyEvents/test.js']}
+                ]
+            },**/
+            /** LAUNCH WITH PATCH **/
+            load : {
+                files : [
+                    { src : ['test/load/test.js']}
+                ]
+            },
+            /** LOADING SCREEN **/
+            /**
+            meshEvents : {
+                files : [
+                    { src : ['test/meshEvents/test.js']}
+                ]
+            },
+           **/
+            nolaunch : {
+                files : [
+                    { src : [  'test/no-launch/test.js'] },
+                ]
+            },
+            patch : {
+                files : [
+                    { src : ['test/patch/test.js']}
+                ]
+            },
+            patchParallel : {
+                files : [
+                    { src : ['test/patchParallel/test.js']}
+                ]
+            },
+            playground : {
+                files : [
+                    { src : [  'test/playground-paste/test.js'] },
                 ]
             },
             plugins : {
@@ -81,26 +114,11 @@ module.exports = function(grunt) {
                     { src : ['test/queryString/test.js']}
                 ]
             },
-            data : {
+            selectors : {
                 files : [
-                    { src : ['test/data/test.js']}
+                    { src : [  'test/selectors/test.js'] },
                 ]
             },
-            is : {
-                files : [
-                    { src : ['test/is/test.js']}
-                ]
-            },
-            patch : {
-                files : [
-                    { src : ['test/patch/test.js']}
-                ]
-            },
-            patchParallel : {
-                files : [
-                    { src : ['test/patchParallel/test.js']}
-                ]
-            }
         }
     });
     // Default task(s).

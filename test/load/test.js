@@ -32,53 +32,36 @@ before(function(done) {
             var ground = BABYLON.Mesh.CreateGround("ground1", 6, 6, 2, scene);
 
             return scene;
-        }
+        },
+        patch : [
+            {
+                "sphere1": {
+                    material : function() {
+                        return new BABYLON.StandardMaterial("material.sphere1", _r.scene)
+                    }
+                }
+            },
+            {
+                "material.sphere1" : {
+                    diffuseTexture : function() {
+                        //return new BABYLON.Texture("https://www.babylonjs-playground.com/textures/grass.jpg", _r.scene);
+                    }
+                }
+            }
+        ]
     });
     _r.ready(done);
 });
 
 describe('Download without add to the scene', function() {
-    it('import Scene', function(done) {
-        _r.import({
-            scene : "https://models.babylonjs.com/CornellBox/cornellBox.babylon",
-            patch : [
-                {
-                    "suzanne.000" : {
-                        material : {
-                            diffuseColor : "yellow"
-                        }
-                    }
-                }
-            ],
-            addAllToScene : false,
-            ready : function(assetContainer) {
-                expect(_r.scene.getMeshByName('suzanne.000') == null).to.be.true;
-                _r.select(assetContainer).addToScene();
-                expect(_r.scene.getMeshByName('suzanne.000') !== null).to.be.true;
-                expect(_r.select("suzanne.000")[0].material.diffuseColor.r === 1).to.be.true;
-                expect(_r.select("suzanne.000")[0].material.diffuseColor.g === 1).to.be.true;
-                expect(_r.select("suzanne.000")[0].material.diffuseColor.b === 0).to.be.true;
+    this.timeout(10000);
+    it('preload', function(done) {
+        _r.load("https://www.babylonjs-playground.com/textures/grass.jpg").then(function (img) {
+            expect(_r.is.DOM.image(img)).to.be.true;
+            _r.load("https://models.babylonjs.com/CornellBox/cornellBox.babylon").then(function (assets) {
+                expect(_r.is.AssetContainer(assets)).to.be.true;
                 done();
-            }
+            })
         });
     });
-    it('import Cubemap', function(done) {
-        _r.import("", {
-            loadingScreen : false,
-            extension : 'png'
-        }).then(function(cubemap) {
-            done();
-        });
-    });
-    it('import PNG cubemap', function(done) {
-
-    });
-    it('import texture', function(done) {
-        _r.import({
-            url : "",
-            ready : function(texture) {
-                done();
-            }
-        })
-    })
 });

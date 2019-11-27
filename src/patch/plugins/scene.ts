@@ -8,6 +8,16 @@ registerPlugin({
     return property === "scene";
   },
   resolve(element, source, property) {
-    return globalPatch(source[property], element);
+    if (is.Function(source[property])) {
+      try {
+       global.scene = source[property]();
+      }
+      catch (ex) {
+        console.error(ex);
+      }
+    }
+    else {
+      return globalPatch(source[property], element);
+    }
   }
 });

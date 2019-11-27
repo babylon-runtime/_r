@@ -3,74 +3,79 @@ import { global } from "./global.js";
 import { select } from "./select.js";
 
 let counter = 0;
-let tasks = [];
 
-export function load(resource : string | Array<string>) : Promise<any> {
-  if (is.Array(resource)) {
-    let _resources = resource as Array<string>;
-    let promises = [];
-    _resources.forEach((_resource) => {
-      addTask(_resource);
-      promises.push(tasks[_resource]);
-    });
-    return Promise.all(promises);
-  }
-  else {
-    addTask(resource as string);
-    return tasks[resource as string];
-  }
-}
-
-function addTask(resource : string) {
+export function load(resource : string, patch? : any) : Promise<any> {
   if (is.ImageFile(<string> resource)) {
-    let assetsManager = new BABYLON.AssetsManager(global.scene);
-    let task = assetsManager.addImageTask('_r.preload.task' + counter++, resource);
-    tasks[resource] = new Promise((resolve, reject) => {
-      task.onSuccess = function(task) {
-        resolve(task.image);
-      };
-      task.onError = function(task, message, exception) {
-        console.error(message, exception);
-        reject(message);
-      };
-    });
-    assetsManager.load();
+    return load.image(resource, patch);
   }
   if (is.FileWithExtension(resource, ['babylon', 'gltf', 'glb'])) {
-    let fileName = resource.split('/').pop();
-    let root = resource.replace(fileName, '');
-    tasks[resource] = BABYLON.SceneLoader.LoadAssetContainerAsync(root, fileName, global.scene); // return a Promise
+    return load.assets(resource, patch);
+  }
+  if (is.FileWithExtension(resource, ['json'])) {
+    return load.JSON(resource);
+  }
+  if (is.FileWithExtension(resource, ['js'])) {
+    return load.script(resource);
+  }
+  /**
+  if (is.FileWithExtension(resource, ['css'])) {
+    return load.css(resource);
+  }**/
+  if (is.FileWithExtension(resource, ['patch'])) {
+    return load.patch(resource);
+  }
+  if (is.FileWithExtension(resource, ['txt'])) {
+    return load.ajax(resource);
   }
 }
 
-load.scene = function(scene : string, patch? : any) {
-  if (patch) {
-    return load(scene).then((assetsContainer) => {
-      let elements = select(assetsContainer);
-      let promises = [];
-      if (!is.Array(patch)) {
-        console.error('_r.load.scene - patch parameter must be an array');
-        return assetsContainer;
-      }
-      else {
-        patch.forEach((_patch) => {
-          let selector = _patch.getOwnPropertyNames(_patch)[0];
-          let _elements = elements.select(selector);
-          console.error("TODO !!");
+load.image = function(image : string, patch? : any) : Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    let assetsManager = new BABYLON.AssetsManager(global.scene);
+    let task = assetsManager.addImageTask('_r.preload.task' + counter++, image);
+    task.onSuccess = function(task) {
+      if (patch) {
+        return select(task.image).patch(patch).then(() => {
+          resolve(task.image);
         });
       }
-    });
-  }
-  else {
-    return load(scene);
-  }
+      else {
+        resolve(task.image);
+      }
+    };
+    task.onError = function(task, message, exception) {
+      console.error(message, exception);
+      reject(message);
+    };
+    assetsManager.load();
+  });
 };
 
-load.texture = function(image : string, patch? : any) {
+load.assets = function(scene : string, patch? : any, progress? : (event : BABYLON.SceneLoaderProgressEvent) => any) : Promise<BABYLON.AssetContainer> {
+  let fileName = scene.split('/').pop();
+  let root = scene.replace(fileName, '');
+  BABYLON.SceneLoader.ShowLoadingScreen = false;
+  return BABYLON.SceneLoader.LoadAssetContainerAsync(root, fileName, global.scene, progress).then((assetsContainer) => {
+    if (patch) {
+      return select(assetsContainer).globalPatch(patch).then(() => {
+        BABYLON.SceneLoader.ShowLoadingScreen = true;
+        return assetsContainer;
+      });
+    }
+    else {
+      BABYLON.SceneLoader.ShowLoadingScreen = true;
+      return assetsContainer;
+    }
+  });
+};
+
+load.texture = function(image : string, patch? : any) : Promise<BABYLON.Texture> {
   return load(image).then((img) => {
     let texture = new BABYLON.Texture(image, global.scene);
     if (patch) {
-      return select(texture).patch(patch);
+      return select(texture).patch(patch).then(() => {
+        return texture;
+      });
     }
     else {
       return texture;
@@ -81,10 +86,10 @@ load.texture = function(image : string, patch? : any) {
 };
 
 let cubeCounter = 0;
-load.cubeTexture = function(url : string, patch? : any) {
+load.cubeTexture = function(url : string, patch? : any) : Promise<BABYLON.CubeTexture> {
   return new Promise((resolve, reject) => {
     let assetsManager = new BABYLON.AssetsManager(global.scene);
-    let task = assetsManager.addCubeTextureTask('cubeTexture' + cubeCounter++, url);
+    let task = assetsManager.addCubeTextureTask('_r.load.cubeTexture.' + cubeCounter++, url);
     task.onSuccess = function(task) {
       if (patch) {
         return select(task.texture).patch(patch);
@@ -100,7 +105,7 @@ load.cubeTexture = function(url : string, patch? : any) {
   });
 };
 
-load.patch = function(file : string) {
+load.patch = function(file : string) : Promise<any> {
   return new Promise((resolve, reject) => {
     let xhr = new XMLHttpRequest();
     xhr.open("get", file, true);
@@ -141,3 +146,68 @@ load.patch = function(file : string) {
     xhr.send();
   });
 };
+
+let ajaxCounter = 0;
+load.ajax = function(file : string) : Promise<string> {
+  return new Promise((resolve, reject) => {
+    let assetsManager = new BABYLON.AssetsManager(global.scene);
+    let task = assetsManager.addTextFileTask('_r.load.ajax.' + ajaxCounter++, file);
+    task.onSuccess = function(task) {
+     resolve(task.text);
+    };
+    task.onError = function(reason) {
+      reject(reason);
+    };
+    assetsManager.load();
+  });
+};
+
+load.JSON = function(file : string) : Promise<any> {
+  return new Promise((resolve, reject) => {
+    load.ajax(file).then((text : string) => {
+      try {
+        let data = JSON.parse(text);
+        resolve(data);
+      }
+      catch (e) {
+        reject(e);
+      }
+    });
+  });
+};
+
+load.script = function(file : string) : Promise<null> {
+  return new Promise((resolve, reject) => {
+    // Adding the script tag to the head as suggested before
+    let script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = file;
+
+    // Then bind the event to the callback function.
+    // There are several events for cross browser compatibility.
+    let resolved = false;
+    script['onreadystatechange'] = function() {
+      if (this.readyState === 'complete') {
+        if (resolved) {
+          return;
+        }
+        resolve();
+        resolved = true;
+      }
+    };
+    script.onload = function() {
+      if (resolved) {
+        return;
+      }
+      resolve();
+      resolved = true;
+    };
+    // Fire the loading
+    document.head.appendChild(script);
+  });
+};
+
+/**
+load.css = function(css : string) : Promise<null> {
+
+};**/

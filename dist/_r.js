@@ -4,7 +4,7 @@
   (global = global || self, global._r = factory());
 }(this, function () { 'use strict';
 
-  console.log("babylon runtime v0.1.0-beta-2")
+  console.log("babylon runtime v0.1.0-beta-3")
 
   var is;
   (function (is) {
@@ -517,6 +517,20 @@
           global.scene.activeCamera = camera;
       }
       global.scene.activeCamera.attachControl(global.canvas);
+  }
+
+  var plugins = [];
+  function registerPlugin(plugin) {
+      plugins.push(plugin);
+  }
+  function getPlugin(element, source, property) {
+      var plugin = null;
+      for (var i = 0; i < plugins.length; i++) {
+          if (plugins[i].test(element, source, property)) {
+              plugin = plugins[i];
+          }
+      }
+      return plugin;
   }
 
   var Selector = /** @class */ (function () {
@@ -1128,175 +1142,76 @@
       return elements;
   }
 
-  function downloadScene(options) {
-      var assets, fileName;
-      if (options.assets) {
-          assets = options.assets;
-          fileName = options.scene;
-      }
-      else {
-          fileName = options.scene.split('/').pop();
-          assets = options.scene.replace(fileName, '');
-      }
-      return new Promise(function (resolve, reject) {
-          BABYLON.SceneLoader.LoadAssetContainerAsync(assets, fileName, global.scene, function (e) {
-              if (options.progress) {
-                  options.progress(e);
-              }
-          }).then(function (assetContainer) {
-              // success
-              createLibrary(assets + fileName, assetContainer);
-              if (options.patch) {
-                  try {
-                      select(assetContainer).globalPatch(options.patch).then(function () {
-                          if (options.addAllToScene !== false) {
-                              assetContainer.addAllToScene();
-                          }
-                          if (options.ready) {
-                              options.ready(assetContainer);
-                          }
-                          resolve(assetContainer);
-                      });
-                  }
-                  catch (ex) {
-                      reject(ex);
-                  }
-              }
-              else {
-                  if (options.addAllToScene !== false) {
-                      assetContainer.addAllToScene();
-                  }
-                  if (options.ready) {
-                      options.ready(assetContainer);
-                  }
-                  resolve(assetContainer);
-              }
-          }, function (reason) {
-              // error
-              if (options.error) {
-                  options.error(reason);
-                  reject(reason);
-              }
-          });
-      });
-  }
-  function downloadTexture(options) {
-      return new Promise(function (resolve, reject) {
-          var assetsManager = new BABYLON.AssetsManager(global.scene);
-          var task = assetsManager.addTextureTask(options.name, options.url, options.noMipmap, options.invertY, options.samplingMode);
-          task.onSuccess = function (task) {
-              resolve(task.texture);
-              if (options.ready) {
-                  options.ready(task.texture);
-              }
-          };
-          task.onError = function (reason) {
-              reject(reason);
-              if (options.error) {
-                  options.error(reason);
-              }
-          };
-          assetsManager.load();
-      });
-  }
-  function downloadCubeTexture(options) {
-      return new Promise(function (resolve, reject) {
-          var assetsManager = new BABYLON.AssetsManager(global.scene);
-          var task = assetsManager.addCubeTextureTask(options.name, options.url, options.extensions, options.noMipmap, options.files);
-          task.onSuccess = function (task) {
-              resolve(task.texture);
-              if (options.ready) {
-                  options.ready(task.texture);
-              }
-          };
-          task.onError = function (reason) {
-              reject(reason);
-              if (options.error) {
-                  options.error(reason);
-              }
-          };
-          assetsManager.load();
-      });
-  }
-
-  var plugins = [];
-  function registerPlugin(plugin) {
-      plugins.push(plugin);
-  }
-  function getPlugin(element, source, property) {
-      var plugin = null;
-      for (var i = 0; i < plugins.length; i++) {
-          if (plugins[i].test(element, source, property)) {
-              plugin = plugins[i];
-          }
-      }
-      return plugin;
-  }
-
   var counter = 0;
-  var tasks = [];
-  function load(resource) {
-      if (is.Array(resource)) {
-          var _resources = resource;
-          var promises_1 = [];
-          _resources.forEach(function (_resource) {
-              addTask(_resource);
-              promises_1.push(tasks[_resource]);
-          });
-          return Promise.all(promises_1);
-      }
-      else {
-          addTask(resource);
-          return tasks[resource];
-      }
-  }
-  function addTask(resource) {
+  function load(resource, patch) {
       if (is.ImageFile(resource)) {
-          var assetsManager = new BABYLON.AssetsManager(global.scene);
-          var task_1 = assetsManager.addImageTask('_r.preload.task' + counter++, resource);
-          tasks[resource] = new Promise(function (resolve, reject) {
-              task_1.onSuccess = function (task) {
-                  resolve(task.image);
-              };
-              task_1.onError = function (task, message, exception) {
-                  console.error(message, exception);
-                  reject(message);
-              };
-          });
-          assetsManager.load();
+          return load.image(resource, patch);
       }
       if (is.FileWithExtension(resource, ['babylon', 'gltf', 'glb'])) {
-          var fileName = resource.split('/').pop();
-          var root = resource.replace(fileName, '');
-          tasks[resource] = BABYLON.SceneLoader.LoadAssetContainerAsync(root, fileName, global.scene); // return a Promise
+          return load.assets(resource, patch);
+      }
+      if (is.FileWithExtension(resource, ['json'])) {
+          return load.JSON(resource);
+      }
+      if (is.FileWithExtension(resource, ['js'])) {
+          return load.script(resource);
+      }
+      /**
+      if (is.FileWithExtension(resource, ['css'])) {
+        return load.css(resource);
+      }**/
+      if (is.FileWithExtension(resource, ['patch'])) {
+          return load.patch(resource);
+      }
+      if (is.FileWithExtension(resource, ['txt'])) {
+          return load.ajax(resource);
       }
   }
-  load.scene = function (scene, patch) {
-      if (patch) {
-          return load(scene).then(function (assetsContainer) {
-              var elements = select(assetsContainer);
-              if (!is.Array(patch)) {
-                  console.error('_r.load.scene - patch parameter must be an array');
-                  return assetsContainer;
-              }
-              else {
-                  patch.forEach(function (_patch) {
-                      var selector = _patch.getOwnPropertyNames(_patch)[0];
-                      var _elements = elements.select(selector);
-                      console.error("TODO !!");
+  load.image = function (image, patch) {
+      return new Promise(function (resolve, reject) {
+          var assetsManager = new BABYLON.AssetsManager(global.scene);
+          var task = assetsManager.addImageTask('_r.preload.task' + counter++, image);
+          task.onSuccess = function (task) {
+              if (patch) {
+                  return select(task.image).patch(patch).then(function () {
+                      resolve(task.image);
                   });
               }
-          });
-      }
-      else {
-          return load(scene);
-      }
+              else {
+                  resolve(task.image);
+              }
+          };
+          task.onError = function (task, message, exception) {
+              console.error(message, exception);
+              reject(message);
+          };
+          assetsManager.load();
+      });
+  };
+  load.assets = function (scene, patch, progress) {
+      var fileName = scene.split('/').pop();
+      var root = scene.replace(fileName, '');
+      BABYLON.SceneLoader.ShowLoadingScreen = false;
+      return BABYLON.SceneLoader.LoadAssetContainerAsync(root, fileName, global.scene, progress).then(function (assetsContainer) {
+          if (patch) {
+              return select(assetsContainer).globalPatch(patch).then(function () {
+                  BABYLON.SceneLoader.ShowLoadingScreen = true;
+                  return assetsContainer;
+              });
+          }
+          else {
+              BABYLON.SceneLoader.ShowLoadingScreen = true;
+              return assetsContainer;
+          }
+      });
   };
   load.texture = function (image, patch) {
       return load(image).then(function (img) {
           var texture = new BABYLON.Texture(image, global.scene);
           if (patch) {
-              return select(texture).patch(patch);
+              return select(texture).patch(patch).then(function () {
+                  return texture;
+              });
           }
           else {
               return texture;
@@ -1309,7 +1224,7 @@
   load.cubeTexture = function (url, patch) {
       return new Promise(function (resolve, reject) {
           var assetsManager = new BABYLON.AssetsManager(global.scene);
-          var task = assetsManager.addCubeTextureTask('cubeTexture' + cubeCounter++, url);
+          var task = assetsManager.addCubeTextureTask('_r.load.cubeTexture.' + cubeCounter++, url);
           task.onSuccess = function (task) {
               if (patch) {
                   return select(task.texture).patch(patch);
@@ -1365,6 +1280,66 @@
           xhr.send();
       });
   };
+  var ajaxCounter = 0;
+  load.ajax = function (file) {
+      return new Promise(function (resolve, reject) {
+          var assetsManager = new BABYLON.AssetsManager(global.scene);
+          var task = assetsManager.addTextFileTask('_r.load.ajax.' + ajaxCounter++, file);
+          task.onSuccess = function (task) {
+              resolve(task.text);
+          };
+          task.onError = function (reason) {
+              reject(reason);
+          };
+          assetsManager.load();
+      });
+  };
+  load.JSON = function (file) {
+      return new Promise(function (resolve, reject) {
+          load.ajax(file).then(function (text) {
+              try {
+                  var data = JSON.parse(text);
+                  resolve(data);
+              }
+              catch (e) {
+                  reject(e);
+              }
+          });
+      });
+  };
+  load.script = function (file) {
+      return new Promise(function (resolve, reject) {
+          // Adding the script tag to the head as suggested before
+          var script = document.createElement('script');
+          script.type = 'text/javascript';
+          script.src = file;
+          // Then bind the event to the callback function.
+          // There are several events for cross browser compatibility.
+          var resolved = false;
+          script['onreadystatechange'] = function () {
+              if (this.readyState === 'complete') {
+                  if (resolved) {
+                      return;
+                  }
+                  resolve();
+                  resolved = true;
+              }
+          };
+          script.onload = function () {
+              if (resolved) {
+                  return;
+              }
+              resolve();
+              resolved = true;
+          };
+          // Fire the loading
+          document.head.appendChild(script);
+      });
+  };
+  /**
+  load.css = function(css : string) : Promise<null> {
+
+  };**/
 
   function recursive(elements, func, promisify) {
       if (promisify === void 0) { promisify = true; }
@@ -1428,17 +1403,20 @@
                       return plugin.resolve(global.scene, patch, selector);
                   }
               }
-              var _elements = find(selector, elements);
-              var test = patchElements(_elements.toArray(), patch[selector]);
-              return test; // patchElements(_elements, patch[selector]);
+              //console.log("call to find", selector, elements);
+              var _elements;
+              if (elements) {
+                  _elements = find(selector, elements);
+              }
+              else {
+                  _elements = find(selector, global.scene);
+              }
+              return patchElements(_elements.toArray(), patch[selector]);
           }, false);
           return res;
       }
   }
   function globalPatch(patch, elements) {
-      if (!elements) {
-          elements = global.scene;
-      }
       if (!is.Array(patch)) {
           patch = [patch];
       }
@@ -1660,7 +1638,17 @@
           return property === "scene";
       },
       resolve: function (element, source, property) {
-          return globalPatch(source[property], element);
+          if (is.Function(source[property])) {
+              try {
+                  global.scene = source[property]();
+              }
+              catch (ex) {
+                  console.error(ex);
+              }
+          }
+          else {
+              return globalPatch(source[property], element);
+          }
       }
   });
 
@@ -1699,18 +1687,18 @@
                   Object.getOwnPropertyNames(source[property]).forEach(function (event) {
                       var handler = source[property][event];
                       if (is.Function(handler)) {
-                          select(element).on(event, handler);
+                          return select(element).on(event, handler);
                       }
                       else {
                           select(element).on(event, function () {
-                              select(element).patch(source[property][event]);
+                              return select(element).patch(source[property][event]);
                           });
                       }
                   });
                   break;
               case "off":
                   if (is.String(source[property])) {
-                      select(element).off(source[property]);
+                      return select(element).off(source[property]);
                   }
                   else {
                       Object.getOwnPropertyNames(source[property]).forEach(function (event) {
@@ -1720,11 +1708,11 @@
                   break;
               case "trigger":
                   if (is.String(source[property])) {
-                      select(element).trigger(source[property]);
+                      return select(element).trigger(source[property]);
                   }
                   else {
                       Object.getOwnPropertyNames(source[property]).forEach(function (event) {
-                          select(element).trigger(event, source[property][event]);
+                          return select(element).trigger(event, source[property][event]);
                       });
                   }
                   break;
@@ -1732,11 +1720,11 @@
                   Object.getOwnPropertyNames(source[property]).forEach(function (event) {
                       var handler = source[property][event];
                       if (is.Function(handler)) {
-                          select(element).on(event, handler);
+                          return select(element).one(event, handler);
                       }
                       else {
-                          select(element).on(event, function () {
-                              select(element).patch(source[property][event]);
+                          select(element).one(event, function () {
+                              return select(element).patch(source[property][event]);
                           });
                       }
                   });
@@ -1793,7 +1781,7 @@
       if (promisify === void 0) { promisify = true; }
       if (is.PatchFile(patch)) {
           return load.patch(patch).then(function (data) {
-              var res = globalPatch(patch);
+              var res = globalPatch(data);
               if (promisify && !is.Promise(res)) {
                   return new Promise(function (resolve) {
                       resolve(res);
@@ -1845,7 +1833,222 @@
       }
   };
 
-  var isReady = true;
+  var iFrameLoadingScreen = /** @class */ (function () {
+      function iFrameLoadingScreen(url, id) {
+          var _this = this;
+          this._attached = false;
+          this.iframe = document.createElement('iframe');
+          this.iframe.src = url;
+          if (id) {
+              this.iframe.id = id;
+          }
+          this.iframe.addEventListener('transitionend', function () {
+              if (!_this.isVisible) {
+                  _this.parentNode.removeChild(_this.iframe);
+                  _this._attached = false;
+              }
+          });
+          this.iframe.classList.add('runtime-loadingScreen');
+      }
+      Object.defineProperty(iFrameLoadingScreen.prototype, "parentNode", {
+          get: function () {
+              return global.canvas.parentNode;
+          },
+          enumerable: true,
+          configurable: true
+      });
+      iFrameLoadingScreen.prototype.displayLoadingUI = function () {
+          var _this = this;
+          if (!this._attached) {
+              this.iframe.onload = function () {
+                  if (_this.iframe.contentDocument) {
+                      _this._contentDocument = _this.iframe.contentDocument;
+                  }
+                  else {
+                      _this._contentDocument = _this.iframe.contentWindow.document;
+                  }
+                  _this.message = _this._message;
+                  if (_this._progress) {
+                      _this.progress = _this._progress;
+                  }
+              };
+              this.parentNode.appendChild(this.iframe);
+              this._attached = true;
+          }
+          this.iframe.classList.add('visible');
+      };
+      iFrameLoadingScreen.prototype.hideLoadingUI = function () {
+          this.iframe.classList.remove('visible');
+      };
+      Object.defineProperty(iFrameLoadingScreen.prototype, "isVisible", {
+          get: function () {
+              return this.iframe.classList.contains('visible');
+          },
+          set: function (value) {
+              if (value) {
+                  this.displayLoadingUI();
+              }
+              else {
+                  this.hideLoadingUI();
+              }
+          },
+          enumerable: true,
+          configurable: true
+      });
+      Object.defineProperty(iFrameLoadingScreen.prototype, "message", {
+          get: function () {
+              return this._message;
+          },
+          set: function (value) {
+              this._message = value;
+              if (this._contentDocument) {
+                  var elements = this._contentDocument.getElementsByClassName('runtime-loading-message');
+                  for (var i = 0; i < elements.length; i++) {
+                      elements.item(i).innerHTML = value;
+                  }
+                  this.postMessage({
+                      type: "message",
+                      value: value
+                  });
+              }
+          },
+          enumerable: true,
+          configurable: true
+      });
+      Object.defineProperty(iFrameLoadingScreen.prototype, "progress", {
+          get: function () {
+              return this._progress;
+          },
+          set: function (value) {
+              this._progress = value;
+              if (this._contentDocument) {
+                  var elements = this._contentDocument.getElementsByClassName('runtime-loading-progress');
+                  for (var i = 0; i < elements.length; i++) {
+                      elements.item(i).innerHTML = value.toString() + '%';
+                  }
+                  this.postMessage({
+                      type: "progress",
+                      value: value
+                  });
+              }
+          },
+          enumerable: true,
+          configurable: true
+      });
+      iFrameLoadingScreen.prototype.postMessage = function (data) {
+          var _this = this;
+          setTimeout(function () {
+              var json = JSON.stringify(data);
+              _this.iframe.contentWindow.postMessage(json.toString(), location.origin);
+          }, 100);
+      };
+      return iFrameLoadingScreen;
+  }());
+  var loadingScreen = /** @class */ (function () {
+      function loadingScreen() {
+      }
+      Object.defineProperty(loadingScreen, "instance", {
+          get: function () {
+              return this._instance;
+          },
+          enumerable: true,
+          configurable: true
+      });
+      loadingScreen.iframe = function (url, id) {
+          this.activate(new iFrameLoadingScreen(url, id));
+          global.engine.loadingScreen = this._instance;
+          return this._instance;
+      };
+      loadingScreen.activate = function (loadingScreen) {
+          this._instance = loadingScreen;
+      };
+      Object.defineProperty(loadingScreen, "isVisible", {
+          get: function () {
+              if (this._instance) {
+                  return this._instance.isVisible;
+              }
+              else {
+                  var div = document.getElementById('babylonjsLoadingDiv');
+                  if (div) {
+                      return div.style.opacity === '1';
+                  }
+                  else {
+                      return false;
+                  }
+              }
+          },
+          set: function (value) {
+              if (this._instance) {
+                  this._instance.isVisible = value;
+              }
+              else {
+                  if (value) {
+                      var div = document.getElementById('babylonjsLoadingDiv');
+                      if (div && div.style.opacity === '0') {
+                          div.style.opacity = '1';
+                      }
+                      global.engine.displayLoadingUI();
+                  }
+                  else {
+                      global.engine.hideLoadingUI();
+                  }
+              }
+          },
+          enumerable: true,
+          configurable: true
+      });
+      Object.defineProperty(loadingScreen, "message", {
+          get: function () {
+              if (this._instance) {
+                  return this._instance.message;
+              }
+              else {
+                  return global.engine.loadingScreen.loadingUIText;
+              }
+          },
+          set: function (value) {
+              if (this._instance) {
+                  this.instance.message = value;
+              }
+              else {
+                  global.engine.loadingScreen.loadingUIText = value;
+              }
+          },
+          enumerable: true,
+          configurable: true
+      });
+      Object.defineProperty(loadingScreen, "progress", {
+          get: function () {
+              if (this._instance) {
+                  return this.instance.progress;
+              }
+              else {
+                  console.error("TODO _r.loadingScreen");
+              }
+          },
+          set: function (value) {
+              if (this._instance) {
+                  this.instance.progress = value;
+              }
+              else {
+                  this.message += ' ' + value + '%';
+              }
+          },
+          enumerable: true,
+          configurable: true
+      });
+      loadingScreen.postMessage = function (key, value) {
+          if (this._instance.postMessage) {
+              this._instance.postMessage(key, value);
+          }
+          else {
+              console.error('loadingScreen is not an iframe');
+          }
+      };
+      return loadingScreen;
+  }());
+
+  var isReady = false;
   var callbacks = [];
   var options = {
       container: null,
@@ -1894,6 +2097,7 @@
       else {
           document.body.appendChild(global.canvas);
       }
+      loadingScreen.isVisible = true;
       // KTX
       if (options.ktx) {
           if (is.Array(options.ktx)) {
@@ -1928,6 +2132,7 @@
                   global.engine.resize();
                   start();
                   isReady = true;
+                  loadingScreen.isVisible = false;
                   callbacks.forEach(function (callback) {
                       try {
                           callback.call(global.scene);
@@ -1949,17 +2154,32 @@
           if (is.String(options.scene)) {
               // scene is a filename
               if (options.assets) {
-                  return downloadScene({
-                      scene: options.scene,
-                      assets: options.assets,
-                      progress: options.progress
+                  return load.assets(options.assets + options.scene, null, function (evt) {
+                      if (options.progress) {
+                          options.progress(evt);
+                      }
+                  }).then(function (assetsContainer) {
+                      assetsContainer.addAllToScene();
                   });
+                  /**
+                  return downloadScene({
+                    scene: <string>options.scene,
+                    assets: options.assets,
+                    progress: options.progress
+                  });**/
               }
               else {
-                  return downloadScene({
-                      scene: options.scene,
-                      progress: options.progress
+                  return load.assets(options.scene, null, function (evt) {
+                      if (options.progress) {
+                          options.progress(evt);
+                      }
+                  }).then(function (assetsContainer) {
+                      assetsContainer.addAllToScene();
                   });
+                  /**return downloadScene({
+                    scene: <string>options.scene,
+                    progress: options.progress
+                  });**/
               }
           }
           else {
@@ -2059,6 +2279,97 @@
   }
   function pause() {
       global.engine.stopRenderLoop(loop$1);
+  }
+
+  function downloadScene(options) {
+      var assets, fileName;
+      if (options.assets) {
+          assets = options.assets;
+          fileName = options.scene;
+      }
+      else {
+          fileName = options.scene.split('/').pop();
+          assets = options.scene.replace(fileName, '');
+      }
+      return new Promise(function (resolve, reject) {
+          BABYLON.SceneLoader.LoadAssetContainerAsync(assets, fileName, global.scene, function (e) {
+              if (options.progress) {
+                  options.progress(e);
+              }
+          }).then(function (assetContainer) {
+              // success
+              createLibrary(assets + fileName, assetContainer);
+              if (options.patch) {
+                  try {
+                      select(assetContainer).globalPatch(options.patch).then(function () {
+                          if (options.addAllToScene !== false) {
+                              assetContainer.addAllToScene();
+                          }
+                          if (options.ready) {
+                              options.ready(assetContainer);
+                          }
+                          resolve(assetContainer);
+                      });
+                  }
+                  catch (ex) {
+                      reject(ex);
+                  }
+              }
+              else {
+                  if (options.addAllToScene !== false) {
+                      assetContainer.addAllToScene();
+                  }
+                  if (options.ready) {
+                      options.ready(assetContainer);
+                  }
+                  resolve(assetContainer);
+              }
+          }, function (reason) {
+              // error
+              if (options.error) {
+                  options.error(reason);
+                  reject(reason);
+              }
+          });
+      });
+  }
+  function downloadTexture(options) {
+      return new Promise(function (resolve, reject) {
+          var assetsManager = new BABYLON.AssetsManager(global.scene);
+          var task = assetsManager.addTextureTask(options.name, options.url, options.noMipmap, options.invertY, options.samplingMode);
+          task.onSuccess = function (task) {
+              resolve(task.texture);
+              if (options.ready) {
+                  options.ready(task.texture);
+              }
+          };
+          task.onError = function (reason) {
+              reject(reason);
+              if (options.error) {
+                  options.error(reason);
+              }
+          };
+          assetsManager.load();
+      });
+  }
+  function downloadCubeTexture(options) {
+      return new Promise(function (resolve, reject) {
+          var assetsManager = new BABYLON.AssetsManager(global.scene);
+          var task = assetsManager.addCubeTextureTask(options.name, options.url, options.extensions, options.noMipmap, options.files);
+          task.onSuccess = function (task) {
+              resolve(task.texture);
+              if (options.ready) {
+                  options.ready(task.texture);
+              }
+          };
+          task.onError = function (reason) {
+              reject(reason);
+              if (options.error) {
+                  options.error(reason);
+              }
+          };
+          assetsManager.load();
+      });
   }
 
   var keys = [
@@ -2859,38 +3170,6 @@
       hide.wireframe = hideWireframe;
       hide.gizmo = hideGizmo;
   })(hide || (hide = {}));
-
-  var loadingScreen = /** @class */ (function () {
-      function loadingScreen() {
-      }
-      loadingScreen.show = function () {
-          global.engine.displayLoadingUI();
-      };
-      loadingScreen.hide = function () {
-          global.engine.hideLoadingUI();
-      };
-      Object.defineProperty(loadingScreen, "text", {
-          get: function () {
-              return global.engine.text;
-          },
-          set: function (value) {
-              global.engine.text = value;
-          },
-          enumerable: true,
-          configurable: true
-      });
-      Object.defineProperty(loadingScreen, "backgroundColor", {
-          get: function () {
-              return global.engine.loadingUIBackgroundColor;
-          },
-          set: function (value) {
-              global.engine.loadingUIBackgroundColor = value;
-          },
-          enumerable: true,
-          configurable: true
-      });
-      return loadingScreen;
-  }());
 
   var router = {
       hashChangedListener: [],

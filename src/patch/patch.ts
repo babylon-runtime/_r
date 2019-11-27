@@ -10,7 +10,7 @@ import { load } from "../load.js";
 export function patch(patch : any, promisify = true) : Promise<any> {
   if (is.PatchFile(patch)) {
     return load.patch(patch).then((data) => {
-      let res = globalPatch(patch);
+      let res = globalPatch(data);
       if (promisify && !is.Promise(res)) {
         return new Promise((resolve) => {
           resolve(res);
