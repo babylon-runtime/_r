@@ -142,12 +142,20 @@ export function patchProperty(element, source, property, context? : Array<any>) 
       }
     }
     else {
-      if (is.PlainObject(source[property])) {
-        if (!element[property]) {
-          element[property] = {};
-        }
-        return patchElement(element[property], source[property], context);
+      if (is.Promise(source[property])) {
+        return source[property].then((result) => {
+          element[property] = result;
+        });
       }
+      else {
+        if (is.PlainObject(source[property])) {
+          if (!element[property]) {
+            element[property] = {};
+          }
+          return patchElement(element[property], source[property], context);
+        }
+      }
+
     }
   }
 }

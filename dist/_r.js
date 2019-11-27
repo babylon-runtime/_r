@@ -1215,6 +1215,18 @@
           }
       });
   };
+  load.material = function (name, patch) {
+      var material = new BABYLON.StandardMaterial(name, global.scene);
+      return select(material).patch(patch).then(function () {
+          return material;
+      });
+  };
+  load.pbr = function (name, patch) {
+      var material = new BABYLON.PBRMaterial(name, global.scene);
+      return select(material).patch(patch).then(function () {
+          return material;
+      });
+  };
   load.texture = function (image, patch) {
       return load(image).then(function (img) {
           var texture = new BABYLON.Texture(image, global.scene);
@@ -1508,11 +1520,18 @@
               }
           }
           else {
-              if (is.PlainObject(source[property])) {
-                  if (!element[property]) {
-                      element[property] = {};
+              if (is.Promise(source[property])) {
+                  return source[property].then(function (result) {
+                      element[property] = result;
+                  });
+              }
+              else {
+                  if (is.PlainObject(source[property])) {
+                      if (!element[property]) {
+                          element[property] = {};
+                      }
+                      return patchElement(element[property], source[property], context);
                   }
-                  return patchElement(element[property], source[property], context);
               }
           }
       }

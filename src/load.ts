@@ -79,6 +79,20 @@ load.assets = function(scene : string, patch? : any, progress? : (event : BABYLO
   });
 };
 
+load.material = function(name : string, patch? : any) : Promise<BABYLON.StandardMaterial> {
+  let material = new BABYLON.StandardMaterial(name, global.scene);
+  return select(material).patch(patch).then(() => {
+    return material;
+  });
+};
+
+load.pbr = function(name : string, patch? : any) : Promise<BABYLON.PBRMaterial> {
+  let material =  new BABYLON.PBRMaterial(name, global.scene);
+  return select(material).patch(patch).then(() => {
+    return material;
+  });
+};
+
 load.texture = function(image : string, patch? : any) : Promise<BABYLON.Texture> {
   return load(image).then((img) => {
     let texture = new BABYLON.Texture(image, global.scene);

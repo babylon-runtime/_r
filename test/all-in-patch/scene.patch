@@ -20,13 +20,7 @@
             var sphere6 = BABYLON.Mesh.CreateSphere("Sphere6", 10.0, 9.0, scene);
             //Creation of a plane
             var plane = BABYLON.Mesh.CreatePlane("plane", 120, scene);
-            console.log("here we are");
             return scene;
-        }
-    },
-    {
-        "execute" : function() {
-            console.log("execution");
         }
     },
     {
@@ -39,23 +33,14 @@
                     return Math.PI /2;
                 }
             },
-            material : function() {
-                console.log("1. plane")
-                var material = new BABYLON.StandardMaterial("texturePlane", _r.scene);
-                return _r.select(material).patch(
+            material : _r.load.material('texturePlane',
                     {
-                        diffuseTexture : function() {
-                            return _r.load.texture("https://www.babylonjs-playground.com/textures/grass.jpg", {
+                        diffuseTexture : _r.load.texture("https://www.babylonjs-playground.com/textures/grass.jpg", {
                                 uScale : 5.0,
                                 vScale : 5.0
-                            })
-                        },
+                            }),
                         backFaceCulling: false
-                    }
-                ).then(function() {
-                    return material;
-                })
-            }
+                    })
         }
     },
     {
@@ -63,11 +48,7 @@
             position : {
                 x : 40
             },
-            material : function(context) {
-                var material = new BABYLON.StandardMaterial("texture1", _r.scene);
-                material.wireframe = true;
-                return material
-            }
+            material : _r.load.material('texture1', { wireframe : true})
         }
     },
     {
@@ -75,34 +56,18 @@
             position : {
                 x : 25
             },
-            material : function() {
-                console.log("3.Sphere2")
-                var material = new BABYLON.StandardMaterial("texture2", _r.scene);
-                return _r.select(material).patch( {
+            material : _r.load.material('texture2', {
                     diffuseColor : new BABYLON.Color3(1, 0, 0),
                     alpha : 0.3
-                }).then(function() {
-                    return material;
-                });
+                })
             }
-        }
     },
     {
         "Sphere3" : {
             position : {
                 x : 10
             },
-            material : function() {
-                var material = new BABYLON.StandardMaterial("texture3", _r.scene);
-                return _r.select(material).patch({
-                    diffuseTexture : function() {
-                        return _r.load.texture("https://www.babylonjs-playground.com/textures/misc.jpg");
-                    }
-                }).then(function() {
-                    return material;
-                })
-
-            }
+            material :_r.load.material('texture3', { diffuseTexture :  _r.load.texture("https://www.babylonjs-playground.com/textures/misc.jpg") })
         }
     },
     {
@@ -110,19 +75,12 @@
             position : {
                 x : -5
             },
-            material : function() {
-                var material = new BABYLON.StandardMaterial("texture4", _r.scene);
-                return _r.select(material).patch({
-                    diffuseTexture : function() {
-                        return _r.load.texture("https://www.babylonjs-playground.com/textures/misc.jpg", {
-                            vOffset : 0.1,
-                            uOffset : 0.4
-                        })
-                    }
-                }).then(function() {
-                    return material
-                });
-            }
+            material : _r.load.material('texture4', {
+              diffuseTexture : _r.load.texture("https://www.babylonjs-playground.com/textures/misc.jpg", {
+                  vOffset : 0.1,
+                  uOffset : 0.4
+              })
+            })
         }
     },
     {
@@ -130,18 +88,9 @@
             position : {
                 x : -20
             },
-            material : function() {
-                var material = new BABYLON.StandardMaterial("texture5", _r.scene);
-                return _r.select(material).patch({
-                    diffuseTexture : function() {
-                        return _r.load.texture("https://www.babylonjs-playground.com/textures/tree.png", {
-                            hasAlpha : true
-                        });
-                    }
-                }).then(function() {
-                    return material;
-                });
-            }
+            material :_r.load.material("texture5", {
+                diffuseTexture : _r.load.texture("https://www.babylonjs-playground.com/textures/tree.png", {hasAlpha : true})
+            })
         }
     },
     {
@@ -149,19 +98,10 @@
             position : {
                 x : -35
             },
-            material : function() {
-                var material = new BABYLON.StandardMaterial("texture6", _r.scene);
-                return _r.select(material).patch({
-                    diffuseTexture : function() {
-                        return _r.load.texture("https://www.babylonjs-playground.com/textures/tree.png", {
-                            hasAlpha: true
-                        })
-                    },
-                    backFaceCulling : false
-                }).then(function() {
-                    return material;
-                });
-            }
+            material : _r.load.material('texture6', {
+                diffuseTexture : _r.load.texture("https://www.babylonjs-playground.com/textures/tree.png", { hasAlpha : true}),
+                backFaceCulling : false
+            })
         }
     },
     {

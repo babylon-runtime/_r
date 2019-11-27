@@ -19,6 +19,7 @@ describe('Launch with patch', function() {
         });
 
         _r.ready(function() {
+
             expect(_r.scene.activeCamera).to.exist;
             expect(_r.select('sphere1')[0].material.diffuseColor.r == 1).to.be.true;
             expect(_r.select('sphere1')[0].material.diffuseColor.g == 0).to.be.true;
