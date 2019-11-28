@@ -204,7 +204,7 @@ load.script = function(file : string) : Promise<null> {
   return new Promise((resolve, reject) => {
     // Adding the script tag to the head as suggested before
     let script = document.createElement('script');
-    script.type = 'text/javascript';
+    // script.type = 'text/javascript';
     script.src = file;
 
     // Then bind the event to the callback function.

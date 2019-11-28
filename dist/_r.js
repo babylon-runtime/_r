@@ -1333,7 +1333,7 @@
       return new Promise(function (resolve, reject) {
           // Adding the script tag to the head as suggested before
           var script = document.createElement('script');
-          script.type = 'text/javascript';
+          // script.type = 'text/javascript';
           script.src = file;
           // Then bind the event to the callback function.
           // There are several events for cross browser compatibility.
@@ -1536,301 +1536,6 @@
           }
       }
   }
-
-  function color(expr) {
-      if (expr instanceof BABYLON.Color3 || expr instanceof BABYLON.Color4) {
-          return expr;
-      }
-      if (is.HexColor(expr)) {
-          return BABYLON.Color3.FromHexString(expr);
-      }
-      if (is.PlainObject(expr)) {
-          if (expr.hasOwnProperty("r") || expr.hasOwnProperty("g") || expr.hasOwnProperty("b") || expr.hasOwnProperty("a")) {
-              var r = expr["r"] || 0;
-              var g = expr["g"] || 0;
-              var b = expr["b"] || 0;
-              if (expr["a"]) {
-                  return new BABYLON.Color4(r, g, b, expr["a"]);
-              }
-              else {
-                  return new BABYLON.Color3(r, g, b);
-              }
-          }
-          else {
-              console.error("_r.to.Color - invalid color : ", expr);
-              return new BABYLON.Color3(0, 0, 0);
-          }
-      }
-      if (is.Array(expr)) {
-          if (expr.length == 3) {
-              return BABYLON.Color3.FromArray(expr);
-          }
-          if (expr.length == 4) {
-              return BABYLON.Color4.FromArray(expr);
-          }
-          console.error("_r.to.Color - invalid color : ", expr);
-          return new BABYLON.Color3(0, 0, 0);
-      }
-      if (is.String(expr)) {
-          expr = expr.trim().toLocaleLowerCase();
-          if (expr.indexOf('rgb(') == 0) {
-              var rgb = expr.substring(expr.indexOf('(') + 1, expr.lastIndexOf(')')).split(/,\s*/);
-              var r = parseFloat(rgb[0]);
-              var g = parseFloat(rgb[1]);
-              var b = parseFloat(rgb[2]);
-              return new BABYLON.Color3(!isNaN(r) ? (r / 255) : 0, !isNaN(g) ? (g / 255) : 0, !isNaN(b) ? (b / 255) : 0);
-          }
-          else {
-              if (expr.indexOf('rgba(') == 0) {
-                  var rgba = expr.substring(expr.indexOf('(') + 1, expr.lastIndexOf(')')).split(/,\s*/);
-                  var r = parseFloat(rgba[0]);
-                  var g = parseFloat(rgba[1]);
-                  var b = parseFloat(rgba[2]);
-                  var a = parseFloat(rgba[3]);
-                  return new BABYLON.Color4(!isNaN(r) ? (r / 255) : 0, !isNaN(g) ? (g / 255) : 0, !isNaN(b) ? (b / 255) : 0, !isNaN(a) ? (a / 255) : 0);
-              }
-              else {
-                  switch (expr) {
-                      case 'red':
-                          return BABYLON.Color3.Red();
-                      case 'green':
-                          return BABYLON.Color3.Green();
-                      case 'blue':
-                          return BABYLON.Color3.Blue();
-                      case 'black':
-                          return BABYLON.Color3.Black();
-                      case 'white':
-                          return BABYLON.Color3.White();
-                      case 'purple':
-                          return BABYLON.Color3.Purple();
-                      case 'magenta':
-                      case 'pink':
-                          return BABYLON.Color3.Magenta();
-                      case 'yellow':
-                          return BABYLON.Color3.Yellow();
-                      case 'teal':
-                      case 'cyan':
-                          return BABYLON.Color3.Teal();
-                      case 'gray':
-                      case 'grey':
-                          return BABYLON.Color3.Gray();
-                      case 'random':
-                          return BABYLON.Color3.Random();
-                      default:
-                          console.error("_r.to.Color - invalid color : ", expr);
-                          return new BABYLON.Color3(0, 0, 0);
-                  }
-              }
-          }
-      }
-  }
-  function color4(expr) {
-      var _color = color(expr);
-      return new BABYLON.Color4(_color.r, _color.g, _color.b, 1);
-  }
-
-  registerPlugin({
-      test: function (element, source, property) {
-          return !is.Function(source[property]) && element[property] instanceof BABYLON.Color3 || element[property] instanceof BABYLON.Color4;
-      },
-      resolve: function (element, source, property) {
-          element[property] = color(source[property]);
-          return element[property];
-      }
-  });
-
-  registerPlugin({
-      test: function (element, source, property) {
-          return property.trim() === "*";
-      },
-      resolve: function (element, source, property) {
-          if (is.MultiMaterial(element)) {
-              return patchElements(element.subMaterials, source[property], element);
-          }
-          else {
-              if (is.Array(element)) {
-                  return patchElements(element, source[property]);
-              }
-              else {
-                  return patchElement(element, source[property]);
-              }
-          }
-      }
-  });
-
-  registerPlugin({
-      test: function (element, source, property) {
-          return ["diffuseFresnelParameters", "opacityFresnelParameters", "emissiveFresnelParameters", "refractionFresnelParameters", "reflectionFresnelParameters"].indexOf(property) !== -1
-              && !element.target[property];
-      },
-      resolve: function (element, source, property) {
-          return new BABYLON.FresnelParameters();
-      }
-  });
-
-  registerPlugin({
-      test: function (element, source, property) {
-          return property === "execute" || property === "exec";
-      },
-      resolve: function (element, source, property, context) {
-          try {
-              var func = source[property];
-              if (element) {
-                  return func.apply(element, context);
-              }
-              else {
-                  return func.apply(global.scene, context);
-              }
-          }
-          catch (ex) {
-              console.error(ex);
-          }
-      }
-  });
-
-  registerPlugin({
-      test: function (element, source, property) {
-          return property === "scene";
-      },
-      resolve: function (element, source, property) {
-          if (is.Function(source[property])) {
-              try {
-                  global.scene = source[property]();
-              }
-              catch (ex) {
-                  console.error(ex);
-              }
-          }
-          else {
-              return globalPatch(source[property], element);
-          }
-      }
-  });
-
-  registerPlugin({
-      test: function (element, source, property) {
-          return property === "data";
-      },
-      resolve: function (element, source, property, context) {
-          var data = source[property];
-          var properties = Object.getOwnPropertyNames(data);
-          var x = {};
-          properties.forEach(function (property) {
-              var _patch = data[property];
-              if (is.Function(_patch)) {
-                  console.log(element, context);
-                  x[property] = function () {
-                      return _patch.apply(element, context);
-                  };
-                  select(element).data(property, x[property]);
-              }
-              else {
-                  x[property] = _patch;
-                  select(element).data(property, _patch);
-              }
-          });
-      }
-  });
-
-  registerPlugin({
-      test: function (element, source, property) {
-          return ["on", "off", "trigger", "one"].indexOf(property) != -1;
-      },
-      resolve: function (element, source, property, context) {
-          switch (property) {
-              case "on":
-                  Object.getOwnPropertyNames(source[property]).forEach(function (event) {
-                      var handler = source[property][event];
-                      if (is.Function(handler)) {
-                          return select(element).on(event, handler);
-                      }
-                      else {
-                          select(element).on(event, function () {
-                              return select(element).patch(source[property][event]);
-                          });
-                      }
-                  });
-                  break;
-              case "off":
-                  if (is.String(source[property])) {
-                      return select(element).off(source[property]);
-                  }
-                  else {
-                      Object.getOwnPropertyNames(source[property]).forEach(function (event) {
-                          select(element).off(event, source[property][event]);
-                      });
-                  }
-                  break;
-              case "trigger":
-                  if (is.String(source[property])) {
-                      return select(element).trigger(source[property]);
-                  }
-                  else {
-                      Object.getOwnPropertyNames(source[property]).forEach(function (event) {
-                          return select(element).trigger(event, source[property][event]);
-                      });
-                  }
-                  break;
-              case "one":
-                  Object.getOwnPropertyNames(source[property]).forEach(function (event) {
-                      var handler = source[property][event];
-                      if (is.Function(handler)) {
-                          return select(element).one(event, handler);
-                      }
-                      else {
-                          select(element).one(event, function () {
-                              return select(element).patch(source[property][event]);
-                          });
-                      }
-                  });
-                  break;
-          }
-      }
-  });
-
-  registerPlugin({
-      test: function (element, source, property) {
-          return false;
-          //return source[property] && is.String(source[property]) && (is.Material(element) || is.Texture(element));
-      },
-      resolve: function (element, source, property, context) {
-          /**
-          if (is.Material(element)) {
-            let elements = select(source[property] + ':material');
-            if (elements.length != 0) {
-              element = elements[0];
-            }
-          }
-          if (is.Texture(element)) {
-            let elements = select(source[property] + ':texture');
-            if (elements.length != 0) {
-              element = elements[0];
-            }
-          }**/
-      }
-  });
-
-  registerPlugin({
-      test: function (element, source, property) {
-          return property === "patchParallel";
-      },
-      resolve: function (element, source, property, context) {
-          var promises = [];
-          if (element) {
-              source[property].forEach(function (_patch) {
-                  console.log("push", _patch);
-                  promises.push(select(element).patch(_patch));
-              });
-          }
-          else {
-              source[property].forEach(function (_patch) {
-                  promises.push(patch(_patch));
-              });
-          }
-          console.log("call to patchParallel", promises);
-          return Promise.all(promises);
-      }
-  });
 
   function patch(patch, promisify) {
       if (promisify === void 0) { promisify = true; }
@@ -2116,96 +1821,118 @@
       enableOfflineSupport: false,
       progress: null,
       loadingScreen: null,
-      load: null
+      load: null,
+      babylon: null
   };
   function launch(obj) {
       isReady = false;
       options = extend(options, obj);
-      // CANVAS
-      if (options.canvas) {
-          if (is.String(options.canvas)) {
-              var element = document.getElementById(options.canvas);
-              if (is.DOM.canvas(element)) {
-                  global.canvas = element;
-              }
-              else {
-                  console.error("_r.launch - " + options.canvas + "is not a valid HTMLCanvasElement");
-              }
-          }
-          else {
-              if (is.DOM.canvas(options.canvas)) {
-                  global.canvas = options.canvas;
-              }
-              else {
-                  console.error("_r.launch - canvas parameter should be a string or a HTMLCanvasElement");
-              }
-          }
-      }
-      if (options.container) {
-          if (is.String(options.container)) {
-              var parent_1 = document.getElementById(options.container);
-              parent_1.appendChild(global.canvas);
-          }
-          else {
-              options.container.appendChild(global.canvas);
-          }
-      }
-      else {
-          document.body.appendChild(global.canvas);
-      }
-      // KTX
-      if (options.ktx) {
-          if (is.Array(options.ktx)) {
-              global.engine.setTextureFormatToUse(options.ktx);
-          }
-          else {
-              if (options.ktx === true) {
-                  global.engine.setTextureFormatToUse(['-astc.ktx', '-dxt.ktx', '-pvrtc.ktx', '-etc2.ktx']);
-              }
-          }
-      }
-      // ENABLE OFFLINE SUPPORT
-      if (options.enableOfflineSupport) {
-          global.engine.enableOfflineSupport = options.enableOfflineSupport;
-      }
-      else {
-          global.engine.enableOfflineSupport = false;
-      }
-      // LOADING SCREEN
-      if (options.loadingScreen) {
-          global.engine.loadingScreen = options.loadingScreen;
-      }
-      loadingScreen.isVisible = true;
       return new Promise(function (resolve, reject) {
-          _createScene().then(function () {
-              _load().then(function () {
-                  _patch().then(function () {
-                      _checkActiveCamera();
-                      _beforeFirstRender();
-                      // RESIZE
-                      window.addEventListener('resize', function () {
+          _setup().then(function () {
+              _createScene().then(function () {
+                  _load().then(function () {
+                      _patch().then(function () {
+                          _checkActiveCamera();
+                          _beforeFirstRender();
+                          // RESIZE
+                          window.addEventListener('resize', function () {
+                              global.engine.resize();
+                          });
                           global.engine.resize();
+                          start();
+                          isReady = true;
+                          loadingScreen.isVisible = false;
+                          callbacks.forEach(function (callback) {
+                              try {
+                                  callback.call(global.scene);
+                              }
+                              catch (ex) {
+                                  console.error(ex);
+                              }
+                          });
+                          callbacks.length = 0;
+                          resolve(global.scene);
                       });
-                      global.engine.resize();
-                      start();
-                      isReady = true;
-                      loadingScreen.isVisible = false;
-                      callbacks.forEach(function (callback) {
-                          try {
-                              callback.call(global.scene);
-                          }
-                          catch (ex) {
-                              console.error(ex);
-                          }
-                      });
-                      callbacks.length = 0;
-                      resolve(global.scene);
                   });
+              }, function (err) {
+                  reject(err);
               });
-          }, function (err) {
-              reject(err);
           });
       });
+  }
+  function _setup() {
+      return _babylon().then(function () {
+          // CANVAS
+          if (options.canvas) {
+              if (is.String(options.canvas)) {
+                  var element = document.getElementById(options.canvas);
+                  if (is.DOM.canvas(element)) {
+                      global.canvas = element;
+                  }
+                  else {
+                      console.error("_r.launch - " + options.canvas + "is not a valid HTMLCanvasElement");
+                  }
+              }
+              else {
+                  if (is.DOM.canvas(options.canvas)) {
+                      global.canvas = options.canvas;
+                  }
+                  else {
+                      console.error("_r.launch - canvas parameter should be a string or a HTMLCanvasElement");
+                  }
+              }
+          }
+          if (options.container) {
+              if (is.String(options.container)) {
+                  var parent_1 = document.getElementById(options.container);
+                  parent_1.appendChild(global.canvas);
+              }
+              else {
+                  options.container.appendChild(global.canvas);
+              }
+          }
+          else {
+              document.body.appendChild(global.canvas);
+          }
+          // KTX
+          if (options.ktx) {
+              if (is.Array(options.ktx)) {
+                  global.engine.setTextureFormatToUse(options.ktx);
+              }
+              else {
+                  if (options.ktx === true) {
+                      global.engine.setTextureFormatToUse(['-astc.ktx', '-dxt.ktx', '-pvrtc.ktx', '-etc2.ktx']);
+                  }
+              }
+          }
+          // ENABLE OFFLINE SUPPORT
+          if (options.enableOfflineSupport) {
+              global.engine.enableOfflineSupport = options.enableOfflineSupport;
+          }
+          else {
+              global.engine.enableOfflineSupport = false;
+          }
+          // LOADING SCREEN
+          if (options.loadingScreen) {
+              global.engine.loadingScreen = options.loadingScreen;
+          }
+          loadingScreen.isVisible = true;
+      });
+  }
+  function _babylon() {
+      if (options.babylon) {
+          switch (options.babylon) {
+              case 'preview':
+                  return load('https://preview.babylonjs.com/babylon.js');
+              case 'stable':
+                  return load('https://cdn.babylonjs.com/babylon.js');
+              default:
+                  return load(options.babylon);
+          }
+      }
+      else {
+          return new Promise(function (resolve, reject) { resolve(); });
+      }
   }
   function _createScene() {
       if (options.scene) {
@@ -2654,6 +2381,301 @@
           trigger.apply(e, [item, events].concat(extraParameters));
       });
   };
+
+  function color(expr) {
+      if (expr instanceof BABYLON.Color3 || expr instanceof BABYLON.Color4) {
+          return expr;
+      }
+      if (is.HexColor(expr)) {
+          return BABYLON.Color3.FromHexString(expr);
+      }
+      if (is.PlainObject(expr)) {
+          if (expr.hasOwnProperty("r") || expr.hasOwnProperty("g") || expr.hasOwnProperty("b") || expr.hasOwnProperty("a")) {
+              var r = expr["r"] || 0;
+              var g = expr["g"] || 0;
+              var b = expr["b"] || 0;
+              if (expr["a"]) {
+                  return new BABYLON.Color4(r, g, b, expr["a"]);
+              }
+              else {
+                  return new BABYLON.Color3(r, g, b);
+              }
+          }
+          else {
+              console.error("_r.to.Color - invalid color : ", expr);
+              return new BABYLON.Color3(0, 0, 0);
+          }
+      }
+      if (is.Array(expr)) {
+          if (expr.length == 3) {
+              return BABYLON.Color3.FromArray(expr);
+          }
+          if (expr.length == 4) {
+              return BABYLON.Color4.FromArray(expr);
+          }
+          console.error("_r.to.Color - invalid color : ", expr);
+          return new BABYLON.Color3(0, 0, 0);
+      }
+      if (is.String(expr)) {
+          expr = expr.trim().toLocaleLowerCase();
+          if (expr.indexOf('rgb(') == 0) {
+              var rgb = expr.substring(expr.indexOf('(') + 1, expr.lastIndexOf(')')).split(/,\s*/);
+              var r = parseFloat(rgb[0]);
+              var g = parseFloat(rgb[1]);
+              var b = parseFloat(rgb[2]);
+              return new BABYLON.Color3(!isNaN(r) ? (r / 255) : 0, !isNaN(g) ? (g / 255) : 0, !isNaN(b) ? (b / 255) : 0);
+          }
+          else {
+              if (expr.indexOf('rgba(') == 0) {
+                  var rgba = expr.substring(expr.indexOf('(') + 1, expr.lastIndexOf(')')).split(/,\s*/);
+                  var r = parseFloat(rgba[0]);
+                  var g = parseFloat(rgba[1]);
+                  var b = parseFloat(rgba[2]);
+                  var a = parseFloat(rgba[3]);
+                  return new BABYLON.Color4(!isNaN(r) ? (r / 255) : 0, !isNaN(g) ? (g / 255) : 0, !isNaN(b) ? (b / 255) : 0, !isNaN(a) ? (a / 255) : 0);
+              }
+              else {
+                  switch (expr) {
+                      case 'red':
+                          return BABYLON.Color3.Red();
+                      case 'green':
+                          return BABYLON.Color3.Green();
+                      case 'blue':
+                          return BABYLON.Color3.Blue();
+                      case 'black':
+                          return BABYLON.Color3.Black();
+                      case 'white':
+                          return BABYLON.Color3.White();
+                      case 'purple':
+                          return BABYLON.Color3.Purple();
+                      case 'magenta':
+                      case 'pink':
+                          return BABYLON.Color3.Magenta();
+                      case 'yellow':
+                          return BABYLON.Color3.Yellow();
+                      case 'teal':
+                      case 'cyan':
+                          return BABYLON.Color3.Teal();
+                      case 'gray':
+                      case 'grey':
+                          return BABYLON.Color3.Gray();
+                      case 'random':
+                          return BABYLON.Color3.Random();
+                      default:
+                          console.error("_r.to.Color - invalid color : ", expr);
+                          return new BABYLON.Color3(0, 0, 0);
+                  }
+              }
+          }
+      }
+  }
+  function color4(expr) {
+      var _color = color(expr);
+      return new BABYLON.Color4(_color.r, _color.g, _color.b, 1);
+  }
+
+  registerPlugin({
+      test: function (element, source, property) {
+          return !is.Function(source[property]) && element[property] instanceof BABYLON.Color3 || element[property] instanceof BABYLON.Color4;
+      },
+      resolve: function (element, source, property) {
+          element[property] = color(source[property]);
+          return element[property];
+      }
+  });
+
+  registerPlugin({
+      test: function (element, source, property) {
+          return property.trim() === "*";
+      },
+      resolve: function (element, source, property) {
+          if (is.MultiMaterial(element)) {
+              return patchElements(element.subMaterials, source[property], element);
+          }
+          else {
+              if (is.Array(element)) {
+                  return patchElements(element, source[property]);
+              }
+              else {
+                  return patchElement(element, source[property]);
+              }
+          }
+      }
+  });
+
+  registerPlugin({
+      test: function (element, source, property) {
+          return ["diffuseFresnelParameters", "opacityFresnelParameters", "emissiveFresnelParameters", "refractionFresnelParameters", "reflectionFresnelParameters"].indexOf(property) !== -1
+              && !element.target[property];
+      },
+      resolve: function (element, source, property) {
+          return new BABYLON.FresnelParameters();
+      }
+  });
+
+  registerPlugin({
+      test: function (element, source, property) {
+          return property === "execute" || property === "exec";
+      },
+      resolve: function (element, source, property, context) {
+          try {
+              var func = source[property];
+              if (element) {
+                  return func.apply(element, context);
+              }
+              else {
+                  return func.apply(global.scene, context);
+              }
+          }
+          catch (ex) {
+              console.error(ex);
+          }
+      }
+  });
+
+  registerPlugin({
+      test: function (element, source, property) {
+          return property === "scene";
+      },
+      resolve: function (element, source, property) {
+          if (is.Function(source[property])) {
+              try {
+                  global.scene = source[property]();
+              }
+              catch (ex) {
+                  console.error(ex);
+              }
+          }
+          else {
+              return globalPatch(source[property], element);
+          }
+      }
+  });
+
+  registerPlugin({
+      test: function (element, source, property) {
+          return property === "data";
+      },
+      resolve: function (element, source, property, context) {
+          var data = source[property];
+          var properties = Object.getOwnPropertyNames(data);
+          var x = {};
+          properties.forEach(function (property) {
+              var _patch = data[property];
+              if (is.Function(_patch)) {
+                  console.log(element, context);
+                  x[property] = function () {
+                      return _patch.apply(element, context);
+                  };
+                  select(element).data(property, x[property]);
+              }
+              else {
+                  x[property] = _patch;
+                  select(element).data(property, _patch);
+              }
+          });
+      }
+  });
+
+  registerPlugin({
+      test: function (element, source, property) {
+          return ["on", "off", "trigger", "one"].indexOf(property) != -1;
+      },
+      resolve: function (element, source, property, context) {
+          switch (property) {
+              case "on":
+                  Object.getOwnPropertyNames(source[property]).forEach(function (event) {
+                      var handler = source[property][event];
+                      if (is.Function(handler)) {
+                          return select(element).on(event, handler);
+                      }
+                      else {
+                          select(element).on(event, function () {
+                              return select(element).patch(source[property][event]);
+                          });
+                      }
+                  });
+                  break;
+              case "off":
+                  if (is.String(source[property])) {
+                      return select(element).off(source[property]);
+                  }
+                  else {
+                      Object.getOwnPropertyNames(source[property]).forEach(function (event) {
+                          select(element).off(event, source[property][event]);
+                      });
+                  }
+                  break;
+              case "trigger":
+                  if (is.String(source[property])) {
+                      return select(element).trigger(source[property]);
+                  }
+                  else {
+                      Object.getOwnPropertyNames(source[property]).forEach(function (event) {
+                          return select(element).trigger(event, source[property][event]);
+                      });
+                  }
+                  break;
+              case "one":
+                  Object.getOwnPropertyNames(source[property]).forEach(function (event) {
+                      var handler = source[property][event];
+                      if (is.Function(handler)) {
+                          return select(element).one(event, handler);
+                      }
+                      else {
+                          select(element).one(event, function () {
+                              return select(element).patch(source[property][event]);
+                          });
+                      }
+                  });
+                  break;
+          }
+      }
+  });
+
+  registerPlugin({
+      test: function (element, source, property) {
+          return false;
+          //return source[property] && is.String(source[property]) && (is.Material(element) || is.Texture(element));
+      },
+      resolve: function (element, source, property, context) {
+          /**
+          if (is.Material(element)) {
+            let elements = select(source[property] + ':material');
+            if (elements.length != 0) {
+              element = elements[0];
+            }
+          }
+          if (is.Texture(element)) {
+            let elements = select(source[property] + ':texture');
+            if (elements.length != 0) {
+              element = elements[0];
+            }
+          }**/
+      }
+  });
+
+  registerPlugin({
+      test: function (element, source, property) {
+          return property === "patchParallel";
+      },
+      resolve: function (element, source, property, context) {
+          var promises = [];
+          if (element) {
+              source[property].forEach(function (_patch) {
+                  console.log("push", _patch);
+                  promises.push(select(element).patch(_patch));
+              });
+          }
+          else {
+              source[property].forEach(function (_patch) {
+                  promises.push(patch(_patch));
+              });
+          }
+          console.log("call to patchParallel", promises);
+          return Promise.all(promises);
+      }
+  });
 
   function getEasingFunction(easing) {
       var mode;

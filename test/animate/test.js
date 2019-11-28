@@ -1,9 +1,9 @@
 var expect = chai.expect;
 
-before(function() {
+before(function(done) {
     _r.launch({
         scene : function() {
-            var scene = new BABYLON.Scene(engine);
+            var scene = new BABYLON.Scene(_r.engine);
 
             var light = new BABYLON.PointLight("Omni", new BABYLON.Vector3(0, 100, 100), scene);
             var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0.8, 100, new BABYLON.Vector3.Zero(), scene);
@@ -28,6 +28,7 @@ before(function() {
             return scene;
         }
     });
+    _r.ready(done);
 });
 
 describe('animate', function() {

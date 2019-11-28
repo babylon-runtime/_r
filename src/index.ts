@@ -9,6 +9,7 @@ import { select } from "./select.js";
 import { data } from "./data.js";
 import { on, off, one, trigger } from "./events/index.js";
 import { patch } from "./patch/patch.js";
+import "./patch/plugins/index.js";
 import { match } from "./Elements.js";
 import { color, color4 } from './util/color.js';
 import { animate } from "./animate.js";

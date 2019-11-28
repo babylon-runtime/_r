@@ -4,7 +4,7 @@ import { global } from "../global.js";
 import { start, isStarted } from "../renderLoop.js";
 import { patchElements, patchElement, globalPatch } from "./patchElement.js";
 import { registerPlugin } from "./patchPlugin.js";
-import "./plugins/index.js";
+
 import { load } from "../load.js";
 
 export function patch(patch : any, promisify = true) : Promise<any> {
