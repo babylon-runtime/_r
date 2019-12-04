@@ -116,10 +116,12 @@ load.cubeTexture = function(url : string, patch? : any) : Promise<BABYLON.CubeTe
     let task = assetsManager.addCubeTextureTask('_r.load.cubeTexture.' + cubeCounter++, url);
     task.onSuccess = function(task) {
       if (patch) {
-        return select(task.texture).patch(patch);
+        select(task.texture).patch(patch).then(() => {
+          resolve(task.texture);
+        });
       }
       else {
-        return task.texture;
+        resolve(task.texture);
       }
     };
     task.onError = function(reason) {

@@ -1249,10 +1249,12 @@
           var task = assetsManager.addCubeTextureTask('_r.load.cubeTexture.' + cubeCounter++, url);
           task.onSuccess = function (task) {
               if (patch) {
-                  return select(task.texture).patch(patch);
+                  select(task.texture).patch(patch).then(function () {
+                      resolve(task.texture);
+                  });
               }
               else {
-                  return task.texture;
+                  resolve(task.texture);
               }
           };
           task.onError = function (reason) {
@@ -2663,7 +2665,6 @@
           var promises = [];
           if (element) {
               source[property].forEach(function (_patch) {
-                  console.log("push", _patch);
                   promises.push(select(element).patch(_patch));
               });
           }
@@ -2672,7 +2673,6 @@
                   promises.push(patch(_patch));
               });
           }
-          console.log("call to patchParallel", promises);
           return Promise.all(promises);
       }
   });

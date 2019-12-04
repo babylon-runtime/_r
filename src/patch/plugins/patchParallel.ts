@@ -11,7 +11,6 @@ registerPlugin({
     let promises = [];
     if (element) {
       source[property].forEach((_patch) => {
-        console.log("push", _patch);
         promises.push(select(element).patch(_patch));
       });
     }
@@ -20,7 +19,6 @@ registerPlugin({
         promises.push(patch(_patch));
       });
     }
-    console.log("call to patchParallel", promises);
     return Promise.all(promises);
   }
 });
