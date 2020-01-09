@@ -2,7 +2,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
   (global = global || self, global._r = factory());
-}(this, function () { 'use strict';
+}(this, (function () { 'use strict';
 
   console.log("babylon runtime v0.1.0")
 
@@ -369,6 +369,7 @@
   }
 
   var e = /*#__PURE__*/Object.freeze({
+    __proto__: null,
     on: on,
     one: one,
     trigger: trigger,
@@ -3397,5 +3398,5 @@
 
   return index;
 
-}));
+})));
 //# sourceMappingURL=_r.js.map
