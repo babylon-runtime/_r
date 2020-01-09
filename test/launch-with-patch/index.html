@@ -15,7 +15,6 @@
 <script nomodule src="../../dist/_r.min.js"></script>
 <script nomodule src="test.js"></script>
 <script nomodule>
-    mocha.checkLeaks();
     mocha.run();
 </script>
 
@@ -24,7 +23,6 @@
     window._r = _r;
     _r.TRACE = true;
     import "./test.js";
-    mocha.checkLeaks();
     mocha.run();
 </script>
 

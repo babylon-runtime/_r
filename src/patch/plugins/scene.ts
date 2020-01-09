@@ -1,7 +1,7 @@
 import { registerPlugin } from "../patchPlugin.js";
 import { is } from "../../is.js";
 import { global } from "../../global.js";
-import { globalPatch } from "../patchElement.js";
+import { patchElement } from "../patchElement.js";
 
 registerPlugin({
   test(element, source, property) : boolean {
@@ -17,7 +17,7 @@ registerPlugin({
       }
     }
     else {
-      return globalPatch(source[property], element);
+      return patchElement(global.scene, source[property]);
     }
   }
 });
