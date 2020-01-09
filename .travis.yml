@@ -6,3 +6,16 @@ before_install:
   - export DISPLAY=:99.0
 services:
   - xvfb
+script:
+  - echo "Deploying to Github Releases..."
+deploy:
+    provider: releases
+    api_key: $GITHUB_OAUTH_TOKEN
+    file:
+      - 'dist/_r.js'
+      - 'dist/_r.js.map'
+      - 'dist/_r.min.js'
+      - 'dist/_r.min.js.map'
+    skip_cleanup: true
+    on:
+      tags: true

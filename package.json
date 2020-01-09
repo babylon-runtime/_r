@@ -7,12 +7,15 @@
     "help": "docs"
   },
   "scripts": {
-    "preinstall": "npm install -g rollup",
-    "build": "npm run lint && rollup -c && npm run test",
-    "release": "npm run build && release-it --no-requireCleanWorkingDir",
     "lint": "tslint src/**/*.ts{,x}",
     "test": "rollup -c && grunt",
-    "typescript": "rollup -c"
+    "build": "npm run lint && rollup -c && npm run test",
+    "typescript": "rollup -c",
+    "preversion": "npm run build",
+    "version": "git push && git push --tags",
+    "publish:patch": "npm version patch",
+    "publish:minor": "npm version minor",
+    "publish:major": "npm version major"
   },
   "repository": {
     "type": "git",
@@ -31,7 +34,6 @@
     "chai": "^4.2.0",
     "grunt": "^1.0.4",
     "grunt-karma": "^3.0.2",
-    "jsdoc-json": "^2.0.2",
     "karma": "^3.1.4",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^2.2.0",
@@ -40,8 +42,6 @@
     "karma-mocha-reporter": "^2.2.5",
     "mocha": "^5.2.0",
     "pepjs": "^0.5.2",
-    "q": "^1.5.1",
-    "release-it": "^7.6.3",
     "rollup-plugin-typescript2": "^0.17.2",
     "rollup-plugin-uglify": "^6.0.3",
     "tslib": "^1.10.0",
