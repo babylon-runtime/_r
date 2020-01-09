@@ -25,8 +25,8 @@ deploy:
     on:
       tags: true
 after_deploy:
-  - chmod +x ./deploy/discord-new-release.sh
-  - ./deploy/discord-new-release.sh success $WEBHOOK_URL
+  - chmod +x ./discord-new-release.sh
+  - ./discord-new-release.sh success $WEBHOOK_URL
 after_failure:
   - wget https://raw.githubusercontent.com/DiscordHooks/travis-ci-discord-webhook/master/send.sh
   - chmod +x send.sh
