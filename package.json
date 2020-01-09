@@ -11,9 +11,9 @@
     "test": "rollup -c && grunt",
     "build": "npm run lint && rollup -c && npm run test",
     "typescript": "rollup -c",
-    "publish:patch": "npm version patch && npm run build && git add -A dist && git push origin && git push origin --tags",
-    "publish:minor": "npm version minor",
-    "publish:major": "npm version major"
+    "preversion": "npm run test",
+    "version": "rollup -c && git add package.json && git add -A dist",
+    "postversion": "git push origin && git push origin --tags"
   },
   "repository": {
     "type": "git",

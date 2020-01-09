@@ -7,6 +7,10 @@ before_install:
 services:
   - xvfb
 script:
+  - cd dist
+  - zip -r babylon-runtime-$TRAVIS_TAG.zip .
+  - ls
+  - cd ..
   - echo "Deploying to Github Releases..."
 deploy:
     provider: releases
@@ -16,6 +20,14 @@ deploy:
       - 'dist/_r.js.map'
       - 'dist/_r.min.js'
       - 'dist/_r.min.js.map'
+      - 'dist/babylon-runtime-${TRAVIS_TAG}.zip'
     skip_cleanup: true
     on:
       tags: true
+after_deploy:
+  - chmod +x ./deploy/discord-new-release.sh
+  - ./deploy/discord-new-release.sh success $WEBHOOK_URL
+after_failure:
+  - wget https://raw.githubusercontent.com/DiscordHooks/travis-ci-discord-webhook/master/send.sh
+  - chmod +x send.sh
+  - ./send.sh failure $WEBHOOK_URL
