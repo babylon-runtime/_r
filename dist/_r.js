@@ -4,7 +4,7 @@
   (global = global || self, global._r = factory());
 }(this, (function () { 'use strict';
 
-  console.log("babylon runtime v0.1.0")
+  console.log("babylon runtime v0.1.2")
 
   var is;
   (function (is) {
@@ -2550,7 +2550,7 @@
               }
           }
           else {
-              return globalPatch(source[property], element);
+              return patchElement(global.scene, source[property]);
           }
       }
   });
