@@ -12,7 +12,7 @@
     "build": "npm run lint && rollup -c && npm run test",
     "typescript": "rollup -c",
     "preversion": "npm run build",
-    "version": "git push && git push --tags",
+    "version": "git push origin --tags",
     "publish:patch": "npm version patch",
     "publish:minor": "npm version minor",
     "publish:major": "npm version major"
