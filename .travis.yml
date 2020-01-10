@@ -34,7 +34,5 @@ deploy:
       - '../dist/babylon-runtime-${TRAVIS_TAG}.zip'
     skip_cleanup: true
     draft: true
-    run:
-      - echo "simple test"
 after_deploy:
   - echo "After deploy call";
