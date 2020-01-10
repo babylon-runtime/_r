@@ -28,8 +28,6 @@ deploy:
     email: "fabien.levavasseur@gmail.com"
     api_key: $NPM_AUTH_TOKEN
     skip_cleanup: true
-      on:
-        tags: true
 after_deploy:
   - chmod +x ./discord-new-release.sh
   - ./discord-new-release.sh success $WEBHOOK_URL
