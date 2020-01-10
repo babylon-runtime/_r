@@ -1,0 +1,22 @@
+{
+  "name": "babylon-runtime",
+  "version": "0.1.3",
+  "description": "",
+  "main": "_r.js",
+  "directories": {
+    "help": "docs"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/babylon-runtime/_r.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/babylon-runtime/_r/issues"
+  },
+  "homepage": "https://github.com/babylon-runtime/_r#readme",
+  "devDependencies": {},
+  "dependencies": {}
+}
