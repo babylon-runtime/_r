@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.com/babylon-runtime/_r.svg?branch=master)](https://travis-ci.com/babylon-runtime/_r)
 
+[![Gitter](https://badges.gitter.im/babylon-runtime/community.svg)](https://gitter.im/babylon-runtime/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
 # Babylon Runtime
 A lightweight, *write less, do more*, [BabylonJS](https://www.babylonjs.com/) library.
 ## Code less, Babylon more
