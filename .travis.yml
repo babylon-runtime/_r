@@ -10,7 +10,7 @@ script:
   - cd dist
   - zip -r babylon-runtime-$TRAVIS_TAG.zip .
   - cd ..
-  - node tools/npm-publish/prebuildpackage.js
+  - node ./tools/npm-publish/prebuildpackage.js
   - cd dist.npm
 deploy:
   - provider: npm
