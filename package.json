@@ -1,9 +1,11 @@
 {
   "name": "babylon-runtime",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Code Less, Babylon more",
   "main": "dist/_r.min.js",
-  "keywords" : ["babylonjs"],
+  "keywords": [
+    "babylonjs"
+  ],
   "directories": {
     "help": "docs"
   },
