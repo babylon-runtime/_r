@@ -1,6 +1,6 @@
 # Contributing to_r
 
-## Get the sources
+## Fork
 
 1. [Fork](https://help.github.com/en/articles/fork-a-repo)  the [babylon-runtime directory](https://github.com/babylon-runtime/_r) to your github account 
 2. Create a local repository 
@@ -14,11 +14,18 @@
 5. Check if everything is ok
     > npm run test
 
-## Dev and Debug
+## Dev 
 
-## Build & Test
+Before you can start dev. you should launch
+> tsc --watch
+
+(Or enable recompile on change in your IDE)
+
+Then dev in **localDev/** or in **/test** folder.
 
 ## Pull-Request
+
+see https://help.github.com/en/desktop/contributing-to-projects/creating-a-pull-request
 
 
 
