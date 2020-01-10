@@ -10,7 +10,6 @@ script:
   - cd dist
   - zip -r babylon-runtime-$TRAVIS_TAG.zip .
   - cd ..
-before_deploy:
   - node tools/npm-publish/prebuildpackage.js
   - cd dist.npm
 deploy:
@@ -31,11 +30,10 @@ deploy:
     skip_cleanup: true
     on:
       tags: true
-    after_deploy:
-      - cd ..
-      - chmod +x ./tools/discord-bot/discord-new-release.sh
-      - ./tools/discord-bot/discord-new-release.sh success $WEBHOOK_URL
-
+after_deploy:
+  - cd ..
+  - chmod +x ./tools/discord-bot/discord-new-release.sh
+  - ./tools/discord-bot/discord-new-release.sh success $WEBHOOK_URL
 after_failure:
   - wget https://raw.githubusercontent.com/DiscordHooks/travis-ci-discord-webhook/master/send.sh
   - chmod +x send.sh
