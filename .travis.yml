@@ -38,12 +38,3 @@ deploy:
       - echo "simple test"
 after_deploy:
   - echo "After deploy call";
-after_success:
-  - echo "Calling after success";
-  - cd ..
-  - chmod +x ./tools/discord-bot/discord-new-release.sh
-  - if [[ $TRAVIS_TAG != "" ]]; then
-      ./tools/discord-bot/discord-new-release.sh success $WEBHOOK_URL;
-    else
-      echo "Not a tag";
-    fi
