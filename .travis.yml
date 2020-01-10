@@ -13,6 +13,7 @@ script:
   - ls
   - node ./tools/npm-publish/prebuildpackage.js
   - cd dist.npm
+  - ls
 deploy:
   - provider: npm
     email: "fabien.levavasseur@gmail.com"
