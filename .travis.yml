@@ -9,18 +9,33 @@ services:
 script:
   - cd dist
   - zip -r babylon-runtime-$TRAVIS_TAG.zip .
-  - ls
   - cd ..
 before_deploy:
   - node tools/npm-publish/prebuildpackage.js
   - cd dist.npm
-  - ls
 deploy:
-  provider: npm
-  email: "fabien.levavasseur@gmail.com"
-  api_key: $NPM_AUTH_TOKEN
-  skip_cleanup: true
-  on:
-    tags: true
+  - provider: npm
+    email: "fabien.levavasseur@gmail.com"
+    api_key: $NPM_AUTH_TOKEN
+    skip_cleanup: true
+    on:
+      tags: true
+  - provider: releases
+    api_key: $GITHUB_OAUTH_TOKEN
+    file:
+      - '_r.js'
+      - '_r.js.map'
+      - '_r.min.js'
+      - '_r.min.js.map'
+      - '../dist/babylon-runtime-${TRAVIS_TAG}.zip'
+    skip_cleanup: true
+    on:
+      tags: true
 after_deploy:
-  -  cd ..
+  - cd ..
+  - chmod +x ./tools/discord-bot/discord-new-release.sh
+  - ./tools/discord-bot/discord-new-release.sh success $WEBHOOK_URL
+after_failure:
+  - wget https://raw.githubusercontent.com/DiscordHooks/travis-ci-discord-webhook/master/send.sh
+  - chmod +x send.sh
+  - ./send.sh failure $WEBHOOK_URL

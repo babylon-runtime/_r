@@ -1,8 +1,9 @@
 {
   "name": "babylon-runtime",
   "version": "0.1.4",
-  "description": "",
-  "main": "index.js",
+  "description": "Code Less, Babylon more",
+  "main": "dist/_r.min.js",
+  "keywords" : ["babylonjs"],
   "directories": {
     "help": "docs"
   },
@@ -24,7 +25,7 @@
   "bugs": {
     "url": "https://github.com/babylon-runtime/_r/issues"
   },
-  "homepage": "https://github.com/babylon-runtime/_r#readme",
+  "homepage": "https://babylon-runtime.github.io/",
   "devDependencies": {
     "@types/babylonjs": "^2.4.1",
     "babylonjs": "^4.0.3",
