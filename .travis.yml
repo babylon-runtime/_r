@@ -31,11 +31,12 @@ deploy:
     skip_cleanup: true
     on:
       tags: true
-after_deploy:
+after_success:
+  - echo "Calling after success";
   - cd ..
   - chmod +x ./tools/discord-bot/discord-new-release.sh
-  - ./tools/discord-bot/discord-new-release.sh success $WEBHOOK_URL
-after_failure:
-  - wget https://raw.githubusercontent.com/DiscordHooks/travis-ci-discord-webhook/master/send.sh
-  - chmod +x send.sh
-  - ./send.sh failure $WEBHOOK_URL
+  - if [ $TRAVIS_TAG != "" ]; then
+      ./tools/discord-bot/discord-new-release.sh success $WEBHOOK_URL;
+    else
+      echo "Not a tag";
+    fi
