@@ -33,4 +33,4 @@ deploy:
     on:
       tags: true
   - provider: script
-    script: ../tools/discord-bot/discord-new-release.sh success $WEBHOOK_URL
+    script: bash ../tools/discord-bot/discord-new-release.sh success $WEBHOOK_URL
