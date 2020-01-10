@@ -2,6 +2,7 @@
 
 [![Gitter](https://badges.gitter.im/babylon-runtime/community.svg)](https://gitter.im/babylon-runtime/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
+[![NPM](https://nodei.co/npm/babylon-runtime.png?mini=true)](https://nodei.co/npm/babylon-runtime/)
 # Babylon Runtime
 A lightweight, *write less, do more*, [BabylonJS](https://www.babylonjs.com/) library.
 ## Code less, Babylon more
