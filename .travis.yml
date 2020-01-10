@@ -13,7 +13,7 @@ script:
   - cd ..
   - echo "Deploying to Github Releases..."
 deploy:
-    provider: releases
+  - provider: releases
     api_key: $GITHUB_OAUTH_TOKEN
     file:
       - 'dist/_r.js'
@@ -24,6 +24,12 @@ deploy:
     skip_cleanup: true
     on:
       tags: true
+  - provider: npm
+    email: "fabien.levavasseur@gmail.com"
+    api_key: $NPM_AUTH_TOKEN
+    skip_cleanup: true
+      on:
+        tags: true
 after_deploy:
   - chmod +x ./discord-new-release.sh
   - ./discord-new-release.sh success $WEBHOOK_URL
