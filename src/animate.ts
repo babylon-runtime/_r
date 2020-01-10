@@ -21,7 +21,7 @@ function getEasingFunction(easing: string): BABYLON.EasingFunction {
         mode = BABYLON.EasingFunction.EASINGMODE_EASEOUT;
         func = easing.replace("easeOut", "");
       } else {
-        console.info("_r::unrecognized easing function " + easing);
+        console.warn("_r.animate - unrecognized easing function : " + easing + '. Please use something from https://easings.net/');
         return null;
       }
     }
@@ -69,7 +69,7 @@ function getEasingFunction(easing: string): BABYLON.EasingFunction {
       easingFunction.setEasingMode(mode);
       return easingFunction;
     default:
-      console.warn("_r::unrecognized easing function " + easing);
+      console.warn("_r.animate - unrecognized easing function " + easing + '.Please use something from https://easings.net/');
       return null;
   }
 }
