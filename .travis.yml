@@ -27,12 +27,13 @@ deploy:
   - provider: releases
     api_key: $GITHUB_OAUTH_TOKEN
     file:
-      - './_r.js'
-      - './_r.js.map'
-      - './_r.min.js'
-      - './_r.min.js.map'
+      - '_r.js'
+      - '_r.js.map'
+      - '_r.min.js'
+      - '_r.min.js.map'
       - '../dist/babylon-runtime-${TRAVIS_TAG}.zip'
     skip_cleanup: true
-    draft: true
+    on:
+      tags: true
 after_deploy:
   - echo "After deploy call";
