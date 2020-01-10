@@ -14,6 +14,9 @@ script:
   - node ./tools/npm-publish/prebuildpackage.js
   - cd dist.npm
   - ls
+before_deploy:
+  - echo "before deploy"
+  - ls
 deploy:
   - provider: npm
     email: "fabien.levavasseur@gmail.com"
@@ -31,7 +34,7 @@ deploy:
       - '../dist/babylon-runtime-${TRAVIS_TAG}.zip'
     skip_cleanup: true
     draft: true
-    after_deploy:
+    run:
       - echo "simple test"
 after_deploy:
   - echo "After deploy call";
