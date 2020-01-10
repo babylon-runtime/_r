@@ -4,7 +4,7 @@
   (global = global || self, global._r = factory());
 }(this, (function () { 'use strict';
 
-  console.log("babylon runtime v0.1.3")
+  console.log("babylon runtime v0.1.4")
 
   var is;
   (function (is) {
