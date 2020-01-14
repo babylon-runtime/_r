@@ -9,8 +9,8 @@ _r.launch(options)
         * container : string or HTMLElement;
         * canvas: string or HTMLCanvasElement;
         * assets: string;
-        * activeCamera: Function or string or BABYLON.Camera;
         * patch: Array<any>;
+        * activeCamera: Function or string or BABYLON.Camera. Note this will be executed after `path`;
         * beforeFirstRender: Function;
         * ktx: boolean or Array<string>;
         * enableOfflineSupport: boolean;
