@@ -29,13 +29,13 @@ _r.launch({
         var ground = BABYLON.Mesh.CreateGround("ground1", 6, 6, 2, scene);
         return scene;
     },
-    activeCamera : function() {
-        new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1.6, 0), _r.scene);
-    },
     patch : [
         "mesh.patch",
         "material.patch"
-    ]
+    ],
+    activeCamera : function() {
+        new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1.6, 0), _r.scene);
+    }
 });
 ```
 ```js
