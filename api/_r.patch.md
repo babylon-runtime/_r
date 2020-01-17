@@ -146,3 +146,20 @@ _r.patch([{
 }])
 ```
 The diffuseTexture function has 2 arguments, the first one for the parent (the material), and the second for the parent of the material (the mesh);
+
+## Events
+
+### Mesh pointer events
+
+You can create a [mesh pointer event](https://github.com/babylon-runtime/_r/blob/master/api/mesh%20pointer%20events.md) using patchs:
+```js
+_r.patch([{
+    "sphere1:mesh": {
+        "on": {
+            "OnPickUpTrigger": function () {
+                console.log("user just click on the mesh");
+            }
+        }
+    }
+}]);
+```
