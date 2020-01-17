@@ -152,6 +152,7 @@ The diffuseTexture function has 2 arguments, the first one for the parent (the m
 ### Mesh pointer events
 
 You can create a [mesh pointer event](https://github.com/babylon-runtime/_r/blob/master/api/mesh%20pointer%20events.md) using patchs:
+
 ```js
 _r.patch([{
     "sphere1:mesh": {
@@ -162,4 +163,46 @@ _r.patch([{
         }
     }
 }]);
+```
+
+### Custom events
+
+You can assign a [custom event](https://github.com/babylon-runtime/_r/blob/master/api/custom%20events.md) to handle different states:
+
+```js
+_r.patch([{
+        "sphere1:mesh": {
+            "on": {
+                "status-1": {
+                    material: {
+                        diffuseColor: "red"
+                    }
+                },
+                "status-2": {
+                    material: {
+                        diffuseColor: "blue"
+                    }
+                }
+            }
+        }
+    },
+    {
+        "cube*:mesh": {
+            "on": {
+                "status-1": {
+                    material: {
+                        diffuseColor: "green"
+                    }
+                },
+                "status-2": {
+                    material: {
+                        diffuseColor: "yellow"
+                    }
+                }
+            }
+        }
+    }
+]);
+
+_r.select("*:mesh").trigger("status-2");
 ```
