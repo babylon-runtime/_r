@@ -2,7 +2,6 @@ import { is } from "./is.js";
 import { extend }  from "./util/extend.js";
 import { global } from "./global.js";
 import { activateCamera } from "./activateCamera.js";
-import { downloadScene } from "./download.js";
 import { patch } from "./patch/patch.js";
 import { load } from "./load.js";
 import { loadingScreen }  from "./util/loadingScreen.js";
@@ -166,12 +165,6 @@ function _createScene() : Promise<any> {
         }).then((assetsContainer) => {
           assetsContainer.addAllToScene();
         });
-        /**
-        return downloadScene({
-          scene: <string>options.scene,
-          assets: options.assets,
-          progress: options.progress
-        });**/
       } else {
         return load.assets(<string>options.scene, null, (evt : BABYLON.SceneLoaderProgressEvent) => {
           if (options.progress) {
@@ -180,10 +173,6 @@ function _createScene() : Promise<any> {
         }).then((assetsContainer) => {
           assetsContainer.addAllToScene();
         });
-        /**return downloadScene({
-          scene: <string>options.scene,
-          progress: options.progress
-        });**/
       }
     } else {
       return new Promise((resolve, reject) => {
