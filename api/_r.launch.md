@@ -9,8 +9,8 @@ _r.launch(options)
         * container : string or HTMLElement;
         * canvas: string or HTMLCanvasElement;
         * assets: string;
-        * activeCamera: Function or string or BABYLON.Camera;
         * patch: Array<any>;
+        * activeCamera: Function or string or BABYLON.Camera. Note this will be executed after `path`;
         * beforeFirstRender: Function;
         * ktx: boolean or Array<string>;
         * enableOfflineSupport: boolean;
@@ -29,13 +29,13 @@ _r.launch({
         var ground = BABYLON.Mesh.CreateGround("ground1", 6, 6, 2, scene);
         return scene;
     },
-    activeCamera : function() {
-        new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1.6, 0), _r.scene);
-    },
     patch : [
         "mesh.patch",
         "material.patch"
-    ]
+    ],
+    activeCamera : function() {
+        new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 1.6, 0), _r.scene);
+    }
 });
 ```
 ```js

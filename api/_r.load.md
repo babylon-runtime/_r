@@ -13,3 +13,19 @@ _r.load(
 ```
 
 `newAssets` is a [BABYLON.AssetContainer](https://doc.babylonjs.com/api/classes/babylon.assetcontainer)
+
+- _r.load.texture(file, patch)
+
+```js
+_r.patch([{
+    "materialName": {
+        "lightmapTexture": function () {
+            return _r.load.texture("lightmapName.jpg",{
+                "vScale": -1,
+                "coordinatesIndex": 1
+            });
+        }
+    }
+}]);
+```
+
