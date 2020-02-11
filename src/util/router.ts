@@ -4,10 +4,7 @@ import { is } from "../is.js";
 export let router = {
   hashChangedListener : [],
   set : function(hash : string) {
-    window.removeEventListener("hashchange", hashChangeListener);
     window.location.hash = hash;
-    this.trigger(hash);
-    window.addEventListener("hashchange", hashChangeListener);
   },
   get : function() {
     if (window.location.hash.length > 1) {
