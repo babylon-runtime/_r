@@ -84,13 +84,16 @@ describe('Router', function() {
         })
         console.log("** set /route1/route2/ **");
         _r.router.set("/route1/route2");
-        expect(route1).to.be.equal("/route1/route2");
-        expect(route).to.be.equal("/route1/route2");
-        console.log("** set /route3 **");
-        _r.router.set("/route3");
-        expect(route1).to.be.equal("/route1/route2");
-        expect(route).to.be.equal("/route3");
-        console.log("countOn1", countOn1)
+        setTimeout(function() {
+            expect(route1).to.be.equal("/route1/route2");
+            expect(route).to.be.equal("/route1/route2");
+            console.log("** set /route3 **");
+            _r.router.set("/route3");
+            expect(route1).to.be.equal("/route1/route2");
+            expect(route).to.be.equal("/route3");
+            console.log("countOn1", countOn1)
+        })
+
     });
     // TODO
     /**
