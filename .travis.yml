@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - 8.11.3
+  - node
 before_install:
   - export CHROME_BIN=/usr/bin/google-chrome
   - export DISPLAY=:99.0
