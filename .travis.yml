@@ -16,6 +16,7 @@ script:
   - ls
 deploy:
   - provider: npm
+    edge: true
     email: "fabien.levavasseur@gmail.com"
     api_key: $NPM_AUTH_TOKEN
     skip_cleanup: true
