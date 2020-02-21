@@ -161,5 +161,3 @@ declare const _r : {
   extend(...args: any[]): any;
   merge(target: any, source: any, excluded?: Array<string>): any
 };
-
-export default _r;
