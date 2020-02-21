@@ -1075,30 +1075,6 @@
       return elements;
   }
 
-  var libraries = [];
-  function createLibrary(name) {
-      var elements = [];
-      for (var _i = 1; _i < arguments.length; _i++) {
-          elements[_i - 1] = arguments[_i];
-      }
-      if (libraries[name]) {
-          console.error("[_r] Error in _r.createLibrary : " + name + " already exists");
-          return;
-      }
-      else {
-          var _elements = new Elements(elements);
-          libraries[name] = _elements;
-          if (global.TRACE) {
-              console.groupCollapsed("[_r] - create library " + name);
-              _elements.log();
-              console.groupEnd();
-          }
-      }
-  }
-  function library(name) {
-      return libraries[name];
-  }
-
   function select(arg) {
       var elements;
       if (is.String(arg)) {
@@ -1106,19 +1082,6 @@
               return new Elements(global.scene);
           }
           elements = find(arg, global.scene);
-          // elements could be in a library not attached to the scene
-          Object.getOwnPropertyNames(libraries).forEach(function (lib) {
-              // TODO : wtf ?
-              if (lib !== "length") {
-                  var selection = libraries[lib].select(arg);
-                  selection.each(function (item) {
-                      // item could be in multiple libraries
-                      if (!elements.contains(item)) {
-                          elements.add(item);
-                      }
-                  });
-              }
-          });
           if (global.TRACE === true && elements.length == 0) {
               console.warn('BABYLON.Runtime::no object(s) found for selector "' + arg + '"');
           }
@@ -1436,7 +1399,7 @@
   function globalPatchItem(patch, elements) {
       if (is.PatchFile(patch)) {
           return load.patch(patch).then(function (data) {
-              return globalPatch(data);
+              return globalPatch(data, elements);
           });
       }
       else {
@@ -1482,13 +1445,13 @@
   }
   function patchElement(element, patch, context) {
       var properties = Object.getOwnPropertyNames(patch);
+      if (context) {
+          context.push(element);
+      }
+      else {
+          context = [element];
+      }
       return recursive(properties, function (property) {
-          if (context) {
-              context.push(element);
-          }
-          else {
-              context = [element];
-          }
           return patchProperty(element, patch, property, context);
       }, false);
   }
@@ -1949,12 +1912,6 @@
                   }).then(function (assetsContainer) {
                       assetsContainer.addAllToScene();
                   });
-                  /**
-                  return downloadScene({
-                    scene: <string>options.scene,
-                    assets: options.assets,
-                    progress: options.progress
-                  });**/
               }
               else {
                   return load.assets(options.scene, null, function (evt) {
@@ -1964,10 +1921,6 @@
                   }).then(function (assetsContainer) {
                       assetsContainer.addAllToScene();
                   });
-                  /**return downloadScene({
-                    scene: <string>options.scene,
-                    progress: options.progress
-                  });**/
               }
           }
           else {
@@ -2077,97 +2030,6 @@
   }
   function pause() {
       global.engine.stopRenderLoop(loop$1);
-  }
-
-  function downloadScene(options) {
-      var assets, fileName;
-      if (options.assets) {
-          assets = options.assets;
-          fileName = options.scene;
-      }
-      else {
-          fileName = options.scene.split('/').pop();
-          assets = options.scene.replace(fileName, '');
-      }
-      return new Promise(function (resolve, reject) {
-          BABYLON.SceneLoader.LoadAssetContainerAsync(assets, fileName, global.scene, function (e) {
-              if (options.progress) {
-                  options.progress(e);
-              }
-          }).then(function (assetContainer) {
-              // success
-              createLibrary(assets + fileName, assetContainer);
-              if (options.patch) {
-                  try {
-                      select(assetContainer).globalPatch(options.patch).then(function () {
-                          if (options.addAllToScene !== false) {
-                              assetContainer.addAllToScene();
-                          }
-                          if (options.ready) {
-                              options.ready(assetContainer);
-                          }
-                          resolve(assetContainer);
-                      });
-                  }
-                  catch (ex) {
-                      reject(ex);
-                  }
-              }
-              else {
-                  if (options.addAllToScene !== false) {
-                      assetContainer.addAllToScene();
-                  }
-                  if (options.ready) {
-                      options.ready(assetContainer);
-                  }
-                  resolve(assetContainer);
-              }
-          }, function (reason) {
-              // error
-              if (options.error) {
-                  options.error(reason);
-                  reject(reason);
-              }
-          });
-      });
-  }
-  function downloadTexture(options) {
-      return new Promise(function (resolve, reject) {
-          var assetsManager = new BABYLON.AssetsManager(global.scene);
-          var task = assetsManager.addTextureTask(options.name, options.url, options.noMipmap, options.invertY, options.samplingMode);
-          task.onSuccess = function (task) {
-              resolve(task.texture);
-              if (options.ready) {
-                  options.ready(task.texture);
-              }
-          };
-          task.onError = function (reason) {
-              reject(reason);
-              if (options.error) {
-                  options.error(reason);
-              }
-          };
-          assetsManager.load();
-      });
-  }
-  function downloadCubeTexture(options) {
-      return new Promise(function (resolve, reject) {
-          var assetsManager = new BABYLON.AssetsManager(global.scene);
-          var task = assetsManager.addCubeTextureTask(options.name, options.url, options.extensions, options.noMipmap, options.files);
-          task.onSuccess = function (task) {
-              resolve(task.texture);
-              if (options.ready) {
-                  options.ready(task.texture);
-              }
-          };
-          task.onError = function (reason) {
-              reject(reason);
-              if (options.error) {
-                  options.error(reason);
-              }
-          };
-          assetsManager.load();
-      });
   }
 
   var keys = [
@@ -2489,20 +2351,35 @@
 
   registerPlugin({
       test: function (element, source, property) {
-          return property.trim() === "*";
+          return property === "forEach" || property === "*" || property === "each";
       },
-      resolve: function (element, source, property) {
-          if (is.MultiMaterial(element)) {
-              return patchElements(element.subMaterials, source[property], element);
+      resolve: function (element, source, property, context) {
+          context.pop();
+          var keyword;
+          if (source["forEach"]) {
+              keyword = "forEach";
           }
           else {
-              if (is.Array(element)) {
-                  return patchElements(element, source[property]);
+              if (source["*"]) {
+                  keyword = "*";
               }
               else {
-                  return patchElement(element, source[property]);
+                  if (source["each"]) {
+                      keyword = "each";
+                  }
               }
           }
+          var promises = [];
+          if (is.Array(element)) {
+              element = [element];
+          }
+          element.forEach(function (item) {
+              // clone context
+              var _context = context.slice();
+              promises.push(patchElement(item, source[keyword], _context));
+          });
+          // Here Promises are parallel :/
+          return Promise.all(promises);
       }
   });
 
@@ -2566,7 +2443,6 @@
           properties.forEach(function (property) {
               var _patch = data[property];
               if (is.Function(_patch)) {
-                  console.log(element, context);
                   x[property] = function () {
                       return _patch.apply(element, context);
                   };
@@ -2697,7 +2573,7 @@
                   func = easing.replace("easeOut", "");
               }
               else {
-                  console.info("_r::unrecognized easing function " + easing);
+                  console.warn("_r.animate - unrecognized easing function : " + easing + '. Please use something from https://easings.net/');
                   return null;
               }
           }
@@ -2745,7 +2621,7 @@
               easingFunction.setEasingMode(mode);
               return easingFunction;
           default:
-              console.warn("_r::unrecognized easing function " + easing);
+              console.warn("_r.animate - unrecognized easing function " + easing + '.Please use something from https://easings.net/');
               return null;
       }
   }
@@ -3265,10 +3141,7 @@
   var router = {
       hashChangedListener: [],
       set: function (hash) {
-          window.removeEventListener("hashchange", hashChangeListener);
           window.location.hash = hash;
-          this.trigger(hash);
-          window.addEventListener("hashchange", hashChangeListener);
       },
       get: function () {
           if (window.location.hash.length > 1) {
@@ -3367,11 +3240,6 @@
       ready: ready,
       start: start$1,
       pause: pause,
-      downloadScene: downloadScene,
-      downloadTexture: downloadTexture,
-      downloadCubeTexture: downloadCubeTexture,
-      createLibrary: createLibrary,
-      library: library,
       data: data,
       on: on$1,
       off: off$1,

@@ -84,7 +84,7 @@ describe('Patching', function() {
             done();
         })
     });
-    it('global patch', function() {
+    it('global patch', function(done) {
         let patch = _r.select("*:mesh").globalPatch([
             {
                 "sphere1" : {
@@ -99,11 +99,14 @@ describe('Patching', function() {
                     visibility : 0.5
                 }
             }
-        ]);
-        expect(patch.then).to.exist;
-        expect(_r.select("sphere1").attr("position").x === 10).to.be.true;
-        expect(_r.select("sphere1").attr("visibility") === 1).to.be.true;
-        expect(_r.select("ground1").attr("visibility") === 0.5).to.be.true;
+        ]).then(() => {
+            expect(patch.then).to.exist;
+            expect(_r.select("sphere1").attr("position").x === 10).to.be.true;
+            expect(_r.select("sphere1").attr("visibility") === 1).to.be.true;
+            expect(_r.select("ground1").attr("visibility") === 0.5).to.be.true;
+            done();
+        })
+
     });
     it("plugins", function() {
         _r.patch.registerPlugin({
