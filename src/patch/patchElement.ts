@@ -100,13 +100,13 @@ export function patchElements(elements : Array<any>, patch : any, context? : Arr
 
 export function patchElement(element : any, patch : any, context? : Array<any>) : any {
   let properties = Object.getOwnPropertyNames(patch);
+  if (context) {
+    context.push(element);
+  }
+  else {
+    context = [element];
+  }
   return recursive(properties, (property) => {
-    if (context) {
-      context.push(element);
-    }
-    else {
-      context = [element];
-    }
     return patchProperty(element, patch, property, context);
   }, false);
 }
@@ -152,7 +152,12 @@ export function patchProperty(element, source, property, context? : Array<any>) 
           if (!element[property]) {
             element[property] = {};
           }
-          return patchElement(element[property], source[property], context);
+          if (is.Array(element[property])) {
+            return patchElements(element[property], source[property], context);
+          }
+          else {
+            return patchElement(element[property], source[property], context);
+          }
         }
       }
 
