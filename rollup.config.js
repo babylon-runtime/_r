@@ -1,6 +1,7 @@
 import typescript from 'rollup-plugin-typescript2';
 import pkg from './package.json'
 import { uglify } from "rollup-plugin-uglify";
+import copy from 'rollup-plugin-copy'
 export default [{
     input: 'src/index.ts',
     output: {
@@ -11,7 +12,15 @@ export default [{
         intro : 'console.log("babylon runtime v' + pkg.version + '")'
     },
     plugins: [
-        typescript()
+        typescript({
+            objectHashIgnoreUnknownHack: true,
+        }),
+        copy({
+            objectHashIgnoreUnknownHack : true,
+            targets : [
+                { src : 'src/_r.d.ts', dest: 'dist/'}
+            ]
+        })
     ]
 },{
     input: 'src/index.ts',

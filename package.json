@@ -43,6 +43,7 @@
     "mkdirp": "^0.5.1",
     "mocha": "^5.2.0",
     "pepjs": "^0.5.2",
+    "rollup-plugin-copy": "^3.3.0",
     "rollup-plugin-typescript2": "^0.17.2",
     "rollup-plugin-uglify": "^6.0.3",
     "tslib": "^1.10.0",
