@@ -3,8 +3,6 @@ import { global } from "./global.js";
 import { is } from "./is.js";
 import { launch, ready } from "./launch.js";
 import { start, pause } from "./renderLoop.js";
-import { downloadScene, downloadTexture, downloadCubeTexture } from "./download.js";
-import { createLibrary, library } from "./library.js";
 import { select } from "./select.js";
 import { data } from "./data.js";
 import { on, off, one, trigger } from "./events/index.js";
@@ -52,11 +50,6 @@ export default {
     ready : ready,
     start : start,
     pause : pause,
-    downloadScene : downloadScene,
-    downloadTexture : downloadTexture,
-    downloadCubeTexture : downloadCubeTexture,
-    createLibrary : createLibrary,
-    library : library,
     data : data,
     on : on,
     off : off,
