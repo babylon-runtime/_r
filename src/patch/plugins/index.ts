@@ -1,5 +1,5 @@
 import "./colors.js";
-import "./star.js";
+import "./forEach.js";
 import './fresnelParameters.js';
 import './execute.js';
 import './scene.js';

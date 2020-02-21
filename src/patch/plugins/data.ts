@@ -15,7 +15,6 @@ registerPlugin({
     properties.forEach((property) => {
       let _patch = data[property];
       if (is.Function(_patch)) {
-        console.log(element, context);
         x[property] = function() {
           return _patch.apply(element, context);
         };
