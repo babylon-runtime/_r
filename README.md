@@ -15,33 +15,3 @@ Demo, API & Examples : [https://babylon-runtime.github.io/](https://babylon-runt
 
 **_r** is a small, and feature-rich JavaScript library. It makes things like scene manipulation, event handling, animation, much simpler with an easy-to-use API.
  The purpose of **_r** is to make BabylonJS much easier to use and maintain in the 3D workflow.
-
-## A Brief Look
-
-### Scene patching
-```js
-_r.select("mesh1, mesh2").patch({
-    position : {
-        x : 10
-    },
-    material : {
-         diffuseColor : "#ff0000"
-    },
-    isVisible : true
-});
-```
-### Event Handling
-```js
-_r.select("mesh1").on("OnPickTrigger", function() {
-    console.log(this.name + ' has been picked');
-});
-```
-### Animations
-```js
-_r.animate("camera1", {
-    position : { x : 0, y : 0, z : 0 },
-    rotation : { x : 0, y : 0, z : 0 },
-    fov : 0.1
-}, 2); // in seconds
-```
- ##
