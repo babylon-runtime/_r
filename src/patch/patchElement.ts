@@ -48,7 +48,7 @@ export function recursive(elements, func, promisify = true) : any {
 function globalPatchItem(patch : any, elements? : any) {
   if (is.PatchFile(patch)) {
     return load.patch(patch).then((data) => {
-      return globalPatch(data);
+      return globalPatch(data, elements);
     });
   }
   else {
@@ -152,12 +152,7 @@ export function patchProperty(element, source, property, context? : Array<any>) 
           if (!element[property]) {
             element[property] = {};
           }
-          if (is.Array(element[property])) {
-            return patchElements(element[property], source[property], context);
-          }
-          else {
-            return patchElement(element[property], source[property], context);
-          }
+          return patchElement(element[property], source[property], context);
         }
       }
 
