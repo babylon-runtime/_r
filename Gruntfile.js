@@ -44,11 +44,6 @@ module.exports = function(grunt) {
                     { src : ['test/data/test.js']}
                 ]
             },
-            download : {
-                files : [
-                    { src : [ 'test/download/test.js']}
-                ]
-            },
             fresnelParameters : {
                 files : [
                     { src : [ 'test/fresnelParameters/test.js']}

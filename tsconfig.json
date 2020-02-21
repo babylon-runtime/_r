@@ -3,9 +3,9 @@
     "module": "es6",
     "target": "es5",
     "sourceMap": true,
+    "rootDir": "src",
     "types" : [
-      "babylonjs",
-      "q"
+      "babylonjs"
     ],
     "lib" : [
       "dom",

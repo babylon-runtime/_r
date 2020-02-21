@@ -40,6 +40,7 @@ describe('animate', function() {
             }
         }, {
             duration : 1,
+            easing: "linear",
             complete : function() {
                 expect(_r.select("Box2")[0].rotation.y === 10).to.be.true;
             }

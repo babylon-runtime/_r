@@ -74,11 +74,7 @@ describe("deep attribute", function() {
         _r.select("suzanne.000").patch({
             isVisible : true,
             material : {
-                diffuseTexture : function() {
-                    return _r.downloadTexture({
-                        url : "https://www.babylonjs-playground.com/textures/grass.jpg"
-                    })
-                }
+                diffuseTexture : _r.load.texture("https://www.babylonjs-playground.com/textures/grass.jpg")
             }
         }).then(function() {
             var elements = _r.select("*:mesh[material.diffuseTexture.name=https://www.babylonjs-playground.com/textures/grass.jpg]");
