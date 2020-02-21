@@ -24,6 +24,9 @@ registerPlugin({
       }
     }
     let promises = [];
+    if (is.Array(element)) {
+      element = [element];
+    }
     element.forEach((item) => {
       // clone context
       let _context = context.slice();
