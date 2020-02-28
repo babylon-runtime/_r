@@ -8,7 +8,8 @@ registerPlugin({
     return property === "forEach" || property === "*" || property === "each";
   },
   resolve(element, source, property, context) {
-    context.pop();
+    //console.log("here is the context", property, context)
+    //context.pop();
     let keyword;
     if (source["forEach"]) {
       keyword = "forEach";
@@ -25,13 +26,13 @@ registerPlugin({
     }
     let promises = [];
     if (is.Array(element)) {
-      element = [element];
+      element.forEach((item) => {
+        // clone context
+        let _context = context.slice();
+        _context.push(item);
+        promises.push(patchElement(item, source[keyword], _context));
+      });
     }
-    element.forEach((item) => {
-      // clone context
-      let _context = context.slice();
-      promises.push(patchElement(item, source[keyword], _context));
-    });
     // Here Promises are parallel :/
     return Promise.all(promises);
   }
