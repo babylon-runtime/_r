@@ -44,7 +44,7 @@ interface Elements {
   dispose() : void;
   addToScene() : void;
   removeFromScene() : void;
-  on(events : string, handler : (args : any) => void);
+  on(events : string, handler : (args : any) => void, repeat? : boolean);
   one(events : string, handler : (args : any) => void);
   off(events : string, handler? : (args : any) => void);
   trigger(events : string, ...extraParameters : any[]);
@@ -54,7 +54,6 @@ interface Elements {
   fadeOut(options? : number | AnimationOptions);
   finish();
 }
-
 
 declare module _r {
   export let canvas : HTMLCanvasElement;
@@ -99,17 +98,17 @@ declare module _r {
     message : string;
     progress : number;
     postMessage(key, value);
-  }
+  };
   export let show : {
     normals(selector? : string, size? : number, color? : string | any);
     wireframe(selector? : string,  epsilon? : number, width? : number, color? : any);
     gizmo(selector? : string, gizmoType?: string, axis?: string, color? : any);
-  }
+  };
   export let hide : {
     normals(selector? : string)
     wireframe(selector? : string);
     gizmo(selector? : string);
-  }
+  };
   export function extend(...args: any[]): any;
   export function merge(target: any, source: any, excluded?: Array<string>): any;
   export let is: {
