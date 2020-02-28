@@ -7,13 +7,13 @@ before_install:
 services:
   - xvfb
 script:
-  - cd dist
-  - zip -r babylon-runtime-$TRAVIS_TAG.zip .
-  - cd ..
-  - ls
-  - node ./tools/npm-publish/prebuildpackage.js
-  - cd dist.npm
-  - ls
+  - if [ $TRAVIS_PULL_REQUEST == "false" ]; then
+      cd dist
+      zip -r babylon-runtime-$TRAVIS_TAG.zip .
+      cd ..
+      node ./tools/npm-publish/prebuildpackage.js
+      cd dist.npm
+    fi
 deploy:
   - provider: npm
     edge: true
