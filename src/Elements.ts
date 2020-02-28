@@ -197,6 +197,7 @@ export class Elements {
   }
 
   addToScene() {
+    console.log("addToScene")
     this.each(function(element) {
       if (is.Camera(element)) {
         global.scene.addCamera(element);
@@ -221,13 +222,14 @@ export class Elements {
   }
 
   removeFromScene() {
+    console.log("removeFromScene")
     this.each(function(element) {
       if (is.Camera(element)) {
         global.scene.removeCamera(element);
         return false;
       }
       if (is.Mesh(element)) {
-        global.scene.removeMesh(element);
+        global.scene.removeMesh(element, true);
         return false;
       }
       if (is.Material(element)) {
