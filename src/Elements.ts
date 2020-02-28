@@ -197,7 +197,6 @@ export class Elements {
   }
 
   addToScene() {
-    console.log("addToScene")
     this.each(function(element) {
       if (is.Camera(element)) {
         global.scene.addCamera(element);
@@ -222,7 +221,6 @@ export class Elements {
   }
 
   removeFromScene() {
-    console.log("removeFromScene")
     this.each(function(element) {
       if (is.Camera(element)) {
         global.scene.removeCamera(element);
