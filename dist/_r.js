@@ -922,7 +922,7 @@
                   return false;
               }
               if (is.Mesh(element)) {
-                  global.scene.removeMesh(element);
+                  global.scene.removeMesh(element, true);
                   return false;
               }
               if (is.Material(element)) {
@@ -1001,7 +1001,8 @@
                       });
                       break;
                   case "multimaterial":
-                      container.materials.forEach(function (material) {
+                      container.multiMaterials.forEach(function (material) {
+                          console.log(material.name);
                           if (is.MultiMaterial(material)) {
                               if (selector.matchFilters(material)) {
                                   elements.add(material);
@@ -2354,7 +2355,8 @@
           return property === "forEach" || property === "*" || property === "each";
       },
       resolve: function (element, source, property, context) {
-          context.pop();
+          //console.log("here is the context", property, context)
+          //context.pop();
           var keyword;
           if (source["forEach"]) {
               keyword = "forEach";
@@ -2371,13 +2373,13 @@
           }
           var promises = [];
           if (is.Array(element)) {
-              element = [element];
+              element.forEach(function (item) {
+                  // clone context
+                  var _context = context.slice();
+                  _context.push(item);
+                  promises.push(patchElement(item, source[keyword], _context));
+              });
           }
-          element.forEach(function (item) {
-              // clone context
-              var _context = context.slice();
-              promises.push(patchElement(item, source[keyword], _context));
-          });
           // Here Promises are parallel :/
           return Promise.all(promises);
       }

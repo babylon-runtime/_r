@@ -1,3 +1,4 @@
+/// <reference types="babylonjs" />
 interface LaunchOptions {
   container? : string | HTMLElement;
   canvas?: string | HTMLCanvasElement;
@@ -43,7 +44,7 @@ interface Elements {
   dispose() : void;
   addToScene() : void;
   removeFromScene() : void;
-  on(events : string, handler : (args : any) => void);
+  on(events : string, handler : (args : any) => void, repeat? : boolean);
   one(events : string, handler : (args : any) => void);
   off(events : string, handler? : (args : any) => void);
   trigger(events : string, ...extraParameters : any[]);
@@ -54,21 +55,63 @@ interface Elements {
   finish();
 }
 
-declare const _r : {
-  canvas: HTMLCanvasElement;
-  scene: BABYLON.Scene;
-  engine: BABYLON.Engine;
-  launch(options: LaunchOptions): Promise<void>;
-  activateCamera(camera: string | BABYLON.Camera): void;
-  ready(callback: () => void): void;
-  on(event: string, handler: (...args: any[]) => void, repeat: boolean): void;
-  off(event: string, handler?: (...args: any[]) => void): void;
-  one(event: string, handler: (...args: any[]) => void): void;
-  trigger(event: string, ...extraParameters: any[]): void;
-  select(arg: string | any): Elements;
-  patch(any):  Promise<any>;
-  data(element : any, key?: string, value?: any) : any;
-  is: {
+declare module _r {
+  export let canvas : HTMLCanvasElement;
+  export let scene : BABYLON.Scene;
+  export let engine : BABYLON.Engine;
+  export function launch(options: LaunchOptions): Promise<void>;
+  export function activateCamera(camera: string | BABYLON.Camera): void;
+  export function ready(callback: () => void): void;
+  export function on(event: string, handler: (...args: any[]) => void, repeat: boolean): void;
+  export function off(event: string, handler?: (...args: any[]) => void): void;
+  export function one(event: string, handler: (...args: any[]) => void): void;
+  export function trigger(event: string, ...extraParameters: any[]): void;
+  export function select(arg: string | any): Elements;
+  export function patch(any):  Promise<any>;
+  export function data(element : any, key?: string, value?: any) : any;
+  export function load(resource : string | Array<string>, patch? : any) : Promise<any>;
+  export function color(expr: any): BABYLON.Color3 | BABYLON.Color4;
+  export function color4(expr: any) : BABYLON.Color4;
+  export function animate(elements : any, patch : any, options? : number | AnimationOptions) : BABYLON.AnimationGroup;
+  export let fn: any;
+  export let queryString : {
+    get: (name: any) => string;
+    set: (name: any, value: any) => void;
+    on: (event: string, handler: (...args: any[]) => void, repeat?: boolean) => void;
+    off: (event: string, handler?: (...args: any[]) => void) => void;
+    one: (event: string, handler: (...args: any[]) => void) => void;
+    trigger: (event: string, extraParameters?: any) => void;
+  };
+  export let router: {
+    hashChangedListener: any[];
+    set: (hash: string) => void;
+    get: () => string;
+    on: (event: TimerHandler, handler?: (...args: any[]) => void, repeat?: boolean) => void;
+    off: (event: string, handler?: (...args: any[]) => void) => void;
+    one: (event: string, handler: (...args: any[]) => void) => void;
+    trigger: (event: string, extraParameters?: any) => void;
+    pause: boolean;
+  };
+  export let loadingScreen : {
+    iframe(url : string, id? : string);
+    isVisible : boolean;
+    message : string;
+    progress : number;
+    postMessage(key, value);
+  };
+  export let show : {
+    normals(selector? : string, size? : number, color? : string | any);
+    wireframe(selector? : string,  epsilon? : number, width? : number, color? : any);
+    gizmo(selector? : string, gizmoType?: string, axis?: string, color? : any);
+  };
+  export let hide : {
+    normals(selector? : string)
+    wireframe(selector? : string);
+    gizmo(selector? : string);
+  };
+  export function extend(...args: any[]): any;
+  export function merge(target: any, source: any, excluded?: Array<string>): any;
+  export let is: {
     Function(functionToCheck: any): boolean;
     Number(n: any): boolean;
     PlainObject(n: any): boolean;
@@ -105,61 +148,19 @@ declare const _r : {
     FileWithExtension(file: string, ext: string | string[]): boolean;
     ImageFile(file: string): boolean;
   };
-  color(expr: any): BABYLON.Color3 | BABYLON.Color4;
-  color4(expr: any) : BABYLON.Color4;
-  animate(elements : any, patch : any, options? : number | AnimationOptions) : BABYLON.AnimationGroup;
-  activeCamera(camera : string | BABYLON.Camera);
-  fn: any;
-  queryString: {
-    get: (name: any) => string;
-    set: (name: any, value: any) => void;
-    on: (event: string, handler: (...args: any[]) => void, repeat?: boolean) => void;
-    off: (event: string, handler?: (...args: any[]) => void) => void;
-    one: (event: string, handler: (...args: any[]) => void) => void;
-    trigger: (event: string, extraParameters?: any) => void;
-  };
-  router: {
-    hashChangedListener: any[];
-    set: (hash: string) => void;
-    get: () => string;
-    on: (event: TimerHandler, handler?: (...args: any[]) => void, repeat?: boolean) => void;
-    off: (event: string, handler?: (...args: any[]) => void) => void;
-    one: (event: string, handler: (...args: any[]) => void) => void;
-    trigger: (event: string, extraParameters?: any) => void;
-    pause: boolean;
-  };
-  loadingScreen : {
-    iframe(url : string, id? : string);
-    isVisible : boolean;
-    message : string;
-    progress : number;
-    postMessage(key, value);
+  export function load(resource : string | Array<string>, patch? : any) : Promise<any>;
+  namespace load {
+    export function script(resource : string | Array<string>, patch? : any) : Promise<any>;
+    export function image(image : string, patch? : any) : Promise<HTMLImageElement>;
+    export function assets(scene : string, patch? : any, progress? : (event : BABYLON.SceneLoaderProgressEvent) => any) : Promise<BABYLON.AssetContainer>;
+    export function material(name : string, patch? : any) : Promise<BABYLON.StandardMaterial>;
+    export function pbr(name : string, patch? : any) : Promise<BABYLON.PBRMaterial>;
+    export function texture(image : string, patch? : any) : Promise<BABYLON.Texture>;
+    export function cubeTexture(url : string, patch? : any) : Promise<BABYLON.CubeTexture>;
+    export function patch(file : string) : Promise<any>;
+    export function ajax(file : string) : Promise<string>;
+    export function JSON(file : string) : Promise<any>;
+    export function script(file : string) : Promise<null>;
+    export function css(file : string) : Promise<null>;
   }
-  show : {
-    normals(selector? : string, size? : number, color? : string | any);
-    wireframe(selector? : string,  epsilon? : number, width? : number, color? : any);
-    gizmo(selector? : string, gizmoType?: string, axis?: string, color? : any);
-  }
-  hide : {
-    normals(selector? : string)
-    wireframe(selector? : string);
-    gizmo(selector? : string);
-  }
-  load : ((resource : string | Array<string>, patch? : any) => Promise<any> | {
-    image(image : string, patch? : any) : Promise<HTMLImageElement>;
-    assets(scene : string, patch? : any, progress? : (event : BABYLON.SceneLoaderProgressEvent) => any) : Promise<BABYLON.AssetContainer>;
-    material(name : string, patch? : any) : Promise<BABYLON.StandardMaterial>;
-    pbr(name : string, patch? : any) : Promise<BABYLON.PBRMaterial>;
-    texture(image : string, patch? : any) : Promise<BABYLON.Texture>;
-    cubeTexture(url : string, patch? : any) : Promise<BABYLON.CubeTexture>;
-    patch(file : string) : Promise<any>;
-    ajax(file : string) : Promise<string>;
-    JSON(file : string) : Promise<any>;
-    script(file : string) : Promise<null>;
-    css(file : string) : Promise<null>;
-    });
-  extend(...args: any[]): any;
-  merge(target: any, source: any, excluded?: Array<string>): any
-};
-
-export default _r;
+}
