@@ -284,6 +284,7 @@ export function find(params : string, container : BABYLON.Scene | Elements | BAB
     let selector = new Selector(item);
     if (is.Scene(container) || is.AssetContainer(container)) {
       container = <BABYLON.AssetContainer> container;
+      console.log("call to find !", selector.type);
       switch (selector.type) {
         case "material" :
           container.materials.forEach(function(material) {
@@ -307,8 +308,10 @@ export function find(params : string, container : BABYLON.Scene | Elements | BAB
           });
           break;
         case "multimaterial":
-          container.materials.forEach(function(material) {
+          container.multiMaterials.forEach(function(material) {
+            console.log(material.name);
             if (is.MultiMaterial(material)) {
+              console.log("there's multimat")
               if (selector.matchFilters(material)) {
                 elements.add(material);
               }
