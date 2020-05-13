@@ -2,7 +2,22 @@ import typescript from 'rollup-plugin-typescript2';
 import pkg from './package.json'
 import { uglify } from "rollup-plugin-uglify";
 import copy from 'rollup-plugin-copy'
-export default [{
+export default [
+    {
+        input: 'src/index.ts',
+        output : {
+          file : 'dist/_r.es6.js',
+          format: "esm",
+          sourcemap : true,
+          intro : 'console.log("babylon runtime ES6 v' + pkg.version + '")'
+        },
+        plugins: [
+            typescript({
+                objectHashIgnoreUnknownHack: true,
+            })
+        ]
+    },
+    {
     input: 'src/index.ts',
     output: {
         file: 'dist/_r.js',
