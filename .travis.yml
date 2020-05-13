@@ -6,6 +6,14 @@ before_install:
   - export DISPLAY=:99.0
 services:
   - xvfb
+script:
+  - cd dist
+  - zip -r babylon-runtime-$TRAVIS_TAG.zip .
+  - cd ..
+  - ls
+  - node ./tools/npm-publish/prebuildpackage.js
+  - cd dist.npm
+  - ls
 deploy:
   - provider: npm
     edge: true
