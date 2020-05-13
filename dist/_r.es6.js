@@ -1,4 +1,4 @@
-console.log("babylon runtime ES6 v0.1.11")
+console.log("babylon runtime ES6 v0.1.12")
 
 var is;
 (function (is) {
