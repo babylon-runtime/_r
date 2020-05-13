@@ -31,7 +31,7 @@ deploy:
       - '_r.min.js.map'
       - '_r.d.ts'
       - '_r.es6.js'
-      - '_r.es6.js.map
+      - '_r.es6.js.map'
       - '../dist/babylon-runtime-${TRAVIS_TAG}.zip'
     skip_cleanup: true
     on:
