@@ -1,5 +1,5 @@
 /// <reference types="babylonjs" />
-interface LaunchOptions {
+export interface LaunchOptions {
   container? : string | HTMLElement;
   canvas?: string | HTMLCanvasElement;
   assets?: string;
@@ -15,7 +15,7 @@ interface LaunchOptions {
   babylon? : string;
 }
 
-interface AnimationOptions {
+export interface AnimationOptions {
   fps?: number;
   duration?: number;
   speedRatio?: number;
@@ -27,7 +27,7 @@ interface AnimationOptions {
   keys? : [];
 }
 
-interface Elements {
+export interface Elements {
   constructor(...elements : any);
   add(element : any) : void;
   contains(element : any) : boolean;
