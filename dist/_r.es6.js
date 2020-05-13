@@ -1922,7 +1922,7 @@ function _createScene() {
             return new Promise(function (resolve, reject) {
                 if (is.Function(options.scene)) {
                     try {
-                        var result = eval("var engine=BABYLON.Engine.LastCreatedEngine; var canvas=engine.getRenderingCanvas(); var scene=BABYLON.Engine.LastCreatedScene; var createScene=" + options.scene + ';createScene()');
+                        var result = eval("var canvas=_r.canvas; var engine = _r.engine; var scene=_r.scene; var createScene=" + options.scene + ';createScene()');
                         if (BABYLON.Engine.LastCreatedEngine.scenes.length == 2) {
                             BABYLON.Engine.LastCreatedEngine.scenes[0].dispose();
                         }
