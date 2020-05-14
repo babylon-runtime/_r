@@ -1,5 +1,5 @@
 /// <reference types="babylonjs" />
-export interface LaunchOptions {
+declare interface LaunchOptions {
   container? : string | HTMLElement;
   canvas?: string | HTMLCanvasElement;
   assets?: string;
@@ -15,7 +15,7 @@ export interface LaunchOptions {
   babylon? : string;
 }
 
-export interface AnimationOptions {
+declare interface AnimationOptions {
   fps?: number;
   duration?: number;
   speedRatio?: number;
@@ -27,7 +27,7 @@ export interface AnimationOptions {
   keys? : [];
 }
 
-export interface Elements {
+declare interface Elements {
   constructor(...elements : any);
   add(element : any) : void;
   contains(element : any) : boolean;
@@ -69,7 +69,6 @@ declare module _r {
   export function select(arg: string | any): Elements;
   export function patch(any):  Promise<any>;
   export function data(element : any, key?: string, value?: any) : any;
-  export function load(resource : string | Array<string>, patch? : any) : Promise<any>;
   export function color(expr: any): BABYLON.Color3 | BABYLON.Color4;
   export function color4(expr: any) : BABYLON.Color4;
   export function animate(elements : any, patch : any, options? : number | AnimationOptions) : BABYLON.AnimationGroup;
